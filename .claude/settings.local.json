@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx tsx examples/basic-usage.ts)",
+      "Bash(node:*)",
+      "Bash(pnpm exec tsx:*)",
+      "Bash(find:*)"
+    ]
+  }
+}
