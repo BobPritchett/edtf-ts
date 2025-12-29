@@ -9,7 +9,8 @@
       "Bash(find:*)",
       "Bash(pnpm exec vitest:*)",
       "Bash(pnpm install:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(pnpm docs:build:*)"
     ]
   }
 }

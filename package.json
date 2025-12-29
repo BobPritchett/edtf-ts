@@ -7,7 +7,10 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "lint": "pnpm -r run lint",
-    "dev": "pnpm -r --parallel run dev"
+    "dev": "pnpm -r --parallel run dev",
+    "docs:dev": "pnpm --filter @edtf-ts/docs dev",
+    "docs:build": "pnpm --filter @edtf-ts/docs build",
+    "docs:preview": "pnpm --filter @edtf-ts/docs preview"
   },
   "keywords": [
     "edtf",

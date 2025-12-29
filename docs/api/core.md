@@ -1,0 +1,188 @@
+# @edtf-ts/core
+
+Core EDTF parsing and type definitions.
+
+## Installation
+
+```bash
+pnpm add @edtf-ts/core
+```
+
+## parse()
+
+Parse an EDTF string and return a result object.
+
+```typescript
+function parse(input: string, level?: EDTFLevel): ParseResult
+```
+
+### Parameters
+
+- `input` - The EDTF string to parse
+- `level` - Optional conformance level (0, 1, or 2). If omitted, auto-detects the level.
+
+### Returns
+
+On success:
+```typescript
+{
+  success: true;
+  value: EDTFBase;
+  level: 0 | 1 | 2;
+}
+```
+
+On failure:
+```typescript
+{
+  success: false;
+  errors: ParseError[];
+}
+```
+
+### Example
+
+```typescript
+import { parse } from '@edtf-ts/core';
+
+const result = parse('1985-04-12');
+
+if (result.success) {
+  console.log(result.value.type);       // 'Date'
+  console.log(result.value.precision);  // 'day'
+  console.log(result.level);            // 0
+} else {
+  console.error(result.errors[0].message);
+}
+```
+
+## isValid()
+
+Validate an EDTF string.
+
+```typescript
+function isValid(input: string, level?: EDTFLevel): boolean
+```
+
+### Parameters
+
+- `input` - The EDTF string to validate
+- `level` - Optional conformance level (0, 1, or 2)
+
+### Returns
+
+`true` if valid, `false` otherwise
+
+### Example
+
+```typescript
+import { isValid } from '@edtf-ts/core';
+
+isValid('1985-04-12');  // true
+isValid('1985-13-01');  // false
+isValid('2000-02-29');  // true (leap year)
+isValid('1984?');       // true (Level 1)
+isValid('[1667,1668]'); // true (Level 2)
+```
+
+## Type Guards
+
+### isEDTFDate()
+
+```typescript
+function isEDTFDate(value: unknown): value is EDTFDate
+```
+
+Check if a value is an EDTFDate.
+
+```typescript
+const result = parse('1985-04-12');
+if (result.success && isEDTFDate(result.value)) {
+  console.log(result.value.year);  // TypeScript knows this is EDTFDate
+}
+```
+
+### isEDTFDateTime()
+
+```typescript
+function isEDTFDateTime(value: unknown): value is EDTFDateTime
+```
+
+Check if a value is an EDTFDateTime.
+
+### isEDTFInterval()
+
+```typescript
+function isEDTFInterval(value: unknown): value is EDTFInterval
+```
+
+Check if a value is an EDTFInterval.
+
+### isEDTFSeason()
+
+```typescript
+function isEDTFSeason(value: unknown): value is EDTFSeason
+```
+
+Check if a value is an EDTFSeason.
+
+### isEDTFSet()
+
+```typescript
+function isEDTFSet(value: unknown): value is EDTFSet
+```
+
+Check if a value is an EDTFSet.
+
+### isEDTFList()
+
+```typescript
+function isEDTFList(value: unknown): value is EDTFList
+```
+
+Check if a value is an EDTFList.
+
+## Level-Specific Parsers
+
+### parseLevel0()
+
+```typescript
+function parseLevel0(input: string): ParseResult
+```
+
+Parse using only Level 0 features (ISO 8601 profile).
+
+### parseLevel1()
+
+```typescript
+function parseLevel1(input: string): ParseResult
+```
+
+Parse using Level 0 and Level 1 features.
+
+### parseLevel2()
+
+```typescript
+function parseLevel2(input: string): ParseResult
+```
+
+Parse using all levels (0, 1, and 2).
+
+## Types
+
+See the [Types Reference](./types/date) for detailed type information.
+
+## Constants
+
+### VERSION
+
+```typescript
+const VERSION: string
+```
+
+The current version of @edtf-ts/core.
+
+```typescript
+import { VERSION } from '@edtf-ts/core';
+console.log(VERSION);  // "0.1.0"
+```
