@@ -9,7 +9,7 @@
       <button
         v-for="example in examples"
         :key="example.edtf"
-        @click="input = example.edtf"
+        @click="selectExample(example.edtf)"
         class="example-btn"
         :class="{ active: input === example.edtf }"
       >
@@ -295,6 +295,11 @@ function getSeasonName(code: number): string {
     37: 'Semester 1', 38: 'Semester 2',
   };
   return seasons[code] || `Season ${code}`;
+}
+
+function selectExample(edtf: string) {
+  input.value = edtf;
+  onEdtfInput();
 }
 
 onMounted(() => {

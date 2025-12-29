@@ -79,7 +79,11 @@ interval ->
 # ==========================================
 
 set ->
-    datevalue __ "or" __ datevalue __ "or" __ datevalue
+    "one"i __ "of"i _ ":" _ datevalue _ "," _ datevalue _ "," _ datevalue
+      {% d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf},${d[14].edtf}]`, confidence: 0.95 }) %}
+  | "one"i __ "of"i _ ":" _ datevalue _ "," _ datevalue
+      {% d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf}]`, confidence: 0.95 }) %}
+  | datevalue __ "or" __ datevalue __ "or" __ datevalue
       {% d => ({ type: 'set', edtf: `[${d[0].edtf},${d[4].edtf},${d[8].edtf}]`, confidence: 0.9 }) %}
   | datevalue __ "or" __ datevalue
       {% d => ({ type: 'set', edtf: `[${d[0].edtf},${d[4].edtf}]`, confidence: 0.9 }) %}
@@ -91,7 +95,11 @@ set ->
 # ==========================================
 
 list ->
-    datevalue __ "and" __ datevalue __ "and" __ datevalue
+    "all"i __ "of"i _ ":" _ datevalue _ "," _ datevalue _ "," _ datevalue
+      {% d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf},${d[14].edtf}}`, confidence: 0.95 }) %}
+  | "all"i __ "of"i _ ":" _ datevalue _ "," _ datevalue
+      {% d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf}}`, confidence: 0.95 }) %}
+  | datevalue __ "and" __ datevalue __ "and" __ datevalue
       {% d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf},${d[8].edtf}}`, confidence: 0.9 }) %}
   | datevalue __ "and" __ datevalue
       {% d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf}}`, confidence: 0.9 }) %}
@@ -120,7 +128,7 @@ date ->
   | datevalue {% id %}
 
 datevalue ->
-    month_name __ day_num __ "," __ year_num
+    month_name __ day_num _ "," _ year_num
       {% d => ({ type: 'date', edtf: `${d[6]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | month_name __ day_num __ year_num
       {% d => ({ type: 'date', edtf: `${d[4]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}

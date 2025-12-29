@@ -70,6 +70,12 @@ var grammar = {
     {"name": "interval$string$10", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"t"}, {"literal":"w"}, {"literal":"e"}, {"literal":"e"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "interval$string$11", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "interval", "symbols": ["interval$string$10", "__", "datevalue", "__", "interval$string$11", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
+    {"name": "set$subexpression$1", "symbols": [/[oO]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "set$subexpression$2", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "set", "symbols": ["set$subexpression$1", "__", "set$subexpression$2", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf},${d[14].edtf}]`, confidence: 0.95 })},
+    {"name": "set$subexpression$3", "symbols": [/[oO]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "set$subexpression$4", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "set", "symbols": ["set$subexpression$3", "__", "set$subexpression$4", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf}]`, confidence: 0.95 })},
     {"name": "set$string$1", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "set$string$2", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "set", "symbols": ["datevalue", "__", "set$string$1", "__", "datevalue", "__", "set$string$2", "__", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[0].edtf},${d[4].edtf},${d[8].edtf}]`, confidence: 0.9 })},
@@ -78,6 +84,12 @@ var grammar = {
     {"name": "set$string$4", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "set$string$5", "symbols": [{"literal":"e"}, {"literal":"a"}, {"literal":"r"}, {"literal":"l"}, {"literal":"i"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "set", "symbols": ["datevalue", "__", "set$string$4", "__", "set$string$5"], "postprocess": d => ({ type: 'set', edtf: `[..${d[0].edtf}]`, confidence: 0.9 })},
+    {"name": "list$subexpression$1", "symbols": [/[aA]/, /[lL]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "list$subexpression$2", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "list", "symbols": ["list$subexpression$1", "__", "list$subexpression$2", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf},${d[14].edtf}}`, confidence: 0.95 })},
+    {"name": "list$subexpression$3", "symbols": [/[aA]/, /[lL]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "list$subexpression$4", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "list", "symbols": ["list$subexpression$3", "__", "list$subexpression$4", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf}}`, confidence: 0.95 })},
     {"name": "list$string$1", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "list$string$2", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "list", "symbols": ["datevalue", "__", "list$string$1", "__", "datevalue", "__", "list$string$2", "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf},${d[8].edtf}}`, confidence: 0.9 })},
@@ -99,7 +111,7 @@ var grammar = {
     {"name": "date", "symbols": ["qualifier", "__", "datevalue"], "postprocess": d => ({ type: 'date', edtf: `${d[2].edtf}${d[0]}`, confidence: d[2].confidence * 0.95 })},
     {"name": "date", "symbols": ["datevalue", "__", "qualifier"], "postprocess": d => ({ type: 'date', edtf: `${d[0].edtf}${d[2]}`, confidence: d[0].confidence * 0.95 })},
     {"name": "date", "symbols": ["datevalue"], "postprocess": id},
-    {"name": "datevalue", "symbols": ["month_name", "__", "day_num", "__", {"literal":","}, "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[6]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue", "symbols": ["month_name", "__", "day_num", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[6]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
     {"name": "datevalue", "symbols": ["month_name", "__", "day_num", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[4]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
     {"name": "datevalue", "symbols": ["day_num", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[4]}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
     {"name": "datevalue", "symbols": ["month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}-${months[d[0].toLowerCase()]}`, confidence: 0.95 })},
@@ -195,7 +207,6 @@ var grammar = {
 if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
    module.exports = grammar;
 } else {
-   window.grammar = grammar;
 }
 
   return grammar;

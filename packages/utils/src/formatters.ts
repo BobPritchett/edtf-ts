@@ -63,17 +63,35 @@ export function formatHuman(value: EDTFBase, options: FormatOptions = {}): strin
   }
 }
 
+/**
+ * Format a year with unspecified digits (e.g., "18XX" -> "1800s")
+ */
+function formatUnspecifiedYear(year: string): string {
+  // Match patterns like 18XX, 19XX, 1XXX, etc.
+  if (year.endsWith('XX')) {
+    const prefix = year.slice(0, -2);
+    return `${prefix}00s`;
+  } else if (year.endsWith('X')) {
+    const prefix = year.slice(0, -1);
+    return `${prefix}0s`;
+  }
+  return year;
+}
+
 function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   const { includeQualifications, dateStyle, locale } = options;
 
   let result = '';
-  const year = typeof date.year === 'string' ? date.year : date.year;
+  const year = date.year;
   const month = date.month;
   const day = date.day;
 
-  if (day && month && typeof day === 'number' && typeof month === 'number') {
-    // Full date
-    const d = new Date(Date.UTC(typeof year === 'number' ? year : 0, month - 1, day));
+  // Handle unspecified digits in year (e.g., "18XX", "19XX")
+  const yearStr = typeof year === 'string' ? formatUnspecifiedYear(year) : String(year);
+
+  if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'number') {
+    // Full date (only if year is numeric)
+    const d = new Date(Date.UTC(year, month - 1, day));
     const formatter = new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long',
@@ -81,17 +99,17 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
       timeZone: 'UTC',
     });
     result = formatter.format(d);
-  } else if (month && typeof month === 'number') {
-    // Year and month
+  } else if (month && typeof month === 'number' && typeof year === 'number') {
+    // Year and month (only if year is numeric)
     const monthNames = dateStyle === 'short'
       ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
       : dateStyle === 'medium'
       ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
       : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    result = `${monthNames[month - 1]} ${year}`;
+    result = `${monthNames[month - 1]} ${yearStr}`;
   } else {
     // Year only
-    result = String(year);
+    result = yearStr;
   }
 
   // Add qualifications

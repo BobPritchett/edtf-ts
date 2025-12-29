@@ -14,6 +14,12 @@ let content = readFileSync(grammarPath, 'utf-8');
 // The Nearley grammar is wrapped in an IIFE
 // We need to assign the result to a variable and export it
 
+// Remove window.grammar assignment (not compatible with Node.js)
+content = content.replace(
+  /\s*window\.grammar = grammar;/g,
+  ''
+);
+
 // Wrap the IIFE and capture its return value
 content = content.replace(
   /\(function\s*\(\)\s*{/,
