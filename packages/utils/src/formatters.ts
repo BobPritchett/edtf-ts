@@ -165,7 +165,22 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
     ? formatUnspecifiedYear(displayYear)
     : String(Math.abs(displayYear));
 
-  if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'number') {
+  // Check for unspecified components
+  if (day === 'XX' && month === 'XX' && typeof year === 'number') {
+    // Both month and day unspecified (e.g., "2020-XX-XX")
+    result = `sometime in ${yearStr}`;
+  } else if (day === 'XX' && month && typeof month === 'number' && typeof year === 'number') {
+    // Unspecified day (e.g., "1872-01-XX")
+    const monthNames = dateStyle === 'short'
+      ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+      : dateStyle === 'medium'
+      ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    result = `some day in ${monthNames[month - 1]} ${yearStr}`;
+  } else if (month === 'XX' && typeof year === 'number') {
+    // Unspecified month (e.g., "1999-XX")
+    result = `some month in ${yearStr}`;
+  } else if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'number') {
     // Full date (only if year is numeric)
     // For BC dates, we can't use Intl.DateTimeFormat (doesn't support negative years)
     if (isNegativeYear) {

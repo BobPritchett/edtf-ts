@@ -327,6 +327,38 @@ describe('Approximation Symbol Variants', () => {
   });
 });
 
+describe('Unspecified Date Components', () => {
+  it('should parse "some day in January 1872"', () => {
+    const results = parseNatural('some day in January 1872');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1872-01-XX');
+  });
+
+  it('should parse "a day in March 2004"', () => {
+    const results = parseNatural('a day in March 2004');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('2004-03-XX');
+  });
+
+  it('should parse "sometime in April 1985"', () => {
+    const results = parseNatural('sometime in April 1985');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1985-04-XX');
+  });
+
+  it('should parse "some month in 1999"', () => {
+    const results = parseNatural('some month in 1999');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1999-XX');
+  });
+
+  it('should parse "sometime in 2020"', () => {
+    const results = parseNatural('sometime in 2020');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('2020-XX-XX');
+  });
+});
+
 describe('EDTF Level 2 Group Qualification', () => {
   it('should parse "2004-06-11%" (year, month, and day uncertain and approximate)', () => {
     const results = parseNatural('2004-06-11%');
