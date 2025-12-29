@@ -12,6 +12,8 @@ export type {
   EDTFDateTime,
   EDTFInterval,
   EDTFSeason,
+  EDTFSet,
+  EDTFList,
   EDTFLevel,
   EDTFType,
   Precision,
@@ -25,17 +27,19 @@ export type {
 // Export parsers
 export { parseLevel0 } from './parser/level0.js';
 export { parseLevel1 } from './parser/level1.js';
+export { parseLevel2 } from './parser/level2.js';
 
 // Import for internal use
 import { parseLevel0 } from './parser/level0.js';
 import { parseLevel1 } from './parser/level1.js';
-import type { ParseResult, EDTFLevel, EDTFDate, EDTFDateTime, EDTFInterval, EDTFSeason } from './types/index.js';
+import { parseLevel2 } from './parser/level2.js';
+import type { ParseResult, EDTFLevel, EDTFDate, EDTFDateTime, EDTFInterval, EDTFSeason, EDTFSet, EDTFList } from './types/index.js';
 
 /**
- * Main parse function - supports Level 0 and Level 1
+ * Main parse function - supports Level 0, 1, and 2
  * Automatically detects the level based on input features
  * @param input - EDTF string to parse
- * @param level - Optional: force a specific EDTF level (0, 1, or auto-detect)
+ * @param level - Optional: force a specific EDTF level (0, 1, 2, or auto-detect)
  * @returns ParseResult with either success and value, or errors
  */
 export function parse(input: string, level?: EDTFLevel): ParseResult {
@@ -45,6 +49,18 @@ export function parse(input: string, level?: EDTFLevel): ParseResult {
   }
 
   // Try the specified level first
+  if (level === 2) {
+    const result = parseLevel2(input);
+    if (result.success) return result;
+
+    // Fall back to Level 1
+    const result1 = parseLevel1(input);
+    if (result1.success) return result1;
+
+    // Fall back to Level 0
+    return parseLevel0(input);
+  }
+
   if (level === 1) {
     // For Level 1, try parseLevel1 and only fall back to Level 0 for simple dates
     const result = parseLevel1(input);
@@ -67,9 +83,24 @@ export function parse(input: string, level?: EDTFLevel): ParseResult {
 /**
  * Detect the EDTF conformance level of an input string
  * @param input - EDTF string
- * @returns Detected level (0 or 1)
+ * @returns Detected level (0, 1, or 2)
  */
 function detectLevel(input: string): EDTFLevel {
+  // Level 2 indicators (check first)
+  const level2Indicators = [
+    /^\[.*\]$/,        // Set notation
+    /^\{.*\}$/,        // List notation
+    /E\d+/,            // Exponential year
+    /S\d/,             // Significant digits
+    /-[234]\d(?:[?~%]|$)/ // Extended seasons (25-41 range)
+  ];
+
+  for (const indicator of level2Indicators) {
+    if (indicator.test(input)) {
+      return 2;
+    }
+  }
+
   // Level 1 indicators
   const level1Indicators = [
     /[?~%]/,           // Uncertainty/approximation qualifiers
@@ -78,7 +109,7 @@ function detectLevel(input: string): EDTFLevel {
     /\/\.\.$/,         // Open interval end
     /^\/|\/$/,         // Unknown interval endpoint
     /Y-?\d{5,}/,       // Extended year (5+ digits)
-    /-2\d(?:[?~%]|$)/  // Season (any -2X pattern, will be validated by parser)
+    /-2[1-4](?:[?~%]|$)/  // Level 1 seasons (21-24)
   ];
 
   for (const indicator of level1Indicators) {
@@ -127,4 +158,18 @@ export function isEDTFInterval(value: unknown): value is EDTFInterval {
  */
 export function isEDTFSeason(value: unknown): value is EDTFSeason {
   return typeof value === 'object' && value !== null && 'type' in value && value.type === 'Season';
+}
+
+/**
+ * Type guard for EDTFSet
+ */
+export function isEDTFSet(value: unknown): value is EDTFSet {
+  return typeof value === 'object' && value !== null && 'type' in value && value.type === 'Set';
+}
+
+/**
+ * Type guard for EDTFList
+ */
+export function isEDTFList(value: unknown): value is EDTFList {
+  return typeof value === 'object' && value !== null && 'type' in value && value.type === 'List';
 }

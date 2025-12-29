@@ -58,7 +58,7 @@ export interface DateComponents {
   day?: number | string;    // 1-31 or "XX"
 }
 
-// Level 0 Date (extended for Level 1)
+// Level 0 Date (extended for Level 1 & 2)
 export interface EDTFDate extends EDTFBase {
   type: 'Date';
   year: number | string;  // Can include 'X' for unspecified
@@ -71,6 +71,15 @@ export interface EDTFDate extends EDTFBase {
 
   // For extended years (Y prefix)
   significantDigits?: number;
+
+  // Level 2 properties
+  exponential?: number;  // Y-17E7 means -17 * 10^7
+  significantDigitsYear?: number;  // 1950S2 means significant digits = 2 (century precision)
+
+  // Partial qualification (Level 2)
+  yearQualification?: Qualification;
+  monthQualification?: Qualification;
+  dayQualification?: Qualification;
 }
 
 // Level 0 DateTime
@@ -85,11 +94,11 @@ export interface EDTFDateTime extends EDTFBase {
   timezone?: string;
 }
 
-// Level 1 Season
+// Level 1 Season (extended for Level 2)
 export interface EDTFSeason extends EDTFBase {
   type: 'Season';
   year: number;
-  season: number;  // 21=Spring, 22=Summer, 23=Autumn, 24=Winter
+  season: number;  // 21-24=Northern seasons, 25-28=Southern, 29-32=Quarters, 33-36=Quadrimesters, 37-41=Semesters
   qualification?: Qualification;
 }
 
@@ -101,6 +110,22 @@ export interface EDTFInterval extends EDTFBase {
   openStart?: boolean;  // .. at start
   openEnd?: boolean;    // .. at end
   qualification?: Qualification;
+}
+
+// Level 2 Set (one of a set)
+export interface EDTFSet extends EDTFBase {
+  type: 'Set';
+  values: (EDTFDate | EDTFDateTime | EDTFSeason)[];
+  earlier?: boolean;  // [..1760-12] means one of the values or earlier
+  later?: boolean;    // [1760-12..] means one of the values or later
+}
+
+// Level 2 List (all members)
+export interface EDTFList extends EDTFBase {
+  type: 'List';
+  values: (EDTFDate | EDTFDateTime | EDTFSeason)[];
+  earlier?: boolean;  // {..1760-12} means all values and earlier
+  later?: boolean;    // {1760-12..} means all values and later
 }
 
 // Parse error

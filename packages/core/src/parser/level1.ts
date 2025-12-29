@@ -31,6 +31,7 @@ export function parseLevel1(input: string): ParseResult {
 
 /**
  * Parse Level 1 date with uncertainty, approximation, and unspecified digits
+ * Exported for use in Level 2 parser
  * Formats:
  * - 1984? (uncertain year)
  * - 2004-06~ (approximate month)
@@ -41,7 +42,7 @@ export function parseLevel1(input: string): ParseResult {
  * - Y170000002 (year exceeding 4 digits)
  * - Y-170000002 (negative year exceeding 4 digits)
  */
-function parseLevel1Date(input: string): ParseResult<EDTFDate> {
+export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
   // Extract qualification symbols from the end
   const qualification: Qualification = {};
   let dateStr = input;
@@ -230,7 +231,7 @@ function parseLevel1Date(input: string): ParseResult<EDTFDate> {
  * Format: YYYY-21 (Spring), YYYY-22 (Summer), YYYY-23 (Autumn), YYYY-24 (Winter)
  * Can have qualification: 2001-21? or 2001-22~
  */
-function parseSeason(input: string): ParseResult<EDTFSeason> {
+export function parseSeason(input: string): ParseResult<EDTFSeason> {
   // Extract qualification
   const qualification: Qualification = {};
   let seasonStr = input;
