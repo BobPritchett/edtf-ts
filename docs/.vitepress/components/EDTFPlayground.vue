@@ -17,110 +17,80 @@
       </button>
     </div>
 
-    <div class="playground-input">
-      <label for="edtf-input">EDTF Input:</label>
-      <input
-        id="edtf-input"
-        v-model="input"
-        type="text"
-        placeholder="Enter an EDTF string (e.g., 1985-04-12, 1984?, 199X)"
-        @input="parseInput"
-        class="edtf-input-field"
-      />
+    <div class="playground-inputs">
+      <div class="input-column">
+        <label for="edtf-input">EDTF Input</label>
+        <input
+          id="edtf-input"
+          v-model="input"
+          type="text"
+          placeholder="1985-04-12, 1984?, 199X..."
+          @input="onEdtfInput"
+          class="edtf-input-field"
+          :class="{ 'input-valid': result?.success, 'input-invalid': result && !result.success }"
+        />
+        <div class="input-status">
+          <span v-if="result?.success" class="status-valid">✓ Valid EDTF</span>
+          <span v-else-if="result && !result.success" class="status-invalid">✗ {{ result.errors[0]?.code }}</span>
+        </div>
+      </div>
+
+      <div class="input-column">
+        <label for="natural-input">Natural Language</label>
+        <input
+          id="natural-input"
+          v-model="naturalInput"
+          type="text"
+          placeholder="January 12, 1940..."
+          @input="onNaturalInput"
+          class="edtf-input-field"
+          :class="{ 'input-valid': naturalResult && naturalResult.length > 0, 'input-invalid': naturalError }"
+        />
+        <div class="input-status">
+          <span v-if="naturalResult && naturalResult.length > 0" class="status-valid">
+            ✓ {{ naturalResult[0].edtf }} ({{ Math.round(naturalResult[0].confidence * 100) }}%)
+          </span>
+          <span v-else-if="naturalError" class="status-invalid">✗ No valid parse</span>
+        </div>
+      </div>
     </div>
 
-    <div v-if="result" class="playground-result">
-      <div v-if="result.success" class="result-success">
-        <h3>✓ Valid EDTF (Level {{ result.level }})</h3>
-
-        <div class="result-section">
-          <h4>Parsed Value</h4>
-          <div class="result-grid">
-            <div class="result-item">
-              <span class="label">Type:</span>
-              <span class="value">{{ result.value.type }}</span>
-            </div>
-            <div class="result-item">
-              <span class="label">Level:</span>
-              <span class="value">{{ result.level }}</span>
-            </div>
-            <div class="result-item">
-              <span class="label">Precision:</span>
-              <span class="value">{{ result.value.precision }}</span>
-            </div>
-            <div class="result-item">
-              <span class="label">EDTF:</span>
-              <span class="value code">{{ result.value.edtf }}</span>
-            </div>
-          </div>
+    <div v-if="result?.success" class="playground-result">
+      <div class="result-compact">
+        <div class="result-row">
+          <span class="row-label">Type</span>
+          <code class="row-value">{{ result.value.type }}</code>
+          <span class="row-label">Level</span>
+          <code class="row-value">{{ result.level }}</code>
+          <span class="row-label">Precision</span>
+          <code class="row-value">{{ result.value.precision }}</code>
+          <span class="row-label">EDTF</span>
+          <code class="row-value">{{ result.value.edtf }}</code>
         </div>
 
-        <div v-if="isDate" class="result-section">
-          <h4>Date Components</h4>
-          <div class="result-grid">
-            <div v-if="result.value.year !== undefined" class="result-item">
-              <span class="label">Year:</span>
-              <span class="value">{{ result.value.year }}</span>
-            </div>
-            <div v-if="result.value.month !== undefined" class="result-item">
-              <span class="label">Month:</span>
-              <span class="value">{{ result.value.month }}</span>
-            </div>
-            <div v-if="result.value.day !== undefined" class="result-item">
-              <span class="label">Day:</span>
-              <span class="value">{{ result.value.day }}</span>
-            </div>
-          </div>
+        <div v-if="isDate && (result.value.year !== undefined || result.value.month !== undefined || result.value.day !== undefined)" class="result-row">
+          <span class="row-label">Components</span>
+          <code v-if="result.value.year !== undefined" class="row-value">Year: {{ result.value.year }}</code>
+          <code v-if="result.value.month !== undefined" class="row-value">Month: {{ result.value.month }}</code>
+          <code v-if="result.value.day !== undefined" class="row-value">Day: {{ result.value.day }}</code>
         </div>
 
-        <div v-if="hasQualification" class="result-section">
-          <h4>Qualifications</h4>
-          <div class="result-grid">
-            <div v-if="result.value.qualification?.uncertain" class="result-item">
-              <span class="label">Uncertain:</span>
-              <span class="value badge">Yes</span>
-            </div>
-            <div v-if="result.value.qualification?.approximate" class="result-item">
-              <span class="label">Approximate:</span>
-              <span class="value badge">Yes</span>
-            </div>
-            <div v-if="result.value.qualification?.uncertainApproximate" class="result-item">
-              <span class="label">Uncertain & Approximate:</span>
-              <span class="value badge">Yes</span>
-            </div>
-          </div>
-
-          <div v-if="hasPartialQualification" class="result-subsection">
-            <h5>Partial Qualifications</h5>
-            <div class="result-grid">
-              <div v-if="result.value.yearQualification" class="result-item">
-                <span class="label">Year:</span>
-                <span class="value">{{ formatQualification(result.value.yearQualification) }}</span>
-              </div>
-              <div v-if="result.value.monthQualification" class="result-item">
-                <span class="label">Month:</span>
-                <span class="value">{{ formatQualification(result.value.monthQualification) }}</span>
-              </div>
-              <div v-if="result.value.dayQualification" class="result-item">
-                <span class="label">Day:</span>
-                <span class="value">{{ formatQualification(result.value.dayQualification) }}</span>
-              </div>
-            </div>
-          </div>
+        <div v-if="hasQualification" class="result-row">
+          <span class="row-label">Qualifications</span>
+          <code v-if="result.value.qualification?.uncertain" class="row-value badge-uncertain">Uncertain</code>
+          <code v-if="result.value.qualification?.approximate" class="row-value badge-approx">Approximate</code>
+          <code v-if="result.value.qualification?.uncertainApproximate" class="row-value badge-both">Both</code>
+          <code v-if="result.value.yearQualification" class="row-value">Year: {{ formatQualification(result.value.yearQualification) }}</code>
+          <code v-if="result.value.monthQualification" class="row-value">Month: {{ formatQualification(result.value.monthQualification) }}</code>
+          <code v-if="result.value.dayQualification" class="row-value">Day: {{ formatQualification(result.value.dayQualification) }}</code>
         </div>
 
-        <div class="result-section">
-          <h4>Date Range</h4>
-          <div class="result-grid">
-            <div class="result-item">
-              <span class="label">Earliest (min):</span>
-              <span class="value">{{ formatDate(result.value.min) }}</span>
-            </div>
-            <div class="result-item">
-              <span class="label">Latest (max):</span>
-              <span class="value">{{ formatDate(result.value.max) }}</span>
-            </div>
-          </div>
+        <div class="result-row">
+          <span class="row-label">Date Range</span>
+          <span class="row-label-sub">Earliest</span>
+          <code class="row-value">{{ formatDate(result.value.min) }}</code>
+          <span class="row-label-sub">Latest</span>
+          <code class="row-value">{{ formatDate(result.value.max) }}</code>
         </div>
 
         <div v-if="isInterval" class="result-section">
@@ -165,8 +135,10 @@
           <pre class="json-output"><code>{{ JSON.stringify(result.value.toJSON(), null, 2) }}</code></pre>
         </div>
       </div>
+    </div>
 
-      <div v-else class="result-error">
+    <div v-else-if="result && !result.success" class="playground-result">
+      <div class="result-error">
         <h3>✗ Invalid EDTF</h3>
         <div v-for="(error, idx) in result.errors" :key="idx" class="error-item">
           <div class="error-code">{{ error.code }}</div>
@@ -183,9 +155,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList } from '@edtf-ts/core';
+import { formatHuman } from '@edtf-ts/utils';
 
 const input = ref('1985-04-12');
 const result = ref<any>(null);
+const naturalInput = ref('');
+const naturalResult = ref<any>(null);
+const naturalError = ref<string | null>(null);
 
 const examples = [
   { label: 'Simple Date', edtf: '1985-04-12' },
@@ -219,12 +195,82 @@ const hasPartialQualification = computed(() => {
   return val.yearQualification || val.monthQualification || val.dayQualification;
 });
 
-function parseInput() {
+const formattedEDTF = computed(() => {
+  if (!result.value?.success) return '';
+  try {
+    return formatHuman(result.value.value);
+  } catch {
+    return result.value.value.edtf;
+  }
+});
+
+let isUpdatingFromEdtf = false;
+let isUpdatingFromNatural = false;
+
+function onEdtfInput() {
+  if (isUpdatingFromNatural) return;
+
   if (!input.value.trim()) {
     result.value = null;
+    naturalInput.value = '';
     return;
   }
+
   result.value = parse(input.value);
+
+  // Update natural input with formatted version when EDTF is valid
+  if (result.value.success) {
+    isUpdatingFromEdtf = true;
+    naturalInput.value = formattedEDTF.value;
+    parseNaturalInput();
+    isUpdatingFromEdtf = false;
+  }
+}
+
+async function onNaturalInput() {
+  if (isUpdatingFromEdtf) return;
+
+  if (!naturalInput.value.trim()) {
+    naturalResult.value = null;
+    naturalError.value = null;
+    return;
+  }
+
+  try {
+    // Dynamic import for natural language parsing
+    const { parseNatural } = await import('@edtf-ts/natural');
+    naturalError.value = null;
+    naturalResult.value = parseNatural(naturalInput.value);
+
+    // Update EDTF input with best parse result
+    if (naturalResult.value && naturalResult.value.length > 0) {
+      isUpdatingFromNatural = true;
+      input.value = naturalResult.value[0].edtf;
+      result.value = parse(input.value);
+      isUpdatingFromNatural = false;
+    }
+  } catch (error: any) {
+    naturalError.value = error.message || 'Failed to parse natural language input';
+    naturalResult.value = null;
+  }
+}
+
+async function parseNaturalInput() {
+  if (!naturalInput.value.trim()) {
+    naturalResult.value = null;
+    naturalError.value = null;
+    return;
+  }
+
+  try {
+    // Dynamic import for natural language parsing
+    const { parseNatural } = await import('@edtf-ts/natural');
+    naturalError.value = null;
+    naturalResult.value = parseNatural(naturalInput.value);
+  } catch (error: any) {
+    naturalError.value = error.message || 'Failed to parse natural language input';
+    naturalResult.value = null;
+  }
 }
 
 function formatDate(date: Date): string {
@@ -252,7 +298,7 @@ function getSeasonName(code: number): string {
 }
 
 onMounted(() => {
-  parseInput();
+  onEdtfInput();
 });
 </script>
 
@@ -304,6 +350,48 @@ onMounted(() => {
   color: white;
 }
 
+.playground-inputs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.input-column label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+}
+
+.input-status {
+  margin-top: 0.5rem;
+  min-height: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.status-valid {
+  color: var(--vp-c-green);
+  font-weight: 500;
+}
+
+.status-invalid {
+  color: var(--vp-c-red);
+  font-weight: 500;
+}
+
+.input-valid {
+  border-color: var(--vp-c-green) !important;
+}
+
+.input-invalid {
+  border-color: var(--vp-c-red) !important;
+}
+
 .playground-input {
   margin-bottom: 1.5rem;
 }
@@ -329,6 +417,124 @@ onMounted(() => {
 .edtf-input-field:focus {
   outline: none;
   border-color: var(--vp-c-brand);
+}
+
+.formatted-output {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--vp-c-bg);
+  border-radius: 4px;
+  border-left: 3px solid var(--vp-c-brand);
+}
+
+.formatted-label {
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.formatted-value {
+  color: var(--vp-c-text-1);
+  font-size: 1rem;
+}
+
+.natural-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.natural-result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: var(--vp-c-bg-soft);
+  border-radius: 4px;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.natural-edtf {
+  font-family: var(--vp-font-family-mono);
+  font-weight: 600;
+  color: var(--vp-c-brand);
+  font-size: 1rem;
+}
+
+.natural-confidence {
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+}
+
+.natural-interpretation {
+  font-size: 0.875rem;
+  color: var(--vp-c-text-1);
+  font-style: italic;
+}
+
+.more-results {
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.natural-error {
+  color: var(--vp-c-red);
+  font-size: 0.875rem;
+}
+
+.result-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.result-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--vp-c-bg);
+  border-radius: 4px;
+}
+
+.row-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+}
+
+.row-label-sub {
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+  margin-left: 0.5rem;
+}
+
+.row-value {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.875rem;
+  background: var(--vp-c-bg-soft);
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  color: var(--vp-c-text-1);
+}
+
+.badge-uncertain {
+  background: var(--vp-c-yellow-soft);
+  color: var(--vp-c-yellow);
+}
+
+.badge-approx {
+  background: var(--vp-c-blue-soft);
+  color: var(--vp-c-blue);
+}
+
+.badge-both {
+  background: var(--vp-c-purple-soft);
+  color: var(--vp-c-purple);
 }
 
 .playground-result {
@@ -463,8 +669,16 @@ onMounted(() => {
     padding: 1rem;
   }
 
+  .playground-inputs {
+    flex-direction: column;
+  }
+
   .result-grid {
     grid-template-columns: 1fr;
+  }
+
+  .result-row {
+    gap: 0.5rem;
   }
 }
 </style>

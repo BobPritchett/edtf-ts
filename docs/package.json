@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@edtf-ts/core": "workspace:*",
-    "@edtf-ts/utils": "workspace:*"
+    "@edtf-ts/utils": "workspace:*",
+    "@edtf-ts/natural": "workspace:*"
   }
 }

@@ -10,7 +10,10 @@
       "Bash(pnpm exec vitest:*)",
       "Bash(pnpm install:*)",
       "Bash(cat:*)",
-      "Bash(pnpm docs:build:*)"
+      "Bash(pnpm docs:build:*)",
+      "Bash(pnpm run build:grammar:*)",
+      "Bash(timeout 5 pnpm preview:*)",
+      "Bash(pnpm preview)"
     ]
   }
 }
