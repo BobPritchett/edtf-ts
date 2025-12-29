@@ -18,7 +18,8 @@
       "Bash(npm test:*)",
       "Bash(git stash:*)",
       "Bash(git restore:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(pnpm run build:*)"
     ]
   }
 }

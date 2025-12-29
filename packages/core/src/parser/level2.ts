@@ -34,8 +34,10 @@ export function parseLevel2(input: string): ParseResult {
     return parseSignificantDigits(input);
   }
 
-  // Try to parse partial qualification (?2004-06-~11 or 2004-~06-11)
-  if (/^[?~%]/.test(input) || /-[?~%]\d{2}/.test(input)) {
+  // Try to parse partial qualification
+  // Individual: ?2004-06-~11 or 2004-~06-11 (qualifier before component)
+  // Group: 2004?-06-11 or 2004-06~-11 (qualifier after component)
+  if (/^[?~%]/.test(input) || /-[?~%]\d{2}/.test(input) || /\d{4}[?~%]/.test(input) || /\d{2}[?~%]/.test(input)) {
     return parsePartialQualification(input);
   }
 
@@ -335,13 +337,19 @@ function parseSignificantDigits(input: string): ParseResult<EDTFDate> {
 
 /**
  * Parse partial qualification
- * Format: ?2004-06-~11 means uncertain year, approximate day
- * Format: ?2004-~06 means uncertain year, approximate month
- * Format: 2004-~06-11 means only approximate month
+ * Individual component qualification (qualifier to left):
+ * - ?2004-06-~11 means uncertain year, approximate day
+ * - ?2004-~06 means uncertain year, approximate month
+ * - 2004-~06-11 means only approximate month
+ * Group qualification (qualifier to right applies to component and all to left):
+ * - 2004?-06-11 means uncertain year
+ * - 2004-06~-11 means approximate year and month
+ * - 2004-06-11% means uncertain and approximate year, month, and day
  */
 function parsePartialQualification(input: string): ParseResult<EDTFDate> {
-  // Pattern: [?~%]?YYYY[-[?~%]?MM[-[?~%]?DD]]
-  const match = input.match(/^([?~%])?(-?\d{4})(?:-([?~%])?(\d{2})(?:-([?~%])?(\d{2}))?)?$/);
+  // Pattern: [?~%]?YYYY[?~%]?[-[?~%]?MM[?~%]?[-[?~%]?DD[?~%]?]]
+  // Supports qualifiers both before (individual) and after (group) components
+  const match = input.match(/^([?~%])?(-?\d{4})([?~%])?(?:-([?~%])?(\d{2})([?~%])?(?:-([?~%])?(\d{2})([?~%])?)?)?$/);
 
   if (!match) {
     return {
@@ -349,17 +357,20 @@ function parsePartialQualification(input: string): ParseResult<EDTFDate> {
       errors: [{
         code: 'INVALID_FORMAT',
         message: `Invalid partial qualification format: ${input}`,
-        suggestion: 'Use format like ?2004-06-~11 (uncertain year, approximate day)'
+        suggestion: 'Use format like ?2004-06-~11 (uncertain year, approximate day) or 2004?-06-11 (uncertain year)'
       }]
     };
   }
 
-  const yearQual = match[1];
+  const yearQualBefore = match[1];
   const year = parseInt(match[2]!, 10);
-  const monthQual = match[3];
-  const month = match[4] ? parseInt(match[4], 10) : undefined;
-  const dayQual = match[5];
-  const day = match[6] ? parseInt(match[6], 10) : undefined;
+  const yearQualAfter = match[3];
+  const monthQualBefore = match[4];
+  const month = match[5] ? parseInt(match[5], 10) : undefined;
+  const monthQualAfter = match[6];
+  const dayQualBefore = match[7];
+  const day = match[8] ? parseInt(match[8], 10) : undefined;
+  const dayQualAfter = match[9];
 
   // Validate month
   if (month !== undefined && (month < 1 || month > 12)) {
@@ -367,7 +378,7 @@ function parsePartialQualification(input: string): ParseResult<EDTFDate> {
       success: false,
       errors: [{
         code: 'INVALID_MONTH',
-        message: `Month must be 01-12, got: ${match[4]}`
+        message: `Month must be 01-12, got: ${match[5]}`
       }]
     };
   }
@@ -380,16 +391,49 @@ function parsePartialQualification(input: string): ParseResult<EDTFDate> {
         success: false,
         errors: [{
           code: 'INVALID_DAY',
-          message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[6]}`
+          message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[8]}`
         }]
       };
     }
   }
 
-  // Create qualification objects for each component
-  const yearQualification = yearQual ? parseQualificationChar(yearQual) : undefined;
-  const monthQualification = monthQual ? parseQualificationChar(monthQual) : undefined;
-  const dayQualification = dayQual ? parseQualificationChar(dayQual) : undefined;
+  // Handle qualifications
+  // Individual qualification (qualifier before component): applies only to that component
+  // Group qualification (qualifier after component): applies to that component AND all to the left
+
+  let yearQualification: import('../types/index.js').Qualification | undefined;
+  let monthQualification: import('../types/index.js').Qualification | undefined;
+  let dayQualification: import('../types/index.js').Qualification | undefined;
+
+  // Process qualifications from right to left (group qualifications cascade left)
+  if (dayQualAfter) {
+    // Group qualification: applies to day, month, and year
+    const qual = parseQualificationChar(dayQualAfter);
+    dayQualification = qual;
+    monthQualification = qual;
+    yearQualification = qual;
+  } else if (dayQualBefore) {
+    // Individual qualification: applies only to day
+    dayQualification = parseQualificationChar(dayQualBefore);
+  }
+
+  if (monthQualAfter && !dayQualAfter) {
+    // Group qualification: applies to month and year (unless overridden by day group qual)
+    const qual = parseQualificationChar(monthQualAfter);
+    monthQualification = qual;
+    yearQualification = qual;
+  } else if (monthQualBefore && !monthQualification) {
+    // Individual qualification: applies only to month (if not already set)
+    monthQualification = parseQualificationChar(monthQualBefore);
+  }
+
+  if (yearQualAfter && !monthQualAfter && !dayQualAfter) {
+    // Group qualification: applies to year only (unless overridden by month/day group qual)
+    yearQualification = parseQualificationChar(yearQualAfter);
+  } else if (yearQualBefore && !yearQualification) {
+    // Individual qualification: applies only to year (if not already set)
+    yearQualification = parseQualificationChar(yearQualBefore);
+  }
 
   const edtfDate: EDTFDate = {
     type: 'Date',

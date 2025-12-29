@@ -266,3 +266,54 @@ describe('Approximation Symbol Variants', () => {
     expect(results[0].edtf).toBe('1950~');
   });
 });
+
+describe('EDTF Level 2 Group Qualification', () => {
+  it('should parse "2004-06-11%" (year, month, and day uncertain and approximate)', () => {
+    const results = parseNatural('2004-06-11%');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('2004-06-11%');
+    expect(results[0].type).toBe('date');
+  });
+
+  it('should parse "2004-06~-11" (year and month approximate)', () => {
+    const results = parseNatural('2004-06~-11');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('2004-06~-11');
+    expect(results[0].type).toBe('date');
+  });
+
+  it('should parse "2004?-06-11" (year uncertain)', () => {
+    const results = parseNatural('2004?-06-11');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('2004?-06-11');
+    expect(results[0].type).toBe('date');
+  });
+
+  it('should parse "?2004-06-~11" (year uncertain; month known; day approximate)', () => {
+    const results = parseNatural('?2004-06-~11');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('?2004-06-~11');
+    expect(results[0].type).toBe('date');
+  });
+
+  it('should parse "2004-%06-11" (month uncertain and approximate; year and day known)', () => {
+    const results = parseNatural('2004-%06-11');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('2004-%06-11');
+    expect(results[0].type).toBe('date');
+  });
+
+  it('should parse "2004-06?" (year and month uncertain)', () => {
+    const results = parseNatural('2004-06?');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('2004-06?');
+    expect(results[0].type).toBe('date');
+  });
+
+  it('should parse "2004~" (year approximate)', () => {
+    const results = parseNatural('2004~');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('2004~');
+    expect(results[0].type).toBe('date');
+  });
+});
