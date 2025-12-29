@@ -102,3 +102,167 @@ describe('EDTF Pass-through', () => {
     expect(results[0].type).toBe('set');
   });
 });
+
+describe('Ordinal Days', () => {
+  it('should parse "January 12th, 1940"', () => {
+    const results = parseNatural('January 12th, 1940');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('1940-01-12');
+  });
+
+  it('should parse "12th January 1940"', () => {
+    const results = parseNatural('12th January 1940');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('1940-01-12');
+  });
+
+  it('should parse "the 12th of January, 1940"', () => {
+    const results = parseNatural('the 12th of January, 1940');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('1940-01-12');
+  });
+
+  it('should parse "April 1st, 1985"', () => {
+    const results = parseNatural('April 1st, 1985');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('1985-04-01');
+  });
+
+  it('should parse "December 2nd, 2004"', () => {
+    const results = parseNatural('December 2nd, 2004');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('2004-12-02');
+  });
+
+  it('should parse "March 3rd, 1999"', () => {
+    const results = parseNatural('March 3rd, 1999');
+    expect(results).toHaveLength(1);
+    expect(results[0].edtf).toBe('1999-03-03');
+  });
+});
+
+describe('Apostrophe Variants for Decades/Centuries', () => {
+  it('should parse "the 1800\'s"', () => {
+    const results = parseNatural('the 1800\'s');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('18XX');
+  });
+
+  it('should parse "1800\'s"', () => {
+    const results = parseNatural('1800\'s');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('18XX');
+  });
+
+  it('should parse "the 1960\'s"', () => {
+    const results = parseNatural('the 1960\'s');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('196X');
+  });
+
+  it('should parse "1960\'s"', () => {
+    const results = parseNatural('1960\'s');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('196X');
+  });
+
+  it('should parse "the \'60s"', () => {
+    const results = parseNatural('the \'60s');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('196X');
+  });
+
+  it('should parse "\'60s"', () => {
+    const results = parseNatural('\'60s');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('196X');
+  });
+});
+
+describe('BC/AD/BCE/CE Era Markers', () => {
+  it('should parse "44 BC"', () => {
+    const results = parseNatural('44 BC');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('-0043');
+  });
+
+  it('should parse "44BC"', () => {
+    const results = parseNatural('44BC');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('-0043');
+  });
+
+  it('should parse "44 BCE"', () => {
+    const results = parseNatural('44 BCE');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('-0043');
+  });
+
+  it('should parse "AD 79"', () => {
+    const results = parseNatural('AD 79');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('0079');
+  });
+
+  it('should parse "AD79"', () => {
+    const results = parseNatural('AD79');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('0079');
+  });
+
+  it('should parse "CE 79"', () => {
+    const results = parseNatural('CE 79');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('0079');
+  });
+});
+
+describe('Approximation Symbol Variants', () => {
+  it('should parse "≈ 1950"', () => {
+    const results = parseNatural('≈ 1950');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+
+  it('should parse "≈1950"', () => {
+    const results = parseNatural('≈1950');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+
+  it('should parse "~ 1950"', () => {
+    const results = parseNatural('~ 1950');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+
+  it('should parse "~1950"', () => {
+    const results = parseNatural('~1950');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+
+  it('should parse "1950-ish"', () => {
+    const results = parseNatural('1950-ish');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+
+  it('should parse "1950ish"', () => {
+    const results = parseNatural('1950ish');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+
+  it('should parse "circa. 1950"', () => {
+    const results = parseNatural('circa. 1950');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+
+  it('should parse "c.1950"', () => {
+    const results = parseNatural('c.1950');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].edtf).toBe('1950~');
+  });
+});

@@ -98,13 +98,15 @@ describe('Sets (Level 2)', () => {
     it('should parse "December 1760 or later"', () => {
       const results = parseNatural('December 1760 or later');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('[1760-12..]');
+      expect(results[0].edtf).toBe('1760-12/..');
+      expect(results[0].type).toBe('interval');
     });
 
     it('should parse "December 1760 or after"', () => {
       const results = parseNatural('December 1760 or after');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('[1760-12..]');
+      expect(results[0].edtf).toBe('1760-12/..');
+      expect(results[0].type).toBe('interval');
     });
   });
 });

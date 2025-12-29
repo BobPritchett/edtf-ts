@@ -461,17 +461,90 @@ This is the comprehensive list of human-readable formats the `@edtf-ts/natural` 
 | `December 1760 or later`        | `[1760-12..]`            |
 | `December 1760 or after`        | `[1760-12..]`            |
 
-## 10. Negative Years (BCE)
+## 10. Ordinal Day Variants (Level 0)
 
-| Input           | EDTF Output |
-| --------------- | ----------- | --------------------- |
-| `-1985`         | `-1985`     |
-| `1985 BCE`      | `-1984`     | Note: BCE is off by 1 |
-| `1985 BC`       | `-1984`     | Note: BC is off by 1  |
-| `1985 B.C.`     | `-1984`     |
-| `1985 B.C.E.`   | `-1984`     |
-| `44 BCE`        | `-0043`     | Julius Caesar's death |
-| `circa 500 BCE` | `-0499~`    |
+### 10.1 Basic Ordinals
+
+| Input                       | EDTF Output  | Notes          |
+| --------------------------- | ------------ | -------------- |
+| `January 12th, 1940`        | `1940-01-12` | US format      |
+| `12th January 1940`         | `1940-01-12` | EU format      |
+| `the 12th of January, 1940` | `1940-01-12` | Spoken prose   |
+| `April 1st, 1985`           | `1985-04-01` | 1st ordinal    |
+| `December 2nd, 2004`        | `2004-12-02` | 2nd ordinal    |
+| `March 3rd, 1999`           | `1999-03-03` | 3rd ordinal    |
+| `January the 12th, 1940`    | `1940-01-12` | Spoken variant |
+| `on the 1st of May 2000`    | `2000-05-01` | With preposition |
+
+**Normalization**: Ordinal suffixes (st, nd, rd, th) are stripped before parsing.
+
+## 11. Approximation Symbol Variants (Level 1)
+
+| Input            | EDTF Output | Notes                    |
+| ---------------- | ----------- | ------------------------ |
+| `≈ 1950`         | `1950~`     | Approximation symbol     |
+| `≈1950`          | `1950~`     | No space                 |
+| `~ 1950`         | `1950~`     | Tilde with space         |
+| `~1950`          | `1950~`     | Tilde no space           |
+| `1950-ish`       | `1950~`     | Suffix with hyphen       |
+| `1950ish`        | `1950~`     | Suffix no hyphen         |
+| `circa. 1950`    | `1950~`     | Period after circa       |
+| `circa.1950`     | `1950~`     | Period, no space         |
+| `c.1950`         | `1950~`     | Abbreviated, no space    |
+| `c. 1950`        | `1950~`     | Abbreviated with space   |
+| `ca.1950`        | `1950~`     | Latin abbreviation       |
+
+**Normalization**: All approximation symbols and suffixes map to `~` qualifier.
+
+## 12. Apostrophe Variants (Level 1)
+
+### 12.1 Decades with Apostrophes
+
+| Input          | EDTF Output | Notes                  |
+| -------------- | ----------- | ---------------------- |
+| `the 1960's`   | `196X`      | Apostrophe before s    |
+| `1960's`       | `196X`      | Without "the"          |
+| `the 1800's`   | `18XX`      | Century with apostrophe|
+| `1800's`       | `18XX`      | Century informal       |
+| `'60s`         | `196X`      | Leading apostrophe     |
+| `the '60s`     | `196X`      | With "the"             |
+| `1960's era`   | `196X`      | Trailing noise ignored |
+
+**Normalization**: Both ASCII `'` and Unicode `'` apostrophes are accepted equivalently.
+
+## 13. Era Markers (BCE/BC/AD/CE)
+
+### 13.1 BC/BCE Single Years
+
+| Input          | EDTF Output | Notes                  |
+| -------------- | ----------- | ---------------------- |
+| `-1985`        | `-1985`     | Direct negative        |
+| `44 BC`        | `-0043`     | Space variant          |
+| `44BC`         | `-0043`     | No space               |
+| `44 BCE`       | `-0043`     | Modern notation        |
+| `44 B.C.`      | `-0043`     | Punctuated             |
+| `44 B.C.E.`    | `-0043`     | Punctuated modern      |
+| `44 bce`       | `-0043`     | Lowercase              |
+| `c.44 BC`      | `-0043~`    | Approximate            |
+| `circa 44 BCE` | `-0043~`    | Approximate variant    |
+| `circa 500 BCE`| `-0499~`    | Approximate century    |
+
+**Note**: BC/BCE years are off-by-one (44 BC = year -43 in astronomical year numbering).
+
+### 13.2 AD/CE Single Years
+
+| Input          | EDTF Output | Notes                  |
+| -------------- | ----------- | ---------------------- |
+| `AD 79`        | `0079`      | Prefix form            |
+| `AD79`         | `0079`      | No space               |
+| `A.D. 79`      | `0079`      | Punctuated             |
+| `79 AD`        | `0079`      | Suffix form            |
+| `CE 79`        | `0079`      | Modern notation        |
+| `79 CE`        | `0079`      | Modern suffix          |
+| `c.79 AD`      | `0079~`     | Approximate            |
+| `circa AD 800` | `0800~`     | Approximate variant    |
+
+**Normalization**: Spaces around era markers are optional.
 
 ## 11. Long Years (Level 1: Y prefix)
 

@@ -104,6 +104,18 @@ describe('Intervals', () => {
       expect(results).toHaveLength(1);
       expect(results[0].edtf).toBe('1984?/2004?');
     });
+
+    it('should parse "August 1979 (approximate) to unknown"', () => {
+      const results = parseNatural('August 1979 (approximate) to unknown');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1979-08~/');
+    });
+
+    it('should parse "June 2, 1984 (uncertain) to August 8, 2004 (approximate)"', () => {
+      const results = parseNatural('June 2, 1984 (uncertain) to August 8, 2004 (approximate)');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1984-06-02?/2004-08-08~');
+    });
   });
 
   describe('Open Intervals', () => {
