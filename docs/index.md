@@ -12,12 +12,12 @@ hero:
     - theme: brand
       text: Get Started
       link: /guide/getting-started
+    - theme: brand
+      text: Try Playground
+      link: /playground
     - theme: alt
       text: View on GitHub
       link: https://github.com/yourusername/edtf-ts
-    - theme: alt
-      text: API Reference
-      link: /api/core
 
 features:
   - icon: 📅

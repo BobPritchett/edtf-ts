@@ -21,6 +21,7 @@ export default defineConfig({
 
     nav: [
       { text: 'Guide', link: '/guide/what-is-edtf' },
+      { text: 'Playground', link: '/playground' },
       { text: 'API Reference', link: '/api/core' },
       { text: 'Examples', link: '/examples/basic-usage' },
       {

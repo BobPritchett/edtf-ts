@@ -1,0 +1,31 @@
+/* Custom styles for EDTF-TS documentation */
+
+:root {
+  --vp-c-brand: #646cff;
+  --vp-c-brand-light: #747bff;
+  --vp-c-brand-lighter: #9499ff;
+  --vp-c-brand-dark: #535bf2;
+  --vp-c-brand-darker: #454ce1;
+
+  --vp-c-green: #42b883;
+  --vp-c-green-light: #42d392;
+  --vp-c-green-lighter: #35eb9a;
+  --vp-c-green-dark: #33a06f;
+  --vp-c-green-darker: #155f3e;
+
+  --vp-c-red: #ed3c50;
+}
+
+/* Ensure code blocks in playground have proper styling */
+.vp-doc .edtf-playground pre {
+  margin: 0;
+}
+
+/* Make playground fit better on mobile */
+@media (max-width: 768px) {
+  .vp-doc .edtf-playground {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    border-radius: 0;
+  }
+}
