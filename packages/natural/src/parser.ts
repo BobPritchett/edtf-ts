@@ -95,6 +95,20 @@ export function parseNatural(
     throw new ParseError('Input must not be empty', input);
   }
 
+  // First, try to parse as EDTF directly (pass-through for valid EDTF)
+  const edtfResult = parseEDTF(trimmed);
+  if (edtfResult.success) {
+    // Valid EDTF string - return it as-is with high confidence
+    return [{
+      edtf: edtfResult.value.edtf,
+      type: edtfResult.value.type.toLowerCase() as ParseResult['type'],
+      confidence: 1.0,
+      interpretation: `Valid EDTF: ${edtfResult.value.edtf}`,
+      parsed: edtfResult.value,
+      ambiguous: false,
+    }];
+  }
+
   // Create parser with compiled grammar (imported at top of file)
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
 

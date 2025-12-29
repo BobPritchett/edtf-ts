@@ -36,6 +36,30 @@ function twoDigitYear(yy) {
 function bceToBCE(year) {
   return -(parseInt(year, 10) - 1);
 }
+
+// Build EDTF with partial qualifications
+// e.g., buildPartialQual('2004-06-11', { year: '?', day: '~' }) => '?2004-06-~11'
+function buildPartialQual(baseEdtf, quals) {
+  const parts = baseEdtf.split('-');
+  const year = parts[0] || '';
+  const month = parts[1] || '';
+  const day = parts[2] || '';
+
+  const yearQual = quals.year || '';
+  const monthQual = quals.month || '';
+  const dayQual = quals.day || '';
+
+  if (day) {
+    // Full date: YYYY-MM-DD
+    return `${yearQual}${year}-${monthQual}${month}-${dayQual}${day}`;
+  } else if (month) {
+    // Year-month: YYYY-MM
+    return `${yearQual}${year}-${monthQual}${month}`;
+  } else {
+    // Year only
+    return `${yearQual}${year}`;
+  }
+}
 var grammar = {
     Lexer: undefined,
     ParserRules: [
@@ -108,6 +132,15 @@ var grammar = {
     {"name": "season_name$subexpression$1$subexpression$5", "symbols": [/[wW]/, /[iI]/, /[nN]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "season_name$subexpression$1", "symbols": ["season_name$subexpression$1$subexpression$5"]},
     {"name": "season_name", "symbols": ["season_name$subexpression$1"], "postprocess": d => d[0][0]},
+    {"name": "date", "symbols": ["datevalue", "_", "parenthetical_qualification"], "postprocess":  d => {
+          const qual = d[2];
+          if (qual.type === 'global') {
+            return { type: 'date', edtf: `${d[0].edtf}${qual.qual}`, confidence: d[0].confidence * 0.9 };
+          } else {
+            // Partial qualifications
+            return { type: 'date', edtf: buildPartialQual(d[0].edtf, qual.quals), confidence: d[0].confidence * 0.85 };
+          }
+        } },
     {"name": "date", "symbols": ["qualifier", "__", "datevalue"], "postprocess": d => ({ type: 'date', edtf: `${d[2].edtf}${d[0]}`, confidence: d[2].confidence * 0.95 })},
     {"name": "date", "symbols": ["datevalue", "__", "qualifier"], "postprocess": d => ({ type: 'date', edtf: `${d[0].edtf}${d[2]}`, confidence: d[0].confidence * 0.95 })},
     {"name": "date", "symbols": ["datevalue"], "postprocess": id},
@@ -148,6 +181,32 @@ var grammar = {
     {"name": "qualifier", "symbols": ["qualifier$string$10"], "postprocess": () => '?'},
     {"name": "qualifier$string$11", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "qualifier", "symbols": ["qualifier$string$11"], "postprocess": () => '?'},
+    {"name": "parenthetical_qualification$string$1", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}, {"literal":"/"}, {"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$1", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '%' })},
+    {"name": "parenthetical_qualification$string$2", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "parenthetical_qualification$string$3", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "parenthetical_qualification$string$4", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$2", "__", "parenthetical_qualification$string$3", "__", "parenthetical_qualification$string$4", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '%' })},
+    {"name": "parenthetical_qualification$string$5", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$5", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '?' })},
+    {"name": "parenthetical_qualification$string$6", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$6", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '~' })},
+    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "partial_qual_list", "_", {"literal":")"}], "postprocess": d => ({ type: 'partial', quals: d[2] })},
+    {"name": "partial_qual_list", "symbols": ["partial_qual", "_", {"literal":","}, "_", "partial_qual_list"], "postprocess": d => ({ ...d[4], ...d[0] })},
+    {"name": "partial_qual_list", "symbols": ["partial_qual", "_", {"literal":","}, "_", "partial_qual"], "postprocess": d => ({ ...d[0], ...d[4] })},
+    {"name": "partial_qual_list", "symbols": ["partial_qual"], "postprocess": d => d[0]},
+    {"name": "partial_qual$subexpression$1", "symbols": [/[yY]/, /[eE]/, /[aA]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "partial_qual", "symbols": ["partial_qual$subexpression$1", "__", "qual_type"], "postprocess": d => ({ year: d[2] })},
+    {"name": "partial_qual$subexpression$2", "symbols": [/[mM]/, /[oO]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "partial_qual", "symbols": ["partial_qual$subexpression$2", "__", "qual_type"], "postprocess": d => ({ month: d[2] })},
+    {"name": "partial_qual$subexpression$3", "symbols": [/[dD]/, /[aA]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "partial_qual", "symbols": ["partial_qual$subexpression$3", "__", "qual_type"], "postprocess": d => ({ day: d[2] })},
+    {"name": "qual_type$subexpression$1", "symbols": [/[uU]/, /[nN]/, /[cC]/, /[eE]/, /[rR]/, /[tT]/, /[aA]/, /[iI]/, /[nN]/, {"literal":"/"}, /[aA]/, /[pP]/, /[pP]/, /[rR]/, /[oO]/, /[xX]/, /[iI]/, /[mM]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qual_type", "symbols": ["qual_type$subexpression$1"], "postprocess": () => '%'},
+    {"name": "qual_type$subexpression$2", "symbols": [/[uU]/, /[nN]/, /[cC]/, /[eE]/, /[rR]/, /[tT]/, /[aA]/, /[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qual_type", "symbols": ["qual_type$subexpression$2"], "postprocess": () => '?'},
+    {"name": "qual_type$subexpression$3", "symbols": [/[aA]/, /[pP]/, /[pP]/, /[rR]/, /[oO]/, /[xX]/, /[iI]/, /[mM]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qual_type", "symbols": ["qual_type$subexpression$3"], "postprocess": () => '~'},
     {"name": "month_name$subexpression$1$subexpression$1", "symbols": [/[jJ]/, /[aA]/, /[nN]/, /[uU]/, /[aA]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$1"]},
     {"name": "month_name$subexpression$1$subexpression$2", "symbols": [/[jJ]/, /[aA]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},

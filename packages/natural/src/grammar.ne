@@ -35,6 +35,30 @@ function twoDigitYear(yy) {
 function bceToBCE(year) {
   return -(parseInt(year, 10) - 1);
 }
+
+// Build EDTF with partial qualifications
+// e.g., buildPartialQual('2004-06-11', { year: '?', day: '~' }) => '?2004-06-~11'
+function buildPartialQual(baseEdtf, quals) {
+  const parts = baseEdtf.split('-');
+  const year = parts[0] || '';
+  const month = parts[1] || '';
+  const day = parts[2] || '';
+
+  const yearQual = quals.year || '';
+  const monthQual = quals.month || '';
+  const dayQual = quals.day || '';
+
+  if (day) {
+    // Full date: YYYY-MM-DD
+    return `${yearQual}${year}-${monthQual}${month}-${dayQual}${day}`;
+  } else if (month) {
+    // Year-month: YYYY-MM
+    return `${yearQual}${year}-${monthQual}${month}`;
+  } else {
+    // Year only
+    return `${yearQual}${year}`;
+  }
+}
 %}
 
 # Main entry point
@@ -121,7 +145,17 @@ season_name -> ("spring"i | "summer"i | "autumn"i | "fall"i | "winter"i) {% d =>
 # ==========================================
 
 date ->
-    qualifier __ datevalue
+    datevalue _ parenthetical_qualification
+      {% d => {
+        const qual = d[2];
+        if (qual.type === 'global') {
+          return { type: 'date', edtf: `${d[0].edtf}${qual.qual}`, confidence: d[0].confidence * 0.9 };
+        } else {
+          // Partial qualifications
+          return { type: 'date', edtf: buildPartialQual(d[0].edtf, qual.quals), confidence: d[0].confidence * 0.85 };
+        }
+      } %}
+  | qualifier __ datevalue
       {% d => ({ type: 'date', edtf: `${d[2].edtf}${d[0]}`, confidence: d[2].confidence * 0.95 }) %}
   | datevalue __ qualifier
       {% d => ({ type: 'date', edtf: `${d[0].edtf}${d[2]}`, confidence: d[0].confidence * 0.95 }) %}
@@ -164,6 +198,41 @@ qualifier ->
   | "perhaps" {% () => '?' %}
   | "probably" {% () => '?' %}
   | "uncertain" {% () => '?' %}
+
+# Parenthetical qualifications like "(uncertain)" or "(year uncertain, day approximate)"
+parenthetical_qualification ->
+    "(" _ "uncertain/approximate" _ ")"
+      {% () => ({ type: 'global', qual: '%' }) %}
+  | "(" _ "uncertain" __ "and" __ "approximate" _ ")"
+      {% () => ({ type: 'global', qual: '%' }) %}
+  | "(" _ "uncertain" _ ")"
+      {% () => ({ type: 'global', qual: '?' }) %}
+  | "(" _ "approximate" _ ")"
+      {% () => ({ type: 'global', qual: '~' }) %}
+  | "(" _ partial_qual_list _ ")"
+      {% d => ({ type: 'partial', quals: d[2] }) %}
+
+# Partial qualifications - returns an object with year/month/day qualifications
+partial_qual_list ->
+    partial_qual _ "," _ partial_qual_list
+      {% d => ({ ...d[4], ...d[0] }) %}
+  | partial_qual _ "," _ partial_qual
+      {% d => ({ ...d[0], ...d[4] }) %}
+  | partial_qual
+      {% d => d[0] %}
+
+partial_qual ->
+    "year"i __ qual_type
+      {% d => ({ year: d[2] }) %}
+  | "month"i __ qual_type
+      {% d => ({ month: d[2] }) %}
+  | "day"i __ qual_type
+      {% d => ({ day: d[2] }) %}
+
+qual_type ->
+    "uncertain/approximate"i {% () => '%' %}
+  | "uncertain"i {% () => '?' %}
+  | "approximate"i {% () => '~' %}
 
 # ==========================================
 # PRIMITIVES
