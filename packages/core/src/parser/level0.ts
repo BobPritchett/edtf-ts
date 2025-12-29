@@ -85,6 +85,21 @@ function parseDate(input: string): ParseResult<EDTFDate> {
     get max() {
       return calculateMaxDate(this);
     },
+    isBefore(other: EDTFDate | Date) {
+      const otherDate = other instanceof Date ? other : other.max;
+      return this.max < otherDate;
+    },
+    isAfter(other: EDTFDate | Date) {
+      const otherDate = other instanceof Date ? other : other.min;
+      return this.min > otherDate;
+    },
+    equals(other: EDTFDate) {
+      return this.edtf === other.edtf;
+    },
+    covers(other: EDTFDate) {
+      // This date covers another if the other's range is within this date's range
+      return this.min <= other.min && this.max >= other.max;
+    },
     toJSON() {
       const result: { type: string; year: number; month?: number; day?: number } = {
         type: this.type,
@@ -302,6 +317,49 @@ function parseInterval(input: string): ParseResult<EDTFInterval> {
     },
     get max() {
       return this.end!.max;
+    },
+    contains(date: EDTFDate | EDTFDateTime | Date) {
+      const testDate = date instanceof Date ? date : date.min;
+      return testDate >= this.min && testDate <= this.max;
+    },
+    overlaps(other: EDTFInterval) {
+      // Two intervals overlap if one's start is before the other's end
+      return this.min <= other.max && other.min <= this.max;
+    },
+    *by(unit: 'year' | 'month' | 'day') {
+      if (!this.start || !this.end) {
+        return; // Cannot iterate with unknown/open endpoints
+      }
+
+      const startDate = this.start.min;
+      const endDate = this.end.max;
+
+      const current = new Date(startDate);
+
+      while (current <= endDate) {
+        // Create an EDTF date for the current position
+        const year = current.getUTCFullYear();
+        const month = current.getUTCMonth() + 1;
+        const day = current.getUTCDate();
+
+        const edtfStr = unit === 'year' ? `${year}` :
+                       unit === 'month' ? `${year}-${String(month).padStart(2, '0')}` :
+                       `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        const dateResult = parseDate(edtfStr);
+        if (dateResult.success) {
+          yield dateResult.value as EDTFDate;
+        }
+
+        // Increment based on unit
+        if (unit === 'year') {
+          current.setUTCFullYear(current.getUTCFullYear() + 1);
+        } else if (unit === 'month') {
+          current.setUTCMonth(current.getUTCMonth() + 1);
+        } else {
+          current.setUTCDate(current.getUTCDate() + 1);
+        }
+      }
     },
     toJSON() {
       return {

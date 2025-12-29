@@ -6,7 +6,8 @@
       "Bash(npx tsx examples/basic-usage.ts)",
       "Bash(node:*)",
       "Bash(pnpm exec tsx:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(pnpm exec vitest:*)"
     ]
   }
 }

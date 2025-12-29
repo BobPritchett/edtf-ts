@@ -34,8 +34,8 @@ export function parseLevel2(input: string): ParseResult {
     return parseSignificantDigits(input);
   }
 
-  // Try to parse partial qualification (?2004-06-~11)
-  if (/^[?~%]/.test(input)) {
+  // Try to parse partial qualification (?2004-06-~11 or 2004-~06-11)
+  if (/^[?~%]/.test(input) || /-[?~%]\d{2}/.test(input)) {
     return parsePartialQualification(input);
   }
 
@@ -336,13 +336,130 @@ function parseSignificantDigits(input: string): ParseResult<EDTFDate> {
 /**
  * Parse partial qualification
  * Format: ?2004-06-~11 means uncertain year, approximate day
+ * Format: ?2004-~06 means uncertain year, approximate month
+ * Format: 2004-~06-11 means only approximate month
  */
-function parsePartialQualification(_input: string): ParseResult<EDTFDate> {
-  // This is a complex feature - simplified implementation
-  return {
-    success: false,
-    errors: [{ code: 'NOT_IMPLEMENTED', message: 'Partial qualification not yet implemented' }]
+function parsePartialQualification(input: string): ParseResult<EDTFDate> {
+  // Pattern: [?~%]?YYYY[-[?~%]?MM[-[?~%]?DD]]
+  const match = input.match(/^([?~%])?(-?\d{4})(?:-([?~%])?(\d{2})(?:-([?~%])?(\d{2}))?)?$/);
+
+  if (!match) {
+    return {
+      success: false,
+      errors: [{
+        code: 'INVALID_FORMAT',
+        message: `Invalid partial qualification format: ${input}`,
+        suggestion: 'Use format like ?2004-06-~11 (uncertain year, approximate day)'
+      }]
+    };
+  }
+
+  const yearQual = match[1];
+  const year = parseInt(match[2]!, 10);
+  const monthQual = match[3];
+  const month = match[4] ? parseInt(match[4], 10) : undefined;
+  const dayQual = match[5];
+  const day = match[6] ? parseInt(match[6], 10) : undefined;
+
+  // Validate month
+  if (month !== undefined && (month < 1 || month > 12)) {
+    return {
+      success: false,
+      errors: [{
+        code: 'INVALID_MONTH',
+        message: `Month must be 01-12, got: ${match[4]}`
+      }]
+    };
+  }
+
+  // Validate day
+  if (day !== undefined && month !== undefined) {
+    const maxDay = daysInMonth(year, month);
+    if (day < 1 || day > maxDay) {
+      return {
+        success: false,
+        errors: [{
+          code: 'INVALID_DAY',
+          message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[6]}`
+        }]
+      };
+    }
+  }
+
+  // Create qualification objects for each component
+  const yearQualification = yearQual ? parseQualificationChar(yearQual) : undefined;
+  const monthQualification = monthQual ? parseQualificationChar(monthQual) : undefined;
+  const dayQualification = dayQual ? parseQualificationChar(dayQual) : undefined;
+
+  const edtfDate: EDTFDate = {
+    type: 'Date',
+    level: 2,
+    edtf: input,
+    precision: day ? 'day' : month ? 'month' : 'year',
+    year,
+    ...(month !== undefined && { month }),
+    ...(day !== undefined && { day }),
+    ...(yearQualification && { yearQualification }),
+    ...(monthQualification && { monthQualification }),
+    ...(dayQualification && { dayQualification }),
+    get min() {
+      const y = typeof this.year === 'number' ? this.year : parseInt(String(this.year), 10);
+      const m = typeof this.month === 'number' ? this.month : 1;
+      const d = typeof this.day === 'number' ? this.day : 1;
+      return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+    },
+    get max() {
+      const y = typeof this.year === 'number' ? this.year : parseInt(String(this.year), 10);
+      const m = typeof this.month === 'number' ? this.month : 12;
+      const d = typeof this.day === 'number' ? this.day : daysInMonth(y, m);
+      return new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999));
+    },
+    toJSON() {
+      const result: any = { type: this.type, year: this.year };
+      if (this.month !== undefined) result.month = this.month;
+      if (this.day !== undefined) result.day = this.day;
+      if (this.yearQualification) result.yearQualification = this.yearQualification;
+      if (this.monthQualification) result.monthQualification = this.monthQualification;
+      if (this.dayQualification) result.dayQualification = this.dayQualification;
+      return result;
+    },
+    toString() {
+      return this.edtf;
+    }
   };
+
+  return { success: true, value: edtfDate, level: 2 };
+}
+
+/**
+ * Parse a qualification character into a Qualification object
+ */
+function parseQualificationChar(char: string): import('../types/index.js').Qualification {
+  switch (char) {
+    case '?':
+      return { uncertain: true };
+    case '~':
+      return { approximate: true };
+    case '%':
+      return { uncertainApproximate: true };
+    default:
+      return {};
+  }
+}
+
+/**
+ * Helper: Days in month (accounting for leap years)
+ */
+function daysInMonth(year: number, month: number): number {
+  const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return days[month - 1] || 0;
+}
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
 /**

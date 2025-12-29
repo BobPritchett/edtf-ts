@@ -183,3 +183,100 @@ describe('Level 2 - Backward Compatibility', () => {
     expect(isValid('201X', 2)).toBe(true);
   });
 });
+
+describe('Level 2 - Partial Qualification', () => {
+  it('should parse date with uncertain year and approximate day', () => {
+    const result = parse('?2004-06-~11');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(2004);
+      expect(result.value.month).toBe(6);
+      expect(result.value.day).toBe(11);
+      expect(result.value.yearQualification?.uncertain).toBe(true);
+      expect(result.value.dayQualification?.approximate).toBe(true);
+      expect(result.level).toBe(2);
+    }
+  });
+
+  it('should parse date with uncertain year and approximate month', () => {
+    const result = parse('?2004-~06');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(2004);
+      expect(result.value.month).toBe(6);
+      expect(result.value.yearQualification?.uncertain).toBe(true);
+      expect(result.value.monthQualification?.approximate).toBe(true);
+    }
+  });
+
+  it('should parse date with only approximate month', () => {
+    const result = parse('2004-~06-11');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(2004);
+      expect(result.value.month).toBe(6);
+      expect(result.value.day).toBe(11);
+      expect(result.value.yearQualification).toBeUndefined();
+      expect(result.value.monthQualification?.approximate).toBe(true);
+      expect(result.value.dayQualification).toBeUndefined();
+    }
+  });
+
+  it('should parse date with uncertain year only', () => {
+    const result = parse('?2004-06');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.yearQualification?.uncertain).toBe(true);
+      expect(result.value.monthQualification).toBeUndefined();
+    }
+  });
+
+  it('should parse with uncertain-approximate qualifier', () => {
+    const result = parse('%2004-06-11');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.yearQualification?.uncertainApproximate).toBe(true);
+    }
+  });
+
+  it('should validate partial qualification dates', () => {
+    expect(isValid('?2004-06-~11')).toBe(true);
+    expect(isValid('?2004-~06')).toBe(true);
+    expect(isValid('2004-~06-11')).toBe(true);
+    expect(isValid('%2004-06-11')).toBe(true);
+  });
+
+  it('should accept Level 1 qualification at end', () => {
+    // Note: '2004-06-11~' is valid Level 1 (whole date approximate), not partial qualification
+    expect(isValid('2004-06-11~')).toBe(true);
+    const result = parse('2004-06-11~');
+    if (result.success && isEDTFDate(result.value)) {
+      // This should be Level 1, not Level 2 partial qualification
+      expect(result.level).toBe(1);
+      expect(result.value.qualification?.approximate).toBe(true);
+    }
+  });
+
+  it('should calculate min/max correctly for partial qualification', () => {
+    const result = parse('?2004-06-~11');
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.min).toBeInstanceOf(Date);
+      expect(result.value.max).toBeInstanceOf(Date);
+      expect(result.value.min.getUTCFullYear()).toBe(2004);
+      expect(result.value.min.getUTCMonth()).toBe(5); // June is month 5 (0-indexed)
+      expect(result.value.min.getUTCDate()).toBe(11);
+    }
+  });
+
+  it('should serialize partial qualification to JSON', () => {
+    const result = parse('?2004-06-~11');
+    if (result.success && isEDTFDate(result.value)) {
+      const json = result.value.toJSON();
+      expect(json).toHaveProperty('year', 2004);
+      expect(json).toHaveProperty('month', 6);
+      expect(json).toHaveProperty('day', 11);
+      expect(json).toHaveProperty('yearQualification');
+      expect(json).toHaveProperty('dayQualification');
+    }
+  });
+});

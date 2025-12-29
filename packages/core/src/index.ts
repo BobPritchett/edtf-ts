@@ -36,11 +36,31 @@ import { parseLevel2 } from './parser/level2.js';
 import type { ParseResult, EDTFLevel, EDTFDate, EDTFDateTime, EDTFInterval, EDTFSeason, EDTFSet, EDTFList } from './types/index.js';
 
 /**
- * Main parse function - supports Level 0, 1, and 2
- * Automatically detects the level based on input features
+ * Parse an EDTF (Extended Date/Time Format) string.
+ *
+ * Supports all three EDTF conformance levels:
+ * - Level 0: ISO 8601 profile (dates, datetimes, intervals)
+ * - Level 1: Uncertainty, approximation, unspecified digits, extended years, seasons
+ * - Level 2: Sets, lists, exponential years, significant digits
+ *
  * @param input - EDTF string to parse
- * @param level - Optional: force a specific EDTF level (0, 1, 2, or auto-detect)
- * @returns ParseResult with either success and value, or errors
+ * @param level - Optional EDTF conformance level (0, 1, or 2). If omitted, auto-detects the level.
+ * @returns ParseResult object with either `{ success: true, value, level }` or `{ success: false, errors }`
+ *
+ * @example
+ * ```typescript
+ * // Parse a simple date
+ * const result = parse('1985-04-12');
+ * if (result.success) {
+ *   console.log(result.value.year); // 1985
+ * }
+ *
+ * // Parse an uncertain date (Level 1)
+ * const uncertain = parse('1984?');
+ *
+ * // Parse a set (Level 2)
+ * const set = parse('[1667,1668,1670]');
+ * ```
  */
 export function parse(input: string, level?: EDTFLevel): ParseResult {
   // Auto-detect level if not specified
@@ -92,7 +112,9 @@ function detectLevel(input: string): EDTFLevel {
     /^\{.*\}$/,        // List notation
     /E\d+/,            // Exponential year
     /S\d/,             // Significant digits
-    /-[234]\d(?:[?~%]|$)/ // Extended seasons (25-41 range)
+    /-[234]\d(?:[?~%]|$)/, // Extended seasons (25-41 range)
+    /^[?~%].*-/,       // Partial qualification (qualifier at start with date parts)
+    /-[?~%]\d{2}/      // Partial qualification (qualifier before month or day)
   ];
 
   for (const indicator of level2Indicators) {
@@ -122,10 +144,19 @@ function detectLevel(input: string): EDTFLevel {
 }
 
 /**
- * Validate an EDTF string
+ * Validate an EDTF string.
+ *
  * @param input - EDTF string to validate
- * @param level - EDTF conformance level (0, 1, or auto-detect)
- * @returns true if valid, false otherwise
+ * @param level - Optional EDTF conformance level (0, 1, or 2). If omitted, auto-detects the level.
+ * @returns `true` if the input is a valid EDTF string, `false` otherwise
+ *
+ * @example
+ * ```typescript
+ * isValid('1985-04-12');  // true
+ * isValid('1985-13-01');  // false (invalid month)
+ * isValid('1984?');       // true (Level 1 - uncertain)
+ * isValid('[1667,1668]'); // true (Level 2 - set)
+ * ```
  */
 export function isValid(input: string, level?: EDTFLevel): boolean {
   const result = parse(input, level);
@@ -133,42 +164,69 @@ export function isValid(input: string, level?: EDTFLevel): boolean {
 }
 
 /**
- * Type guard for EDTFDate
+ * Type guard to check if a value is an EDTFDate.
+ *
+ * @param value - Value to check
+ * @returns `true` if the value is an EDTFDate, `false` otherwise
+ *
+ * @example
+ * ```typescript
+ * const result = parse('1985-04-12');
+ * if (result.success && isEDTFDate(result.value)) {
+ *   // TypeScript now knows result.value is EDTFDate
+ *   console.log(result.value.year);
+ * }
+ * ```
  */
 export function isEDTFDate(value: unknown): value is EDTFDate {
   return typeof value === 'object' && value !== null && 'type' in value && value.type === 'Date';
 }
 
 /**
- * Type guard for EDTFDateTime
+ * Type guard to check if a value is an EDTFDateTime.
+ *
+ * @param value - Value to check
+ * @returns `true` if the value is an EDTFDateTime, `false` otherwise
  */
 export function isEDTFDateTime(value: unknown): value is EDTFDateTime {
   return typeof value === 'object' && value !== null && 'type' in value && value.type === 'DateTime';
 }
 
 /**
- * Type guard for EDTFInterval
+ * Type guard to check if a value is an EDTFInterval.
+ *
+ * @param value - Value to check
+ * @returns `true` if the value is an EDTFInterval, `false` otherwise
  */
 export function isEDTFInterval(value: unknown): value is EDTFInterval {
   return typeof value === 'object' && value !== null && 'type' in value && value.type === 'Interval';
 }
 
 /**
- * Type guard for EDTFSeason
+ * Type guard to check if a value is an EDTFSeason.
+ *
+ * @param value - Value to check
+ * @returns `true` if the value is an EDTFSeason, `false` otherwise
  */
 export function isEDTFSeason(value: unknown): value is EDTFSeason {
   return typeof value === 'object' && value !== null && 'type' in value && value.type === 'Season';
 }
 
 /**
- * Type guard for EDTFSet
+ * Type guard to check if a value is an EDTFSet.
+ *
+ * @param value - Value to check
+ * @returns `true` if the value is an EDTFSet, `false` otherwise
  */
 export function isEDTFSet(value: unknown): value is EDTFSet {
   return typeof value === 'object' && value !== null && 'type' in value && value.type === 'Set';
 }
 
 /**
- * Type guard for EDTFList
+ * Type guard to check if a value is an EDTFList.
+ *
+ * @param value - Value to check
+ * @returns `true` if the value is an EDTFList, `false` otherwise
  */
 export function isEDTFList(value: unknown): value is EDTFList {
   return typeof value === 'object' && value !== null && 'type' in value && value.type === 'List';
