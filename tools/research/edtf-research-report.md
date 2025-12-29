@@ -1151,18 +1151,42 @@ const EDTFDisplay: React.FC<EDTFDisplayProps>;
 
 #### **Phase 2: Extended Features (Months 3-4)** ✅ **COMPLETED**
 - [x] Level 1 parser implementation (uncertainty, approximation, unspecified, extended years, seasons, extended intervals)
-- [x] Level 2 parser implementation (sets, lists, exponential years, significant digits, extended seasons)
+- [x] Level 2 parser implementation (sets, lists, exponential years, significant digits, extended seasons, **partial qualification**)
 - [x] Uncertainty/approximate/unspecified tracking (Qualification interface, UnspecifiedDigits interface)
 - [x] Season, Set, List implementations (EDTFSeason, EDTFSet, EDTFList with 21-41 season support)
 - [x] Min/max range calculation (for dates, seasons, sets, lists with X handling)
-- [ ] Iteration support (not yet implemented)
+- [x] Iteration support (EDTFInterval.by() generator for year/month/day iteration)
+- [x] Comparison methods (isBefore, isAfter, equals, covers for EDTFDate)
+- [x] Interval operations (contains, overlaps for EDTFInterval)
+- [x] Comprehensive JSDoc documentation
 
-**Deliverable:** `@edtf/core@0.5.0` with full spec support ✅ (117 tests passing - 45 L0 + 48 L1 + 24 L2)
+**Deliverable:** `@edtf-ts/core@0.1.0` with full spec support ✅ (126 tests passing - 45 L0 + 48 L1 + 33 L2)
 
 **Notes:**
-- Used hand-written parser instead of PEG for smaller bundle size and better control
-- Partial qualification (Level 2) marked as NOT_IMPLEMENTED stub
+- Used hand-written parser instead of PEG for smaller bundle size (34.92 KB ESM) and better control
+- **Partial qualification (Level 2) fully implemented** - supports patterns like `?2004-06-~11`
 - All tests passing with full build success
+- Zero dependencies, tree-shakeable, dual ESM/CJS builds
+- Complete README with examples and API documentation
+
+#### **Phase 2.5: Utility Package** ✅ **COMPLETED**
+- [x] Date range validators (isInRange, isCompletelyInRange, isValidDate, isValidInterval)
+- [x] Leap year and calendar utilities (isLeapYear, getDaysInMonth)
+- [x] Qualification detection (isUncertain, isApproximate, hasUnspecified)
+- [x] Human-readable formatters (formatHuman with locale support, formatISO, formatRange)
+- [x] Advanced comparison operations (compare, sort, earliest, latest)
+- [x] Grouping utilities (groupByYear, groupByMonth)
+- [x] Duration calculations (duration, durationInDays, durationInYears)
+- [x] Overlap detection (findOverlaps, unique)
+- [x] Comprehensive test suite (68 tests passing)
+
+**Deliverable:** `@edtf-ts/utils@0.1.0` ✅ (Bundle: 12.69 KB ESM / 13.21 KB CJS)
+
+**Notes:**
+- Zero additional dependencies (only depends on @edtf-ts/core)
+- Full TypeScript support with complete type safety
+- Intl API integration for locale-aware formatting
+- Comprehensive README with examples
 
 #### **Phase 3: Natural Language (Month 5)**
 - [ ] Natural language parser framework
@@ -1171,30 +1195,29 @@ const EDTFDisplay: React.FC<EDTFDisplayProps>;
 - [ ] Multi-interpretation support
 - [ ] Integration tests
 
-**Deliverable:** `@edtf/natural@0.1.0`
+**Deliverable:** `@edtf-ts/natural@0.1.0`
 
-#### **Phase 4: Formatting & Display (Month 6)**
-- [ ] Human-readable formatter
-- [ ] Template engine
-- [ ] i18n framework
-- [ ] Multiple locales (en, es, fr, de initially)
-- [ ] Accessibility features
+#### **Phase 4: Integration Packages (Month 6)**
+- [ ] React hooks and components (useEDTF, EDTFInput, EDTFDisplay)
+- [ ] Zod schema validators (z.edtf())
+- [ ] Additional framework integrations
 
-**Deliverable:** `@edtf/format@0.1.0`
+**Deliverables:**
+- `@edtf-ts/react@0.1.0`
+- `@edtf-ts/zod@0.1.0`
 
 #### **Phase 5: Advanced Features (Months 7-8)**
 - [ ] Temporal API integration
-- [ ] Advanced comparison operations
-- [ ] Sorting and range algorithms
-- [ ] Testing utilities
-- [ ] React components and hooks
+- [ ] Database adapters (Prisma, TypeORM, Drizzle)
+- [ ] Conversion utilities (to/from other date formats)
+- [ ] Testing utilities and fixtures
 - [ ] Documentation site
 
 **Deliverables:**
-- `@edtf/temporal@0.1.0`
-- `@edtf/compare@0.1.0`
-- `@edtf/testing@0.1.0`
-- `@edtf/react@0.1.0`
+- `@edtf-ts/temporal@0.1.0`
+- `@edtf-ts/database@0.1.0`
+- `@edtf-ts/conversion@0.1.0`
+- Documentation site
 
 #### **Phase 6: Polish & Performance (Months 9-10)**
 - [ ] Bundle size optimization
