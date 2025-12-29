@@ -232,6 +232,30 @@ datevalue_base ->
       {% d => ({ type: 'date', edtf: `${d[6]}-XX`, confidence: 0.9 }) %}
   | "a"i __ "month"i __ "in"i __ year_num
       {% d => ({ type: 'date', edtf: `${d[6]}-XX`, confidence: 0.9 }) %}
+  | numeric_year __ "Before"i __ "Common"i __ "Era"i
+      {% d => {
+        const year = parseInt(d[0], 10);
+        const bceYear = year - 1;
+        return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
+      } %}
+  | numeric_year __ "Before"i __ "Christ"i
+      {% d => {
+        const year = parseInt(d[0], 10);
+        const bceYear = year - 1;
+        return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
+      } %}
+  | "Anno"i __ "Domini"i __ numeric_year
+      {% d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 }) %}
+  | "Common"i __ "Era"i __ numeric_year
+      {% d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 }) %}
+  | numeric_year __ "B"i
+      {% d => {
+        const year = parseInt(d[0], 10);
+        const bceYear = year - 1;
+        return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.9 };
+      } %}
+  | "A"i __ numeric_year
+      {% d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.9 }) %}
   | numeric_year _ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
       {% d => {
         const year = parseInt(d[0], 10);

@@ -229,43 +229,72 @@ var grammar = {
     {"name": "datevalue_base$subexpression$15", "symbols": [/[mM]/, /[oO]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "datevalue_base$subexpression$16", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$14", "__", "datevalue_base$subexpression$15", "__", "datevalue_base$subexpression$16", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[6]}-XX`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$17$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17", "symbols": ["datevalue_base$subexpression$17$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$17$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$17$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$17$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17", "symbols": ["datevalue_base$subexpression$17$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$17$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$17$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17", "symbols": ["datevalue_base$subexpression$17$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$17$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17", "symbols": ["datevalue_base$subexpression$17$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "_", "datevalue_base$subexpression$17"], "postprocess":  d => {
+    {"name": "datevalue_base$subexpression$17", "symbols": [/[bB]/, /[eE]/, /[fF]/, /[oO]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$18", "symbols": [/[cC]/, /[oO]/, /[mM]/, /[mM]/, /[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$19", "symbols": [/[eE]/, /[rR]/, /[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$17", "__", "datevalue_base$subexpression$18", "__", "datevalue_base$subexpression$19"], "postprocess":  d => {
           const year = parseInt(d[0], 10);
           const bceYear = year - 1;
           return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
         } },
-    {"name": "datevalue_base$subexpression$18$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$18$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$18", "symbols": ["datevalue_base$subexpression$18$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$18$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$18$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$18$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$18", "symbols": ["datevalue_base$subexpression$18$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$18$subexpression$4", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$18$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$18", "symbols": ["datevalue_base$subexpression$18$subexpression$5"]},
-    {"name": "datevalue_base$subexpression$18$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$18", "symbols": ["datevalue_base$subexpression$18$subexpression$6"]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$18", "_", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$19", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$20", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$19", "__", "ordinal_day", "__", "datevalue_base$subexpression$20", "__", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[10]}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$21", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$22", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$21", "__", "ordinal_day", "__", "datevalue_base$subexpression$22", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[8]}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$23", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "datevalue_base$subexpression$23", "__", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[8]}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$24", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "datevalue_base$subexpression$24", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[6]}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$20", "symbols": [/[bB]/, /[eE]/, /[fF]/, /[oO]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$21", "symbols": [/[cC]/, /[hH]/, /[rR]/, /[iI]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$20", "__", "datevalue_base$subexpression$21"], "postprocess":  d => {
+          const year = parseInt(d[0], 10);
+          const bceYear = year - 1;
+          return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
+        } },
+    {"name": "datevalue_base$subexpression$22", "symbols": [/[aA]/, /[nN]/, /[nN]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$23", "symbols": [/[dD]/, /[oO]/, /[mM]/, /[iI]/, /[nN]/, /[iI]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$22", "__", "datevalue_base$subexpression$23", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$24", "symbols": [/[cC]/, /[oO]/, /[mM]/, /[mM]/, /[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$25", "symbols": [/[eE]/, /[rR]/, /[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$24", "__", "datevalue_base$subexpression$25", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$26", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$26"], "postprocess":  d => {
+          const year = parseInt(d[0], 10);
+          const bceYear = year - 1;
+          return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.9 };
+        } },
+    {"name": "datevalue_base$subexpression$27", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$27", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.9 })},
+    {"name": "datevalue_base$subexpression$28$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$28$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$28$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$28", "symbols": ["datevalue_base$subexpression$28$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$28$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$28$subexpression$3", {"literal":"."}]},
+    {"name": "datevalue_base$subexpression$28$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$28$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$28", "symbols": ["datevalue_base$subexpression$28$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$28$subexpression$5", {"literal":"."}]},
+    {"name": "datevalue_base$subexpression$28$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$28", "symbols": ["datevalue_base$subexpression$28$subexpression$6"]},
+    {"name": "datevalue_base$subexpression$28$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$28", "symbols": ["datevalue_base$subexpression$28$subexpression$7"]},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "_", "datevalue_base$subexpression$28"], "postprocess":  d => {
+          const year = parseInt(d[0], 10);
+          const bceYear = year - 1;
+          return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
+        } },
+    {"name": "datevalue_base$subexpression$29$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$29$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$29", "symbols": ["datevalue_base$subexpression$29$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$29$subexpression$2", {"literal":"."}]},
+    {"name": "datevalue_base$subexpression$29$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$29$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$29", "symbols": ["datevalue_base$subexpression$29$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$29$subexpression$4", {"literal":"."}]},
+    {"name": "datevalue_base$subexpression$29$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$29", "symbols": ["datevalue_base$subexpression$29$subexpression$5"]},
+    {"name": "datevalue_base$subexpression$29$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$29", "symbols": ["datevalue_base$subexpression$29$subexpression$6"]},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$29", "_", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$30", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$31", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$30", "__", "ordinal_day", "__", "datevalue_base$subexpression$31", "__", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[10]}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$32", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$33", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$32", "__", "ordinal_day", "__", "datevalue_base$subexpression$33", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[8]}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$34", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "datevalue_base$subexpression$34", "__", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[8]}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$35", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "datevalue_base$subexpression$35", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[6]}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
     {"name": "datevalue_base", "symbols": ["month_name", "__", "ordinal_day", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[6]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
     {"name": "datevalue_base", "symbols": ["month_name", "__", "ordinal_day", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[4]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
     {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${d[4]}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
@@ -296,32 +325,32 @@ var grammar = {
     {"name": "datevalue_base$string$13", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "datevalue_base", "symbols": ["datevalue_base$string$13", "__", {"literal":"'"}, "digit", "digit", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `19${d[3]}X`, confidence: 0.9 })},
     {"name": "datevalue_base", "symbols": [{"literal":"'"}, "digit", "digit", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `19${d[1]}X`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$25", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$26$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$26", "symbols": ["datevalue_base$subexpression$26$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$26$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$26", "symbols": ["datevalue_base$subexpression$26$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$25", "__", "ordinal_century", "__", "datevalue_base$subexpression$26"], "postprocess":  d => {
+    {"name": "datevalue_base$subexpression$36", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$37$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$37", "symbols": ["datevalue_base$subexpression$37$subexpression$1"]},
+    {"name": "datevalue_base$subexpression$37$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$37", "symbols": ["datevalue_base$subexpression$37$subexpression$2", {"literal":"."}]},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$36", "__", "ordinal_century", "__", "datevalue_base$subexpression$37"], "postprocess":  d => {
           const centuryNum = d[2];
           const year = (centuryNum - 1) * 100;
           return { type: 'date', edtf: `${String(year).substring(0, 2)}XX`, confidence: 0.95 };
         } },
-    {"name": "datevalue_base$subexpression$27$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$27", "symbols": ["datevalue_base$subexpression$27$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$27$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$27", "symbols": ["datevalue_base$subexpression$27$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "datevalue_base$subexpression$27"], "postprocess":  d => {
+    {"name": "datevalue_base$subexpression$38$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$38", "symbols": ["datevalue_base$subexpression$38$subexpression$1"]},
+    {"name": "datevalue_base$subexpression$38$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$38", "symbols": ["datevalue_base$subexpression$38$subexpression$2", {"literal":"."}]},
+    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "datevalue_base$subexpression$38"], "postprocess":  d => {
           const centuryNum = d[0];
           const year = (centuryNum - 1) * 100;
           return { type: 'date', edtf: `${String(year).substring(0, 2)}XX`, confidence: 0.95 };
         } },
-    {"name": "datevalue_base$subexpression$28", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$29", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$28", "__", "spelled_century", "__", "datevalue_base$subexpression$29"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$30", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["spelled_century", "__", "datevalue_base$subexpression$30"], "postprocess": d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$31", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$31", "__", "spelled_decade"], "postprocess": d => ({ type: 'date', edtf: `19${d[2]}X`, confidence: 0.9 })},
+    {"name": "datevalue_base$subexpression$39", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base$subexpression$40", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$39", "__", "spelled_century", "__", "datevalue_base$subexpression$40"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$41", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["spelled_century", "__", "datevalue_base$subexpression$41"], "postprocess": d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base$subexpression$42", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$42", "__", "spelled_decade"], "postprocess": d => ({ type: 'date', edtf: `19${d[2]}X`, confidence: 0.9 })},
     {"name": "datevalue_base", "symbols": ["spelled_decade"], "postprocess": d => ({ type: 'date', edtf: `19${d[0]}X`, confidence: 0.9 })},
     {"name": "datevalue_base", "symbols": ["digit", "digit", {"literal":"s"}], "postprocess":  d => {
           const twoDigit = d[0] + d[1];

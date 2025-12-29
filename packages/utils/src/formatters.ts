@@ -16,6 +16,26 @@ export interface FormatOptions {
   dateStyle?: 'full' | 'long' | 'medium' | 'short';
   /** Locale for month/day names (default: 'en-US') */
   locale?: string;
+  /**
+   * Length/display style of the era marker (default: 'short')
+   * - 'long': "Before Christ", "Anno Domini"
+   * - 'short': "BC", "AD"
+   * - 'narrow': "B", "A"
+   */
+  era?: 'long' | 'short' | 'narrow';
+  /**
+   * When to display the era marker (default: 'auto')
+   * - 'auto': Show only for BC/BCE dates (negative years)
+   * - 'always': Show for all dates
+   * - 'never': Never show era markers
+   */
+  eraDisplay?: 'auto' | 'always' | 'never';
+  /**
+   * Era notation style (default: 'bc-ad')
+   * - 'bc-ad': Use "BC"/"AD" notation
+   * - 'bce-ce': Use "BCE"/"CE" notation
+   */
+  eraNotation?: 'bc-ad' | 'bce-ce';
 }
 
 /**
@@ -39,25 +59,19 @@ export interface FormatOptions {
  * ```
  */
 export function formatHuman(value: EDTFBase, options: FormatOptions = {}): string {
-  const {
-    includeQualifications = true,
-    dateStyle = 'full',
-    locale = 'en-US',
-  } = options;
-
   switch (value.type) {
     case 'Date':
-      return formatDateHuman(value as EDTFDate, { includeQualifications, dateStyle, locale });
+      return formatDateHuman(value as EDTFDate, options);
     case 'DateTime':
-      return formatDateTimeHuman(value as EDTFDateTime, { dateStyle, locale });
+      return formatDateTimeHuman(value as EDTFDateTime, options);
     case 'Interval':
-      return formatIntervalHuman(value as EDTFInterval, { includeQualifications, dateStyle, locale });
+      return formatIntervalHuman(value as EDTFInterval, options);
     case 'Season':
-      return formatSeasonHuman(value as EDTFSeason, { includeQualifications, locale });
+      return formatSeasonHuman(value as EDTFSeason, options);
     case 'Set':
-      return formatSetHuman(value as EDTFSet, { includeQualifications, dateStyle, locale });
+      return formatSetHuman(value as EDTFSet, options);
     case 'List':
-      return formatListHuman(value as EDTFList, { includeQualifications, dateStyle, locale });
+      return formatListHuman(value as EDTFList, options);
     default:
       return value.edtf;
   }
@@ -78,27 +92,99 @@ function formatUnspecifiedYear(year: string): string {
   return year;
 }
 
+/**
+ * Format an era marker based on options
+ */
+function formatEra(
+  year: number,
+  options: { era?: 'long' | 'short' | 'narrow'; eraNotation?: 'bc-ad' | 'bce-ce' }
+): string {
+  const { era = 'short', eraNotation = 'bc-ad' } = options;
+  const isBC = year < 0;
+
+  if (era === 'long') {
+    if (isBC) {
+      return eraNotation === 'bc-ad' ? 'Before Christ' : 'Before Common Era';
+    } else {
+      return eraNotation === 'bc-ad' ? 'Anno Domini' : 'Common Era';
+    }
+  } else if (era === 'narrow') {
+    if (isBC) {
+      return 'B';
+    } else {
+      return 'A';
+    }
+  } else {
+    // 'short' (default)
+    if (isBC) {
+      return eraNotation === 'bc-ad' ? 'BC' : 'BCE';
+    } else {
+      return eraNotation === 'bc-ad' ? 'AD' : 'CE';
+    }
+  }
+}
+
+/**
+ * Convert astronomical year numbering to historical year numbering
+ * Astronomical: 0 = 1 BC, -1 = 2 BC, -43 = 44 BC
+ * Historical: No year 0, 1 BC follows 1 AD
+ */
+function astronomicalToHistoricalYear(year: number): number {
+  if (year < 0) {
+    return Math.abs(year) + 1;
+  }
+  return year;
+}
+
 function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
-  const { includeQualifications, dateStyle, locale } = options;
+  const {
+    includeQualifications,
+    dateStyle,
+    locale,
+    era = 'short',
+    eraDisplay = 'auto',
+    eraNotation = 'bc-ad'
+  } = options;
 
   let result = '';
   const year = date.year;
   const month = date.month;
   const day = date.day;
 
+  // Determine if we should show the era marker
+  const isNegativeYear = typeof year === 'number' && year < 0;
+  const shouldShowEra = eraDisplay === 'always' || (eraDisplay === 'auto' && isNegativeYear);
+
+  // For BC/BCE dates, convert from astronomical to historical year numbering
+  const displayYear = typeof year === 'number' && isNegativeYear
+    ? astronomicalToHistoricalYear(year)
+    : year;
+
   // Handle unspecified digits in year (e.g., "18XX", "19XX")
-  const yearStr = typeof year === 'string' ? formatUnspecifiedYear(year) : String(year);
+  const yearStr = typeof displayYear === 'string'
+    ? formatUnspecifiedYear(displayYear)
+    : String(Math.abs(displayYear));
 
   if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'number') {
     // Full date (only if year is numeric)
-    const d = new Date(Date.UTC(year, month - 1, day));
-    const formatter = new Intl.DateTimeFormat(locale, {
-      year: 'numeric',
-      month: dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long',
-      day: 'numeric',
-      timeZone: 'UTC',
-    });
-    result = formatter.format(d);
+    // For BC dates, we can't use Intl.DateTimeFormat (doesn't support negative years)
+    if (isNegativeYear) {
+      const monthNames = dateStyle === 'short'
+        ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+        : dateStyle === 'medium'
+        ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      result = `${monthNames[month - 1]} ${day}, ${yearStr}`;
+    } else {
+      const d = new Date(Date.UTC(year, month - 1, day));
+      const formatter = new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long',
+        day: 'numeric',
+        timeZone: 'UTC',
+      });
+      result = formatter.format(d);
+    }
   } else if (month && typeof month === 'number' && typeof year === 'number') {
     // Year and month (only if year is numeric)
     const monthNames = dateStyle === 'short'
@@ -110,6 +196,12 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   } else {
     // Year only
     result = yearStr;
+  }
+
+  // Add era marker if needed
+  if (shouldShowEra && typeof year === 'number') {
+    const eraMarker = formatEra(year, { era, eraNotation });
+    result = `${result} ${eraMarker}`;
   }
 
   // Add qualifications

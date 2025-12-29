@@ -180,40 +180,100 @@ describe('Apostrophe Variants for Decades/Centuries', () => {
 });
 
 describe('BC/AD/BCE/CE Era Markers', () => {
-  it('should parse "44 BC"', () => {
-    const results = parseNatural('44 BC');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].edtf).toBe('-0043');
+  describe('Short forms', () => {
+    it('should parse "44 BC"', () => {
+      const results = parseNatural('44 BC');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('-0043');
+    });
+
+    it('should parse "44BC"', () => {
+      const results = parseNatural('44BC');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('-0043');
+    });
+
+    it('should parse "44 BCE"', () => {
+      const results = parseNatural('44 BCE');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('-0043');
+    });
+
+    it('should parse "AD 79"', () => {
+      const results = parseNatural('AD 79');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
+    it('should parse "AD79"', () => {
+      const results = parseNatural('AD79');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
+    it('should parse "CE 79"', () => {
+      const results = parseNatural('CE 79');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
   });
 
-  it('should parse "44BC"', () => {
-    const results = parseNatural('44BC');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].edtf).toBe('-0043');
+  describe('Long forms', () => {
+    it('should parse "44 Before Christ"', () => {
+      const results = parseNatural('44 Before Christ');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('-0043');
+    });
+
+    it('should parse "44 Before Common Era"', () => {
+      const results = parseNatural('44 Before Common Era');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('-0043');
+    });
+
+    it('should parse "Anno Domini 79"', () => {
+      const results = parseNatural('Anno Domini 79');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
+    it('should parse "Common Era 79"', () => {
+      const results = parseNatural('Common Era 79');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
+    it('should parse "Anno Domini 33"', () => {
+      const results = parseNatural('Anno Domini 33');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0033');
+    });
   });
 
-  it('should parse "44 BCE"', () => {
-    const results = parseNatural('44 BCE');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].edtf).toBe('-0043');
-  });
+  describe('Narrow forms', () => {
+    it('should parse "100 B"', () => {
+      const results = parseNatural('100 B');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('-0099');
+    });
 
-  it('should parse "AD 79"', () => {
-    const results = parseNatural('AD 79');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].edtf).toBe('0079');
-  });
+    it('should parse "44 B"', () => {
+      const results = parseNatural('44 B');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('-0043');
+    });
 
-  it('should parse "AD79"', () => {
-    const results = parseNatural('AD79');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].edtf).toBe('0079');
-  });
+    it('should parse "A 79"', () => {
+      const results = parseNatural('A 79');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
 
-  it('should parse "CE 79"', () => {
-    const results = parseNatural('CE 79');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].edtf).toBe('0079');
+    it('should parse "A 100"', () => {
+      const results = parseNatural('A 100');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0100');
+    });
   });
 });
 
