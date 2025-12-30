@@ -205,14 +205,32 @@ describe('BC/AD/BCE/CE Era Markers', () => {
       expect(results[0].edtf).toBe('0079');
     });
 
+    it('should parse "79 AD"', () => {
+      const results = parseNatural('79 AD');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
     it('should parse "AD79"', () => {
       const results = parseNatural('AD79');
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].edtf).toBe('0079');
     });
 
+    it('should parse "79AD"', () => {
+      const results = parseNatural('79AD');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
     it('should parse "CE 79"', () => {
       const results = parseNatural('CE 79');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
+    it('should parse "79 CE"', () => {
+      const results = parseNatural('79 CE');
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].edtf).toBe('0079');
     });
@@ -237,14 +255,32 @@ describe('BC/AD/BCE/CE Era Markers', () => {
       expect(results[0].edtf).toBe('0079');
     });
 
+    it('should parse "79 Anno Domini"', () => {
+      const results = parseNatural('79 Anno Domini');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
     it('should parse "Common Era 79"', () => {
       const results = parseNatural('Common Era 79');
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].edtf).toBe('0079');
     });
 
+    it('should parse "79 Common Era"', () => {
+      const results = parseNatural('79 Common Era');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
     it('should parse "Anno Domini 33"', () => {
       const results = parseNatural('Anno Domini 33');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0033');
+    });
+
+    it('should parse "33 Anno Domini"', () => {
+      const results = parseNatural('33 Anno Domini');
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].edtf).toBe('0033');
     });
@@ -269,8 +305,20 @@ describe('BC/AD/BCE/CE Era Markers', () => {
       expect(results[0].edtf).toBe('0079');
     });
 
+    it('should parse "79 A"', () => {
+      const results = parseNatural('79 A');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0079');
+    });
+
     it('should parse "A 100"', () => {
       const results = parseNatural('A 100');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].edtf).toBe('0100');
+    });
+
+    it('should parse "100 A"', () => {
+      const results = parseNatural('100 A');
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].edtf).toBe('0100');
     });

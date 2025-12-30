@@ -246,8 +246,12 @@ datevalue_base ->
       } %}
   | "Anno"i __ "Domini"i __ numeric_year
       {% d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 }) %}
+  | numeric_year __ "Anno"i __ "Domini"i
+      {% d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 }) %}
   | "Common"i __ "Era"i __ numeric_year
       {% d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 }) %}
+  | numeric_year __ "Common"i __ "Era"i
+      {% d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 }) %}
   | numeric_year __ "B"i
       {% d => {
         const year = parseInt(d[0], 10);
@@ -256,6 +260,8 @@ datevalue_base ->
       } %}
   | "A"i __ numeric_year
       {% d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.9 }) %}
+  | numeric_year __ "A"i
+      {% d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.9 }) %}
   | numeric_year _ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
       {% d => {
         const year = parseInt(d[0], 10);
@@ -264,6 +270,8 @@ datevalue_base ->
       } %}
   | ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i) _ numeric_year
       {% d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.95 }) %}
+  | numeric_year _ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 }) %}
   | "the"i __ ordinal_day __ "of"i __ month_name _ "," _ year_num
       {% d => ({ type: 'date', edtf: `${d[10]}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | "the"i __ ordinal_day __ "of"i __ month_name __ year_num

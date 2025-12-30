@@ -138,7 +138,7 @@ function astronomicalToHistoricalYear(year: number): number {
 
 function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   const {
-    includeQualifications,
+    includeQualifications = true,
     dateStyle,
     locale,
     era = 'short',
@@ -180,6 +180,14 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   } else if (month === 'XX' && typeof year === 'number') {
     // Unspecified month (e.g., "1999-XX")
     result = `some month in ${yearStr}`;
+  } else if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'string') {
+    // Unspecified year with specific month/day (e.g., "156X-12-25")
+    const monthNames = dateStyle === 'short'
+      ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+      : dateStyle === 'medium'
+      ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    result = `${monthNames[month - 1]} ${day} in the ${yearStr}`;
   } else if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'number') {
     // Full date (only if year is numeric)
     // For BC dates, we can't use Intl.DateTimeFormat (doesn't support negative years)
