@@ -3,7 +3,8 @@ import type {
   EDTFDate,
   EDTFSeason,
   EDTFSet,
-  EDTFList
+  EDTFList,
+  EDTFInterval
 } from '../types/index.js';
 
 /**
@@ -22,6 +23,21 @@ export function parseLevel2(input: string): ParseResult {
   // Try to parse as list (enclosed in {})
   if (input.startsWith('{') && input.endsWith('}')) {
     return parseList(input);
+  }
+
+  // Try to parse as interval with Level 2 features (contains '/')
+  // Check if it has partial qualifications that indicate Level 2
+  // Level 2: qualifier BEFORE component (2004-~06) or qualifier AFTER non-final component (2004?-06)
+  // Level 1: qualifier AFTER final component only (1984?, 2004-06~)
+  if (input.includes('/')) {
+    const hasLevel2Features = /^[?~%]\d{4}-/.test(input) ||  // ?2004-06 (qualifier before year at start)
+                               /-[?~%]\d{2}/.test(input) ||   // 2004-~06 or 2004-06-~01 (qualifier before month/day)
+                               /\d{4}[?~%]-/.test(input) ||   // 2004?-06 (qualifier after year, before month)
+                               /\d{2}[?~%]-/.test(input);     // 06?-01 (qualifier after month, before day)
+
+    if (hasLevel2Features) {
+      return parseLevel2Interval(input);
+    }
   }
 
   // Try to parse exponential year (Y-17E7 format)
@@ -51,6 +67,151 @@ export function parseLevel2(input: string): ParseResult {
 
   // Fall back to Level 1 parsing
   return { success: false, errors: [{ code: 'NOT_LEVEL_2', message: 'Not a Level 2 feature' }] };
+}
+
+/**
+ * Parse Level 2 interval with partial qualifications
+ * Formats:
+ * - 2004-06-~01/2004-06-~20 (qualified day components)
+ * - 2004-~06/2004-~08 (qualified month components)
+ * - ?2004-06/2004-08 (qualified year at start)
+ */
+function parseLevel2Interval(input: string): ParseResult<EDTFInterval> {
+  const parts = input.split('/');
+
+  if (parts.length !== 2) {
+    return {
+      success: false,
+      errors: [{
+        code: 'INVALID_INTERVAL',
+        message: 'Interval must have exactly one "/" separator'
+      }]
+    };
+  }
+
+  const startStr = parts[0]!.trim();
+  const endStr = parts[1]!.trim();
+
+  let start: EDTFDate | EDTFSeason | null = null;
+  let end: EDTFDate | EDTFSeason | null = null;
+  let openStart = false;
+  let openEnd = false;
+
+  // Parse start
+  if (startStr === '..') {
+    openStart = true;
+  } else if (startStr === '') {
+    start = null;  // Unknown start
+  } else {
+    // Try to parse as extended season first (25-41), then partial qualification, then fall back
+    let startResult: ParseResult<EDTFDate | EDTFSeason>;
+
+    if (startStr.match(/^\d{4}-[234]\d/)) {
+      const seasonNum = parseInt(startStr.slice(5, 7), 10);
+      if (seasonNum >= 25 && seasonNum <= 41) {
+        startResult = parseExtendedSeason(startStr);
+      } else {
+        startResult = parsePartialQualification(startStr);
+      }
+    } else {
+      startResult = parsePartialQualification(startStr);
+    }
+
+    if (!startResult.success) {
+      return {
+        success: false,
+        errors: startResult.errors.map(err => ({
+          ...err,
+          message: `Invalid interval start: ${err.message}`
+        }))
+      };
+    }
+    start = startResult.value as EDTFDate | EDTFSeason;
+  }
+
+  // Parse end
+  if (endStr === '..') {
+    openEnd = true;
+  } else if (endStr === '') {
+    end = null;  // Unknown end
+  } else {
+    // Try to parse as extended season first (25-41), then partial qualification, then fall back
+    let endResult: ParseResult<EDTFDate | EDTFSeason>;
+
+    if (endStr.match(/^\d{4}-[234]\d/)) {
+      const seasonNum = parseInt(endStr.slice(5, 7), 10);
+      if (seasonNum >= 25 && seasonNum <= 41) {
+        endResult = parseExtendedSeason(endStr);
+      } else {
+        endResult = parsePartialQualification(endStr);
+      }
+    } else {
+      endResult = parsePartialQualification(endStr);
+    }
+
+    if (!endResult.success) {
+      return {
+        success: false,
+        errors: endResult.errors.map(err => ({
+          ...err,
+          message: `Invalid interval end: ${err.message}`
+        }))
+      };
+    }
+    end = endResult.value as EDTFDate | EDTFSeason;
+  }
+
+  // Validate interval order (if both endpoints are known and not open)
+  if (start && end && !openStart && !openEnd) {
+    if (start.min > end.max) {
+      return {
+        success: false,
+        errors: [{
+          code: 'INVALID_INTERVAL_ORDER',
+          message: 'Interval start must be before or equal to end'
+        }]
+      };
+    }
+  }
+
+  const edtfInterval: EDTFInterval = {
+    type: 'Interval',
+    level: 2,
+    edtf: input,
+    precision: start?.precision || end?.precision || 'year',
+    start,
+    end,
+    ...(openStart && { openStart }),
+    ...(openEnd && { openEnd }),
+    get min() {
+      if (this.openStart) return new Date(-8640000000000000);  // Min date
+      return this.start ? this.start.min : new Date(-8640000000000000);
+    },
+    get max() {
+      if (this.openEnd) return new Date(8640000000000000);  // Max date
+      return this.end ? this.end.max : new Date(8640000000000000);
+    },
+    toJSON() {
+      return {
+        type: this.type,
+        level: this.level,
+        edtf: this.edtf,
+        precision: this.precision,
+        start: this.start?.toJSON(),
+        end: this.end?.toJSON(),
+        ...(this.openStart && { openStart: this.openStart }),
+        ...(this.openEnd && { openEnd: this.openEnd }),
+        min: this.min.toISOString(),
+        max: this.max.toISOString()
+      };
+    }
+  };
+
+  return {
+    success: true,
+    value: edtfInterval,
+    level: 2
+  };
 }
 
 /**

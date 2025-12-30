@@ -1,87 +1,75 @@
-Below is a **clean, self-contained specification** suitable for handing to an LLM (or a human engineer) to **extend an EDTF library** with:
+# EDTF Range Normalization, Comparison, and Database Preparation
 
-- correct **comparison semantics**
-- **normalization to start/end envelopes**
-- **conversion to epoch milliseconds**
-- **database-friendly indexing strategy**
-- **BigInt vs number policy**
+_(Revised Specification)_
 
-It intentionally avoids prose and reads like an implementation spec.
+## 0. Scope and design constraints
 
----
+This specification defines how to:
 
-# EDTF Comparison & Database Preparation Specification
-
-## 0. Scope and goals
-
-This spec defines how to:
-
-1. Parse any EDTF (Levels 0–2) into **normalized temporal envelopes**
-2. Compare EDTF values using **sound interval relations**
-3. Convert envelopes to **epoch milliseconds** (with BigInt support)
+1. Normalize EDTF (Levels 0–2) into **ranges of possible time**
+2. Compare EDTF values using **range algebra** (Allen relations)
+3. Convert ranges to **epoch milliseconds**
 4. Prepare EDTF values for **efficient database querying**
-5. Preserve correctness for:
-   - reduced precision
-   - uncertainty / approximation
-   - unspecified digits
-   - open vs unknown interval endpoints
-   - sets and ranges
-   - date-times with time zones
+5. Balance **infinite EDTF semantics** with **finite database types**
 
-This spec **does not** require databases or APIs to be EDTF-complete internally; it enables **lossless semantics** with **pragmatic storage**.
+### Explicit constraint (important)
+
+> **All EDTF values are modeled as ranges.**
+> There is no distinction between:
+>
+> - “instant with low precision” and
+> - “duration”
+>
+> A date-time to the minute means:
+> _start of that minute → end of that minute_
+> A year means:
+> _start of the year → end of the year_
+
+This is intentional and aligns with:
+
+- search semantics
+- timeline visualization
+- database indexing
+- user expectations (“find things during 1985”)
 
 ---
 
-## 1. Core concepts
+## 1. Core temporal model
 
-### 1.1 Fundamental principle
-
-> EDTF values represent **sets of possible instants or intervals**, not a single timestamp.
-
-Therefore:
-
-- All comparisons must reason over **ranges of possibility**
-- All DB queries must be **supersets**, then refined precisely
-
----
-
-## 2. Normalized temporal model
-
-### 2.1 Bound kinds
+### 1.1 Bound kinds
 
 ```ts
 type BoundKind =
   | 'closed' // concrete bound exists
   | 'open' // unbounded (EDTF "..")
-  | 'unknown'; // bound exists but unknown (EDTF empty endpoint)
+  | 'unknown'; // bound exists but is unknown (EDTF empty endpoint)
 ```
 
-**Important:**
-`open` ≠ `unknown`
+**Rules**
 
-- open ⇒ infinite, comparable
-- unknown ⇒ indeterminate, propagates UNKNOWN truth
+- `open` = infinite and comparable
+- `unknown` = indeterminate and propagates `UNKNOWN` in comparisons
 
 ---
 
-### 2.2 Normalized member (single envelope)
+### 1.2 Normalized range member
 
-A single possible interpretation of an EDTF value.
+A **Member** represents one possible time range implied by an EDTF expression.
 
 ```ts
 type Member = {
-  // possible start instants
+  // earliest/latest possible start
   sMin: bigint | null;
   sMax: bigint | null;
 
-  // possible end instants
+  // earliest/latest possible end
   eMin: bigint | null;
   eMax: bigint | null;
 
   startKind: BoundKind;
   endKind: BoundKind;
 
-  precision: 'time' | 'day' | 'month' | 'year' | 'subyear' | 'mixed' | 'unknown';
+  precision: 'minute' | 'hour' | 'day' | 'month' | 'year' | 'subyear' | 'mixed' | 'unknown';
 
   qualifiers?: {
     uncertain?: boolean; // ?
@@ -90,11 +78,14 @@ type Member = {
 };
 ```
 
-All EDTF features (X digits, seasons, significant digits, etc.) normalize into **one or more Members**.
+**Invariant**
+
+- A Member always represents a **range**, never a point.
+- Precision determines how wide the range is.
 
 ---
 
-### 2.3 Shape (handles sets)
+### 1.3 Shapes and sets
 
 ```ts
 type Shape = {
@@ -103,69 +94,136 @@ type Shape = {
 };
 ```
 
-- `[]` → exactly one member is chosen
-- `{}` → all members apply
+- `[...]` → one member applies (exclusive choice)
+- `{...}` → all members apply (inclusive list)
 
 ---
 
-## 3. Normalization rules (summary)
+## 2. Normalization rules (EDTF → Members)
 
-### 3.1 Dates and date-times
+### 2.1 Dates and date-times
 
-- A date or date-time becomes a **closed range**
-- Reduced precision expands to full span:
-  - `1985` → Jan 1 00:00:00.000 → Dec 31 23:59:59.999
-  - `1985-04` → April 1 → April 30
+| EDTF                | Normalized range                   |
+| ------------------- | ---------------------------------- |
+| `1985`              | Jan 1 00:00 → Dec 31 23:59:59.999  |
+| `1985-04`           | Apr 1 00:00 → Apr 30 23:59:59.999  |
+| `1985-04-12`        | Apr 12 00:00 → Apr 12 23:59:59.999 |
+| `2024-05-01T10:32Z` | 10:32:00.000 → 10:32:59.999        |
 
-- Date-time with zone → normalize to UTC instant
+**Rule**
 
-### 3.2 Intervals (`start/end`)
+- Date-times are expanded to the **full smallest unit they specify**
+- All bounds are `closed`
 
-- Start is **sometime within** start endpoint
-- End is **sometime within** end endpoint
+---
+
+### 2.2 Intervals (`start/end`)
+
+- Start is **sometime during** the start endpoint
+- End is **sometime during** the end endpoint
 - Mixed precision is allowed
 
-### 3.3 Unspecified digits (`X`)
+Example:
 
-- Expand masked component to min/max range
-- E.g. `1985-04-XX` → entire April 1985
+```
+2004-02-01/2005-02
+```
 
-### 3.4 Qualification (`? ~ %`)
+Normalizes to:
 
-- Do **not** widen time bounds
-- Record qualifiers as metadata only
-
-### 3.5 Open vs unknown endpoints
-
-- `..` ⇒ `open`, bounds = null
-- empty endpoint ⇒ `unknown`, bounds = null
-
-### 3.6 Sets and ranges
-
-- `[a,b]` → two Members, `listMode="oneOf"`
-- `{a,b}` → two Members, `listMode="allOf"`
-- `a..b` → single Member spanning inclusive range
+```
+sMin = 2004-02-01 00:00
+sMax = 2004-02-01 23:59:59.999
+eMin = 2005-02-01 00:00
+eMax = 2005-02-28 23:59:59.999
+```
 
 ---
 
-## 4. Comparison semantics
+### 2.3 Unspecified digits (`X`)
 
-### 4.1 Truth values
+- Masked components expand to their numeric min/max
+- Resulting component defines the range
+
+Examples:
+
+- `201X` → 2010-01-01 → 2019-12-31
+- `1985-04-XX` → entire April 1985
+- `1984-1X` → Oct 1 → Dec 31 1984
+
+---
+
+### 2.4 Qualification (`? ~ %`)
+
+**Policy**
+
+- Qualifiers **do not widen bounds**
+- They are stored as metadata only
+
+Rationale:
+
+- EDTF does not define numeric tolerances
+- Widening is application-specific and optional
+
+Applications MAY:
+
+- widen bounds heuristically at query time
+- rank exact matches above approximate ones
+
+---
+
+### 2.5 Open vs unknown endpoints
+
+| Syntax                   | Meaning   | Representation           |
+| ------------------------ | --------- | ------------------------ |
+| `..`                     | unbounded | `open`, bounds = null    |
+| empty endpoint (`1985/`) | unknown   | `unknown`, bounds = null |
+
+Unknown endpoints propagate `UNKNOWN` in comparison logic.
+
+---
+
+### 2.6 Seasons and sub-year groupings
+
+EDTF season / grouping codes (`21–41`) MUST map to fixed month spans.
+
+**Normative policy (example)**
+_(You may choose different spans, but must document them)_
+
+| Code | Meaning | Months  |
+| ---- | ------- | ------- |
+| 21   | Spring  | Mar–May |
+| 22   | Summer  | Jun–Aug |
+| 23   | Autumn  | Sep–Nov |
+| 24   | Winter  | Dec–Feb |
+
+Resulting Member spans those months.
+
+---
+
+### 2.7 Negative years
+
+- Use **astronomical year numbering**
+  - Year 0 = 1 BC
+  - Year -1 = 2 BC
+
+- All bigint math assumes astronomical numbering
+
+---
+
+## 3. Comparison semantics
+
+### 3.1 Truth values
 
 ```ts
 type Truth = 'YES' | 'NO' | 'MAYBE' | 'UNKNOWN';
 ```
 
-- **YES**: always true
-- **NO**: never true
-- **MAYBE**: true for some interpretations
-- **UNKNOWN**: blocked by unknown endpoint
-
 ---
 
-### 4.2 Canonical relations (Allen algebra)
+### 3.2 Supported relations
 
-Supported base relations:
+Base (Allen algebra):
 
 ```
 before, after,
@@ -177,7 +235,7 @@ finishes, finishedBy,
 equals
 ```
 
-Derived relations:
+Derived:
 
 ```
 intersects
@@ -189,90 +247,60 @@ containsOrEqual
 
 ---
 
-### 4.3 Relation evaluation pattern
+### 3.3 Evaluation pattern
 
-Each relation `R(A,B)` is evaluated using:
+For each Member pair `(A,B)`:
 
-1. **Forced YES** test using bounds
-2. **Forced NO** test using bounds
+1. If bounds force relation → `YES`
+2. If bounds forbid relation → `NO`
 3. If required bound is `unknown` → `UNKNOWN`
-4. Otherwise → `MAYBE`
+4. Else → `MAYBE`
 
-Relations are evaluated **per Member pair**, then lifted across sets.
+Results are then lifted across sets using quantifiers.
 
 ---
 
-### 4.4 Lifting across sets
+### 3.4 Set evaluation
 
 ```ts
 type Quantifier = 'ANY' | 'ALL';
 ```
 
-Evaluation:
+Defaults:
 
-- Compare every `(Ai, Bj)`
-- Combine results with quantifiers
-- Defaults:
-  - search/filtering: `ANY/ANY`
-  - constraints/validation: `ALL/ALL`
+- Search/filtering: `ANY/ANY`
+- Validation/constraints: `ALL/ALL`
 
 ---
 
-## 5. Intersection envelope (optional but useful)
+## 4. Epoch millisecond conversion
 
-```ts
-type IntersectionResult = {
-  truth: Truth;
-  intersection?: Member; // overlapping envelope if computable
-};
-```
+### 4.1 BigInt policy
 
-Used for:
-
-- coverage queries
-- gap detection
-- UI timelines
-
----
-
-## 6. Epoch millisecond conversion
-
-### 6.1 Why BigInt
-
-- EDTF Level 2 allows extreme years
-- JS `number` is unsafe for large instants
-- `BigInt` is built-in and exact
-
-### 6.2 Policy
-
-**Internal normalization:**
-✔ Always use `bigint`
-
-**Database storage:**
-✔ Convert to `number` (BIGINT) **only when representable**
-✔ Otherwise store `null` + `out_of_range=true`
-
----
-
-### 6.3 Conversion helpers
+- **Internal normalization:** always `bigint`
+- **Database storage:** `number` (`BIGINT`) when representable
+- Extreme values are flagged
 
 ```ts
 type InstantMs = { kind: 'number'; value: number } | { kind: 'bigint'; value: bigint };
-
-function instantToEpochMs(
-  instant: bigint,
-  policy: {
-    minYear: number;
-    maxYear: number;
-  }
-): InstantMs;
 ```
 
 ---
 
-## 7. Database preparation
+### 4.2 Time scale
 
-### 7.1 Stored columns
+**Normative choice**
+
+- Proleptic Gregorian calendar
+- Unix time (UTC, ignoring leap seconds)
+
+Leap-second precision is not preserved.
+
+---
+
+## 5. Database preparation
+
+### 5.1 Stored columns
 
 ```sql
 edtf_text          TEXT NOT NULL,
@@ -296,14 +324,36 @@ out_of_range       BOOLEAN NOT NULL
 
 ---
 
-### 7.2 Why all four bounds matter
+### 5.2 Set flattening policy (explicit)
 
-- `start_min`, `end_max` → **candidate overlap**
-- `start_max`, `end_min` → **definitive before/after**, better sorting, fewer false positives
+When `is_set = true`:
+
+1. `start_min_ms` = minimum of all members’ `sMin`
+2. `end_max_ms` = maximum of all members’ `eMax`
+3. `start_max_ms` / `end_min_ms` likewise
+4. This forms a **convex hull**
+
+**Application responsibility**
+
+- The DB may return false positives for gaps
+- Application must re-evaluate EDTF precisely
 
 ---
 
-### 7.3 Canonical overlap query (superset)
+### 5.3 Out-of-range policy (clamping)
+
+To preserve sortable timelines:
+
+- Define `MIN_DB_MS`, `MAX_DB_MS`
+- If a bound exceeds limits:
+  - clamp to min/max
+  - set `out_of_range = true`
+
+This preserves ordering while signaling loss of precision.
+
+---
+
+### 5.4 Canonical overlap query (superset)
 
 ```sql
 WHERE
@@ -312,11 +362,11 @@ WHERE
   (start_min_ms IS NULL OR start_min_ms <= :qEnd)
 ```
 
-Then apply **precise EDTF comparison** in application code.
+No false negatives are permitted.
 
 ---
 
-### 7.4 Indexing
+### 5.5 Indexing
 
 ```sql
 CREATE INDEX ON items (start_min_ms);
@@ -325,63 +375,46 @@ CREATE INDEX ON items (end_max_ms);
 
 Optional (Postgres):
 
-```sql
-env_ms INT8RANGE GENERATED ALWAYS AS (
-  CASE
-    WHEN start_min_ms IS NOT NULL AND end_max_ms IS NOT NULL
-    THEN int8range(start_min_ms, end_max_ms, '[]')
-    ELSE NULL
-  END
-) STORED;
-
-CREATE INDEX ON items USING GIST (env_ms) WHERE env_ms IS NOT NULL;
-```
+- `int8range` for single ranges
+- `int8multirange` if sets are common and performance-critical
 
 ---
 
-## 8. Sorting guidance
+## 6. Sorting
 
-Default chronological sort:
+Canonical chronological order:
 
 ```sql
 ORDER BY
-  start_min_ms ASC NULLS LAST,
+  start_min_ms ASC,
+  end_max_ms ASC,
   precision_rank DESC,
-  end_max_ms ASC NULLS LAST,
   edtf_text ASC
 ```
 
----
-
-## 9. BigInt vs number guidance (normative)
-
-- `BigInt` is **built-in** (no package)
-- Use `BigInt` internally for correctness
-- Use `number`/`BIGINT` in DB for performance
-- Clamp + flag extreme values
-- Never mix `number` and `bigint` implicitly
+Clamping ensures deep-time values remain ordered.
 
 ---
 
-## 10. Implementation boundary
+## 7. Division of responsibility
 
-**Database responsibilities**
+**Database**
 
 - Fast candidate selection
-- Ordering by coarse chronology
+- Coarse chronological ordering
 
-**Application responsibilities**
+**Application**
 
 - Exact EDTF semantics
-- Truth classification (YES/NO/MAYBE/UNKNOWN)
+- Truth classification
 - Set logic
-- Unknown endpoint propagation
+- Unknown-endpoint propagation
 
 ---
 
-## 11. Final invariant
+## 8. Final invariant
 
-> **The database must never exclude a possible match.
-> The comparison engine must never assert certainty without proof.**
+> **The database must never exclude a possible match.**
+> **The comparison engine must never assert certainty without proof.**
 
-This spec guarantees both.
+This revised plan satisfies both while remaining implementable, performant, and aligned with EDTF’s full expressive power.

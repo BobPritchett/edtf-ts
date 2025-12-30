@@ -16,6 +16,7 @@
   "dependencies": {
     "@edtf-ts/core": "workspace:*",
     "@edtf-ts/utils": "workspace:*",
-    "@edtf-ts/natural": "workspace:*"
+    "@edtf-ts/natural": "workspace:*",
+    "@edtf-ts/compare": "workspace:*"
   }
 }

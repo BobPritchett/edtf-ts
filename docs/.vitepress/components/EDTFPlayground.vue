@@ -234,6 +234,162 @@
           <pre class="json-output"><code>{{ JSON.stringify(result.value.toJSON(), null, 2) }}</code></pre>
         </div>
       </div>
+
+      <!-- Second EDTF input for comparison -->
+      <div class="comparison-section">
+        <h3>Compare with Another EDTF</h3>
+        <p class="comparison-description">Enter a second EDTF value to compare temporal relationships using Allen's interval algebra.</p>
+
+        <div class="playground-inputs">
+          <div class="input-column">
+            <label for="edtf-input-2">EDTF Input (Second Value)</label>
+            <input
+              id="edtf-input-2"
+              v-model="input2"
+              type="text"
+              placeholder="1990, 2000-05, [1995,1998]..."
+              @input="onEdtfInput2"
+              class="edtf-input-field"
+              :class="{ 'input-valid': result2?.success, 'input-invalid': result2 && !result2.success }"
+            />
+            <div class="input-status">
+              <span v-if="result2?.success" class="status-valid">✓ Valid EDTF</span>
+              <span v-else-if="result2 && !result2.success" class="status-invalid">✗ {{ result2.errors[0]?.code }}</span>
+            </div>
+          </div>
+
+          <div class="input-column">
+            <label for="natural-input-2">Natural Language (Second Value)</label>
+            <input
+              id="natural-input-2"
+              v-model="naturalInput2"
+              type="text"
+              placeholder="December 1995..."
+              @input="onNaturalInput2"
+              class="edtf-input-field"
+              :class="{ 'input-valid': naturalResult2 && naturalResult2.length > 0, 'input-invalid': naturalError2 }"
+            />
+            <div class="input-status">
+              <span v-if="naturalResult2 && naturalResult2.length > 0" class="status-valid">
+                ✓ {{ naturalResult2[0].edtf }} ({{ Math.round(naturalResult2[0].confidence * 100) }}%)
+              </span>
+              <span v-else-if="naturalError2" class="status-invalid">✗ No valid parse</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison Results -->
+        <div v-if="result2?.success && comparisonResult" class="comparison-results">
+          <h4>Allen Relation Results</h4>
+          <p class="comparison-note">
+            Comparing <code class="inline-code">{{ result.value.edtf }}</code> to <code class="inline-code">{{ result2.value.edtf }}</code>
+          </p>
+          <div v-if="comparisonBounds" class="bounds-display">
+            <div class="bounds-line">
+              <span class="bounds-label">{{ result.value.edtf }}:</span>
+              <span class="bounds-values">sMin={{ formatBound(comparisonBounds.a.sMin) }} sMax={{ formatBound(comparisonBounds.a.sMax) }} eMin={{ formatBound(comparisonBounds.a.eMin) }} eMax={{ formatBound(comparisonBounds.a.eMax) }}</span>
+            </div>
+            <div class="bounds-line">
+              <span class="bounds-label">{{ result2.value.edtf }}:</span>
+              <span class="bounds-values">sMin={{ formatBound(comparisonBounds.b.sMin) }} sMax={{ formatBound(comparisonBounds.b.sMax) }} eMin={{ formatBound(comparisonBounds.b.eMin) }} eMax={{ formatBound(comparisonBounds.b.eMax) }}</span>
+            </div>
+          </div>
+
+          <div class="relations-grid">
+            <!-- Base Allen Relations -->
+            <div class="relation-group">
+              <h5>Base Relations</h5>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.before)">
+                <span class="relation-name">before</span>
+                <span class="relation-value">{{ comparisonResult.before }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.after)">
+                <span class="relation-name">after</span>
+                <span class="relation-value">{{ comparisonResult.after }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.meets)">
+                <span class="relation-name">meets</span>
+                <span class="relation-value">{{ comparisonResult.meets }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.metBy)">
+                <span class="relation-name">metBy</span>
+                <span class="relation-value">{{ comparisonResult.metBy }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.overlaps)">
+                <span class="relation-name">overlaps</span>
+                <span class="relation-value">{{ comparisonResult.overlaps }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.overlappedBy)">
+                <span class="relation-name">overlappedBy</span>
+                <span class="relation-value">{{ comparisonResult.overlappedBy }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.starts)">
+                <span class="relation-name">starts</span>
+                <span class="relation-value">{{ comparisonResult.starts }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.startedBy)">
+                <span class="relation-name">startedBy</span>
+                <span class="relation-value">{{ comparisonResult.startedBy }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.during)">
+                <span class="relation-name">during</span>
+                <span class="relation-value">{{ comparisonResult.during }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.contains)">
+                <span class="relation-name">contains</span>
+                <span class="relation-value">{{ comparisonResult.contains }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.finishes)">
+                <span class="relation-name">finishes</span>
+                <span class="relation-value">{{ comparisonResult.finishes }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.finishedBy)">
+                <span class="relation-name">finishedBy</span>
+                <span class="relation-value">{{ comparisonResult.finishedBy }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.equals)">
+                <span class="relation-name">equals</span>
+                <span class="relation-value">{{ comparisonResult.equals }}</span>
+              </div>
+            </div>
+
+            <!-- Derived Relations -->
+            <div class="relation-group">
+              <h5>Derived Relations</h5>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.intersects)">
+                <span class="relation-name">intersects</span>
+                <span class="relation-value">{{ comparisonResult.intersects }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.disjoint)">
+                <span class="relation-name">disjoint</span>
+                <span class="relation-value">{{ comparisonResult.disjoint }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.touches)">
+                <span class="relation-name">touches</span>
+                <span class="relation-value">{{ comparisonResult.touches }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.duringOrEqual)">
+                <span class="relation-name">duringOrEqual</span>
+                <span class="relation-value">{{ comparisonResult.duringOrEqual }}</span>
+              </div>
+              <div class="relation-item" :class="getRelationClass(comparisonResult.containsOrEqual)">
+                <span class="relation-name">containsOrEqual</span>
+                <span class="relation-value">{{ comparisonResult.containsOrEqual }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="legend">
+            <h5>Legend</h5>
+            <div class="legend-items">
+              <span class="legend-item truth-yes"><span class="legend-badge">YES</span> Definitely true</span>
+              <span class="legend-item truth-no"><span class="legend-badge">NO</span> Definitely false</span>
+              <span class="legend-item truth-maybe"><span class="legend-badge">MAYBE</span> Could be true</span>
+              <span class="legend-item truth-unknown"><span class="legend-badge">UNKNOWN</span> Cannot determine</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="result && !result.success" class="playground-result">
@@ -262,6 +418,15 @@ const result = ref<any>(null);
 const naturalInput = ref('');
 const naturalResult = ref<any>(null);
 const naturalError = ref<string | null>(null);
+
+// Second EDTF input for comparison
+const input2 = ref('1990');
+const result2 = ref<any>(null);
+const naturalInput2 = ref('');
+const naturalResult2 = ref<any>(null);
+const naturalError2 = ref<string | null>(null);
+const comparisonResult = ref<any>(null);
+const comparisonBounds = ref<any>(null);
 
 // FormatOptions state - always reset to defaults on component mount
 const formatOptionsExpanded = ref(false);
@@ -328,6 +493,13 @@ watch(formatOptions, () => {
     isUpdatingFromEdtf = false;
   }
 }, { deep: true });
+
+// Watch for changes in first result and trigger comparison
+watch(result, () => {
+  if (result.value?.success && result2.value?.success) {
+    performComparison();
+  }
+});
 
 function onEdtfInput() {
   if (isUpdatingFromNatural) return;
@@ -419,6 +591,151 @@ function getSeasonName(code: number): string {
   return seasons[code] || `Season ${code}`;
 }
 
+function onEdtfInput2() {
+  if (isUpdatingFromNatural) return;
+
+  if (!input2.value.trim()) {
+    result2.value = null;
+    naturalInput2.value = '';
+    comparisonResult.value = null;
+    return;
+  }
+
+  result2.value = parse(input2.value);
+
+  // Update natural input with formatted version when EDTF is valid
+  if (result2.value.success) {
+    isUpdatingFromEdtf = true;
+    try {
+      naturalInput2.value = formatHuman(result2.value.value, formatOptions.value);
+    } catch {
+      naturalInput2.value = result2.value.value.edtf;
+    }
+    parseNaturalInput2();
+    isUpdatingFromEdtf = false;
+
+    // Perform comparison if first value is also valid
+    if (result.value?.success) {
+      performComparison();
+    }
+  } else {
+    comparisonResult.value = null;
+  }
+}
+
+async function onNaturalInput2() {
+  if (isUpdatingFromEdtf) return;
+
+  if (!naturalInput2.value.trim()) {
+    naturalResult2.value = null;
+    naturalError2.value = null;
+    return;
+  }
+
+  try {
+    const { parseNatural } = await import('@edtf-ts/natural');
+    naturalError2.value = null;
+    naturalResult2.value = parseNatural(naturalInput2.value);
+
+    if (naturalResult2.value && naturalResult2.value.length > 0) {
+      isUpdatingFromNatural = true;
+      input2.value = naturalResult2.value[0].edtf;
+      result2.value = parse(input2.value);
+      isUpdatingFromNatural = false;
+
+      // Perform comparison
+      if (result.value?.success && result2.value?.success) {
+        performComparison();
+      }
+    }
+  } catch (error: any) {
+    naturalError2.value = error.message || 'Failed to parse natural language input';
+    naturalResult2.value = null;
+  }
+}
+
+async function parseNaturalInput2() {
+  if (!naturalInput2.value.trim()) {
+    naturalResult2.value = null;
+    naturalError2.value = null;
+    return;
+  }
+
+  try {
+    const { parseNatural } = await import('@edtf-ts/natural');
+    naturalError2.value = null;
+    naturalResult2.value = parseNatural(naturalInput2.value);
+  } catch (error: any) {
+    naturalError2.value = error.message || 'Failed to parse natural language input';
+    naturalResult2.value = null;
+  }
+}
+
+async function performComparison() {
+  if (!result.value?.success || !result2.value?.success) {
+    comparisonResult.value = null;
+    comparisonBounds.value = null;
+    return;
+  }
+
+  try {
+    // Dynamic import for comparison functions
+    const compareModule = await import('@edtf-ts/compare');
+
+    // Get normalized bounds for display
+    const normA = compareModule.normalize(result.value.value);
+    const normB = compareModule.normalize(result2.value.value);
+    comparisonBounds.value = {
+      a: normA.members[0],
+      b: normB.members[0]
+    };
+
+    // Evaluate all Allen relations
+    comparisonResult.value = {
+      // Base relations
+      before: compareModule.isBefore(result.value.value, result2.value.value),
+      after: compareModule.isAfter(result.value.value, result2.value.value),
+      meets: compareModule.meets(result.value.value, result2.value.value),
+      metBy: compareModule.meets(result2.value.value, result.value.value), // Symmetric
+      overlaps: compareModule.overlaps(result.value.value, result2.value.value),
+      overlappedBy: compareModule.overlaps(result2.value.value, result.value.value), // Symmetric
+      starts: compareModule.starts(result.value.value, result2.value.value),
+      startedBy: compareModule.starts(result2.value.value, result.value.value), // Symmetric
+      during: compareModule.during(result.value.value, result2.value.value),
+      contains: compareModule.contains(result.value.value, result2.value.value),
+      finishes: compareModule.finishes(result.value.value, result2.value.value),
+      finishedBy: compareModule.finishes(result2.value.value, result.value.value), // Symmetric
+      equals: compareModule.equals(result.value.value, result2.value.value),
+
+      // Derived relations
+      intersects: compareModule.intersects(result.value.value, result2.value.value),
+      disjoint: compareModule.disjoint(result.value.value, result2.value.value),
+      touches: compareModule.touches(result.value.value, result2.value.value),
+      duringOrEqual: compareModule.duringOrEqual ? compareModule.duringOrEqual(result.value.value, result2.value.value) : 'UNKNOWN',
+      containsOrEqual: compareModule.containsOrEqual ? compareModule.containsOrEqual(result.value.value, result2.value.value) : 'UNKNOWN',
+    };
+  } catch (error: any) {
+    console.error('Comparison error:', error);
+    comparisonResult.value = null;
+  }
+}
+
+function formatBound(value: bigint | null): string {
+  if (value === null) return 'null';
+  // Format as a readable date string
+  try {
+    const ms = Number(value);
+    const date = new Date(ms);
+    return date.toISOString();
+  } catch {
+    return value.toString();
+  }
+}
+
+function getRelationClass(truthValue: string): string {
+  return `truth-${truthValue?.toLowerCase() || 'unknown'}`;
+}
+
 function selectExample(edtf: string) {
   input.value = edtf;
   onEdtfInput();
@@ -426,6 +743,7 @@ function selectExample(edtf: string) {
 
 onMounted(() => {
   onEdtfInput();
+  onEdtfInput2();
 });
 </script>
 
@@ -912,6 +1230,224 @@ onMounted(() => {
   line-height: 1.3;
 }
 
+/* Comparison section */
+.comparison-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--vp-c-divider);
+}
+
+.comparison-section h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: var(--vp-c-text-1);
+}
+
+.comparison-description {
+  color: var(--vp-c-text-2);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.comparison-results {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--vp-c-bg);
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.comparison-results h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.comparison-note {
+  color: var(--vp-c-text-2);
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.inline-code {
+  font-family: var(--vp-font-family-mono);
+  background: var(--vp-c-bg-soft);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  color: var(--vp-c-brand);
+  font-size: 0.9em;
+}
+
+.relations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.relation-group h5 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--vp-c-text-1);
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding-bottom: 0.35rem;
+}
+
+.relation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--vp-c-bg-soft);
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.relation-name {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.85rem;
+  color: var(--vp-c-text-1);
+  font-weight: 500;
+}
+
+.relation-value {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* Truth value colors */
+.truth-yes {
+  border-left-color: var(--vp-c-green);
+}
+
+.truth-yes .relation-value {
+  background: var(--vp-c-green-soft);
+  color: var(--vp-c-green);
+}
+
+.truth-no {
+  border-left-color: var(--vp-c-red);
+}
+
+.truth-no .relation-value {
+  background: var(--vp-c-red-soft);
+  color: var(--vp-c-red);
+}
+
+.truth-maybe {
+  border-left-color: var(--vp-c-yellow);
+}
+
+.truth-maybe .relation-value {
+  background: var(--vp-c-yellow-soft);
+  color: var(--vp-c-yellow-dark);
+}
+
+.truth-unknown {
+  border-left-color: var(--vp-c-text-3);
+}
+
+.truth-unknown .relation-value {
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
+}
+
+/* Bounds display */
+.bounds-display {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: var(--vp-c-bg);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.bounds-line {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.bounds-line:last-child {
+  margin-bottom: 0;
+}
+
+.bounds-label {
+  font-family: var(--vp-font-family-mono);
+  font-weight: 600;
+  color: var(--vp-c-brand);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.bounds-values {
+  font-family: var(--vp-font-family-mono);
+  color: var(--vp-c-text-2);
+  word-break: break-all;
+}
+
+.legend {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.legend h5 {
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+}
+
+.legend-badge {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.legend-item.truth-yes .legend-badge {
+  background: var(--vp-c-green-soft);
+  color: var(--vp-c-green);
+}
+
+.legend-item.truth-no .legend-badge {
+  background: var(--vp-c-red-soft);
+  color: var(--vp-c-red);
+}
+
+.legend-item.truth-maybe .legend-badge {
+  background: var(--vp-c-yellow-soft);
+  color: var(--vp-c-yellow-dark);
+}
+
+.legend-item.truth-unknown .legend-badge {
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
+}
+
 @media (max-width: 640px) {
   .edtf-playground {
     padding: 0.75rem;
@@ -932,6 +1468,15 @@ onMounted(() => {
 
   .options-grid {
     grid-template-columns: 1fr;
+  }
+
+  .relations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .legend-items {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
 </style>
