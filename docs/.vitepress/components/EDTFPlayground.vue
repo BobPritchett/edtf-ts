@@ -55,6 +55,105 @@
       </div>
     </div>
 
+    <div class="format-options-section">
+      <button
+        class="format-options-toggle"
+        @click="formatOptionsExpanded = !formatOptionsExpanded"
+      >
+        <span class="toggle-icon">{{ formatOptionsExpanded ? '▼' : '▶' }}</span>
+        FormatOptions
+      </button>
+
+      <div v-if="formatOptionsExpanded" class="format-options-content">
+        <div class="options-grid">
+          <!-- includeQualifications -->
+          <div class="option-item">
+            <label class="option-label">
+              <input
+                type="checkbox"
+                v-model="formatOptions.includeQualifications"
+              />
+              <span class="option-name">Include Qualifications</span>
+            </label>
+            <div class="option-description">Show uncertainty/approximation indicators (?, ~, %)</div>
+          </div>
+
+          <!-- showUnspecified -->
+          <div class="option-item">
+            <label class="option-label">
+              <input
+                type="checkbox"
+                v-model="formatOptions.showUnspecified"
+              />
+              <span class="option-name">Show Unspecified</span>
+            </label>
+            <div class="option-description">Display unspecified digits as 'X' or replace with ranges</div>
+          </div>
+
+          <!-- dateStyle -->
+          <div class="option-item option-item-inline">
+            <label class="option-label-inline">
+              <span class="option-name">Date Style</span>
+              <select v-model="formatOptions.dateStyle" class="option-select">
+                <option value="full">Full</option>
+                <option value="long">Long</option>
+                <option value="medium">Medium</option>
+                <option value="short">Short</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- locale -->
+          <div class="option-item option-item-inline">
+            <label class="option-label-inline">
+              <span class="option-name">Locale</span>
+              <input
+                type="text"
+                v-model="formatOptions.locale"
+                class="option-input"
+                placeholder="e.g., en-US, fr-FR"
+              />
+            </label>
+          </div>
+
+          <!-- era -->
+          <div class="option-item option-item-inline">
+            <label class="option-label-inline">
+              <span class="option-name">Era Length</span>
+              <select v-model="formatOptions.era" class="option-select">
+                <option value="long">Long</option>
+                <option value="short">Short</option>
+                <option value="narrow">Narrow</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- eraDisplay -->
+          <div class="option-item option-item-inline">
+            <label class="option-label-inline">
+              <span class="option-name">Era Display</span>
+              <select v-model="formatOptions.eraDisplay" class="option-select">
+                <option value="auto">Auto</option>
+                <option value="always">Always</option>
+                <option value="never">Never</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- eraNotation -->
+          <div class="option-item option-item-inline">
+            <label class="option-label-inline">
+              <span class="option-name">Era Notation</span>
+              <select v-model="formatOptions.eraNotation" class="option-select">
+                <option value="bc-ad">BC/AD</option>
+                <option value="bce-ce">BCE/CE</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div v-if="result?.success" class="playground-result">
       <div class="result-compact">
         <div class="result-row">
@@ -153,15 +252,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList } from '@edtf-ts/core';
 import { formatHuman } from '@edtf-ts/utils';
+import type { FormatOptions } from '@edtf-ts/utils';
 
 const input = ref('1985-04-12');
 const result = ref<any>(null);
 const naturalInput = ref('');
 const naturalResult = ref<any>(null);
 const naturalError = ref<string | null>(null);
+
+// FormatOptions state - always reset to defaults on component mount
+const formatOptionsExpanded = ref(false);
+const formatOptions = ref<FormatOptions>({
+  includeQualifications: true,
+  showUnspecified: false,
+  dateStyle: 'full',
+  locale: 'en-US',
+  era: 'short',
+  eraDisplay: 'auto',
+  eraNotation: 'bc-ad',
+});
 
 const examples = [
   { label: 'Simple Date', edtf: '1985-04-12' },
@@ -198,7 +310,7 @@ const hasPartialQualification = computed(() => {
 const formattedEDTF = computed(() => {
   if (!result.value?.success) return '';
   try {
-    return formatHuman(result.value.value);
+    return formatHuman(result.value.value, formatOptions.value);
   } catch {
     return result.value.value.edtf;
   }
@@ -206,6 +318,16 @@ const formattedEDTF = computed(() => {
 
 let isUpdatingFromEdtf = false;
 let isUpdatingFromNatural = false;
+
+// Watch for format options changes and update natural language output
+watch(formatOptions, () => {
+  if (result.value?.success && !isUpdatingFromNatural) {
+    isUpdatingFromEdtf = true;
+    naturalInput.value = formattedEDTF.value;
+    parseNaturalInput();
+    isUpdatingFromEdtf = false;
+  }
+}, { deep: true });
 
 function onEdtfInput() {
   if (isUpdatingFromNatural) return;
@@ -309,38 +431,40 @@ onMounted(() => {
 
 <style scoped>
 .edtf-playground {
-  margin: 2rem 0;
-  padding: 2rem;
+  margin: 1rem 0;
+  padding: 1rem;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--vp-c-bg-soft);
 }
 
 .playground-header h2 {
   margin-top: 0;
-  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 1.3rem;
 }
 
 .playground-header p {
   color: var(--vp-c-text-2);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 
 .playground-examples {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
 }
 
 .example-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border: 1px solid var(--vp-c-divider);
   border-radius: 4px;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   transition: all 0.2s;
 }
 
@@ -357,8 +481,8 @@ onMounted(() => {
 
 .playground-inputs {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .input-column {
@@ -368,15 +492,16 @@ onMounted(() => {
 
 .input-column label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   font-weight: 600;
+  font-size: 0.9rem;
   color: var(--vp-c-text-1);
 }
 
 .input-status {
-  margin-top: 0.5rem;
-  min-height: 1.5rem;
-  font-size: 0.875rem;
+  margin-top: 0.35rem;
+  min-height: 1.2rem;
+  font-size: 0.8rem;
 }
 
 .status-valid {
@@ -410,12 +535,12 @@ onMounted(() => {
 
 .edtf-input-field {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--vp-c-divider);
   border-radius: 4px;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-family: var(--vp-font-family-mono);
 }
 
@@ -493,36 +618,36 @@ onMounted(() => {
 .result-compact {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.6rem;
 }
 
 .result-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  gap: 0.5rem;
+  padding: 0.5rem;
   background: var(--vp-c-bg);
   border-radius: 4px;
 }
 
 .row-label {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--vp-c-text-2);
 }
 
 .row-label-sub {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--vp-c-text-2);
-  margin-left: 0.5rem;
+  margin-left: 0.35rem;
 }
 
 .row-value {
   font-family: var(--vp-font-family-mono);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   background: var(--vp-c-bg-soft);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 3px;
   color: var(--vp-c-text-1);
 }
@@ -543,7 +668,7 @@ onMounted(() => {
 }
 
 .playground-result {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .result-success h3 {
@@ -557,59 +682,59 @@ onMounted(() => {
 }
 
 .result-section {
-  margin: 1.5rem 0;
-  padding: 1rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
   background: var(--vp-c-bg);
   border-radius: 4px;
 }
 
 .result-section h4 {
   margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
+  margin-bottom: 0.6rem;
+  font-size: 1rem;
   color: var(--vp-c-text-1);
 }
 
 .result-subsection {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--vp-c-divider);
 }
 
 .result-subsection h5 {
   margin-top: 0;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
   color: var(--vp-c-text-2);
 }
 
 .result-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
 }
 
 .result-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .result-item .label {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--vp-c-text-2);
   font-weight: 500;
 }
 
 .result-item .value {
   color: var(--vp-c-text-1);
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .result-item .value.code {
   font-family: var(--vp-font-family-mono);
   background: var(--vp-c-bg-soft);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 3px;
 }
 
@@ -617,28 +742,29 @@ onMounted(() => {
   display: inline-block;
   background: var(--vp-c-brand-soft);
   color: var(--vp-c-brand);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 3px;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .value-list {
   margin: 0;
-  padding-left: 1.5rem;
+  padding-left: 1.25rem;
 }
 
 .value-list li {
   font-family: var(--vp-font-family-mono);
-  margin: 0.5rem 0;
+  margin: 0.35rem 0;
+  font-size: 0.85rem;
 }
 
 .json-output {
   margin: 0;
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--vp-code-block-bg);
   border-radius: 4px;
   overflow-x: auto;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .json-output code {
@@ -646,36 +772,154 @@ onMounted(() => {
 }
 
 .error-item {
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--vp-c-bg);
   border-left: 3px solid var(--vp-c-red);
-  margin: 1rem 0;
+  margin: 0.75rem 0;
 }
 
 .error-code {
   font-family: var(--vp-font-family-mono);
   font-weight: 600;
+  font-size: 0.85rem;
   color: var(--vp-c-red);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .error-message {
   color: var(--vp-c-text-1);
-  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
 }
 
 .error-position {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--vp-c-text-2);
+}
+
+.format-options-section {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
+  background: var(--vp-c-bg-soft);
+}
+
+.format-options-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--vp-c-text-1);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.format-options-toggle:hover {
+  color: var(--vp-c-brand);
+}
+
+.toggle-icon {
+  font-size: 0.75rem;
+  color: var(--vp-c-text-2);
+}
+
+.format-options-content {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  row-gap: 0.5rem;
+}
+
+.option-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.option-item-inline {
+  flex-direction: row;
+  align-items: center;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: var(--vp-c-text-1);
+}
+
+.option-label-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  color: var(--vp-c-text-1);
+}
+
+.option-label input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.option-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.option-select,
+.option-input {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.option-label-inline .option-select,
+.option-label-inline .option-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.option-select:focus,
+.option-input:focus {
+  outline: none;
+  border-color: var(--vp-c-brand);
+}
+
+.option-description {
+  font-size: 0.75rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.3;
 }
 
 @media (max-width: 640px) {
   .edtf-playground {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .playground-inputs {
     flex-direction: column;
+    gap: 0.5rem;
   }
 
   .result-grid {
@@ -683,7 +927,11 @@ onMounted(() => {
   }
 
   .result-row {
-    gap: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

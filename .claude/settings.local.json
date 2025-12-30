@@ -20,7 +20,9 @@
       "Bash(git restore:*)",
       "Bash(npm run build:*)",
       "Bash(pnpm run build:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(pnpm run dev)",
+      "Bash(pnpm -r --filter @edtf-ts/utils run build:*)"
     ]
   }
 }

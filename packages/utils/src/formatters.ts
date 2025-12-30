@@ -93,6 +93,49 @@ function formatUnspecifiedYear(year: string): string {
 }
 
 /**
+ * Cache for month names by locale and style
+ * Key format: "locale|style" (e.g., "en-US|short", "fr-FR|long")
+ * Value: Array of 12 month names (index 0 = January)
+ */
+const monthNameCache = new Map<string, string[]>();
+
+/**
+ * Get a localized month name using Intl.DateTimeFormat with caching
+ */
+function getMonthName(
+  month: number,
+  locale: string | undefined,
+  style: 'numeric' | 'short' | 'long'
+): string {
+  if (style === 'numeric') {
+    return String(month).padStart(2, '0');
+  }
+
+  const cacheKey = `${locale || 'default'}|${style}`;
+
+  // Check cache first
+  let monthNames = monthNameCache.get(cacheKey);
+
+  if (!monthNames) {
+    // Generate all 12 month names for this locale+style combination
+    monthNames = [];
+    const formatter = new Intl.DateTimeFormat(locale, {
+      month: style,
+      timeZone: 'UTC',
+    });
+
+    for (let m = 1; m <= 12; m++) {
+      const date = new Date(Date.UTC(2000, m - 1, 1));
+      monthNames.push(formatter.format(date));
+    }
+
+    monthNameCache.set(cacheKey, monthNames);
+  }
+
+  return monthNames[month - 1]!;
+}
+
+/**
  * Format an era marker based on options
  */
 function formatEra(
@@ -171,51 +214,39 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
     result = `sometime in ${yearStr}`;
   } else if (day === 'XX' && month && typeof month === 'number' && typeof year === 'number') {
     // Unspecified day (e.g., "1872-01-XX")
-    const monthNames = dateStyle === 'short'
-      ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-      : dateStyle === 'medium'
-      ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    result = `some day in ${monthNames[month - 1]} ${yearStr}`;
+    const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+    const monthStr = getMonthName(month, locale, monthStyle);
+    result = `some day in ${monthStr} ${yearStr}`;
   } else if (month === 'XX' && typeof year === 'number') {
     // Unspecified month (e.g., "1999-XX")
     result = `some month in ${yearStr}`;
   } else if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'string') {
     // Unspecified year with specific month/day (e.g., "156X-12-25")
-    const monthNames = dateStyle === 'short'
-      ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-      : dateStyle === 'medium'
-      ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    result = `${monthNames[month - 1]} ${day} in the ${yearStr}`;
+    const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+    const monthStr = getMonthName(month, locale, monthStyle);
+    result = `${monthStr} ${day} in the ${yearStr}`;
   } else if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'number') {
     // Full date (only if year is numeric)
     // For BC dates, we can't use Intl.DateTimeFormat (doesn't support negative years)
     if (isNegativeYear) {
-      const monthNames = dateStyle === 'short'
-        ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-        : dateStyle === 'medium'
-        ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      result = `${monthNames[month - 1]} ${day}, ${yearStr}`;
+      const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+      const monthStr = getMonthName(month, locale, monthStyle);
+      result = `${monthStr} ${day}, ${yearStr}`;
     } else {
       const d = new Date(Date.UTC(year, month - 1, day));
       const formatter = new Intl.DateTimeFormat(locale, {
         year: 'numeric',
-        month: dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long',
-        day: 'numeric',
+        month: dateStyle === 'short' ? '2-digit' : dateStyle === 'medium' ? 'short' : 'long',
+        day: dateStyle === 'short' ? '2-digit' : 'numeric',
         timeZone: 'UTC',
       });
       result = formatter.format(d);
     }
   } else if (month && typeof month === 'number' && typeof year === 'number') {
     // Year and month (only if year is numeric)
-    const monthNames = dateStyle === 'short'
-      ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-      : dateStyle === 'medium'
-      ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    result = `${monthNames[month - 1]} ${yearStr}`;
+    const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+    const monthStr = getMonthName(month, locale, monthStyle);
+    result = `${monthStr} ${yearStr}`;
   } else {
     // Year only
     result = yearStr;
