@@ -1,4 +1,4 @@
-import * as nearley from 'nearley';
+import nearley from 'nearley';
 import { parse as parseEDTF } from '@edtf-ts/core';
 import type { EDTFBase } from '@edtf-ts/core';
 import grammar from './grammar.js';
@@ -76,6 +76,28 @@ export class ParseError extends Error {
  * // [{ edtf: '1950~', type: 'date', confidence: 0.95, ... }]
  * ```
  */
+/**
+ * Normalize input text for parsing
+ * - Normalize various dash/hyphen characters to standard hyphen
+ * - Normalize various apostrophe characters to standard apostrophe
+ * - Normalize various space characters to standard space
+ * - Remove common trailing words that don't affect date meaning
+ */
+function normalizeInput(input: string): string {
+  return input
+    // Normalize dashes: en-dash (–), em-dash (—), non-breaking hyphen, minus sign to regular hyphen
+    .replace(/[–—‐−]/g, '-')
+    // Normalize apostrophes: Unicode apostrophe ('), right single quotation mark to ASCII apostrophe
+    .replace(/[\u2019\u2018]/g, "'")
+    // Normalize spaces: non-breaking space, thin space to regular space
+    .replace(/[\u00A0\u2009]/g, ' ')
+    // Normalize multiple spaces to single space
+    .replace(/\s+/g, ' ')
+    .trim()
+    // Remove common trailing decorative words
+    .replace(/\s+(era|period|epoch|age)$/i, '');
+}
+
 export function parseNatural(
   input: string,
   options: ParseNaturalOptions = {}
@@ -90,13 +112,13 @@ export function parseNatural(
     throw new ParseError('Input must be a non-empty string', input);
   }
 
-  const trimmed = input.trim();
-  if (!trimmed) {
+  const normalized = normalizeInput(input);
+  if (!normalized) {
     throw new ParseError('Input must not be empty', input);
   }
 
   // First, try to parse as EDTF directly (pass-through for valid EDTF)
-  const edtfResult = parseEDTF(trimmed);
+  const edtfResult = parseEDTF(normalized);
   if (edtfResult.success) {
     // Valid EDTF string - return it as-is with high confidence
     return [{
@@ -114,11 +136,11 @@ export function parseNatural(
 
   // Parse the input
   try {
-    parser.feed(trimmed);
+    parser.feed(normalized);
   } catch (error: any) {
     throw new ParseError(
       `Failed to parse input: ${error.message}`,
-      trimmed,
+      normalized,
       error.offset
     );
   }
@@ -127,7 +149,7 @@ export function parseNatural(
   const results = parser.results;
 
   if (!results || results.length === 0) {
-    throw new ParseError('No valid parse found for input', trimmed);
+    throw new ParseError('No valid parse found for input', normalized);
   }
 
   // Process results
@@ -149,7 +171,7 @@ export function parseNatural(
   if (filtered.length === 0) {
     throw new ParseError(
       `No results met minimum confidence threshold of ${minConfidence}`,
-      trimmed
+      normalized
     );
   }
 

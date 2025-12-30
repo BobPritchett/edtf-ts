@@ -302,6 +302,10 @@ datevalue_base ->
       {% d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.95 }) %}
   | numeric_year _ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
       {% d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 }) %}
+  | "on"i __ "the"i __ ordinal_day __ "of"i __ month_name _ "," _ year_num
+      {% d => ({ type: 'date', edtf: `${pad4(d[12])}-${months[d[8].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 }) %}
+  | "on"i __ "the"i __ ordinal_day __ "of"i __ month_name __ year_num
+      {% d => ({ type: 'date', edtf: `${pad4(d[10])}-${months[d[8].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 }) %}
   | "the"i __ ordinal_day __ "of"i __ month_name _ "," _ year_num
       {% d => ({ type: 'date', edtf: `${pad4(d[10])}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | "the"i __ ordinal_day __ "of"i __ month_name __ year_num
@@ -310,6 +314,10 @@ datevalue_base ->
       {% d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
   | ordinal_day __ "of"i __ month_name __ year_num
       {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
+  | month_name __ "the"i __ ordinal_day _ "," _ year_num
+      {% d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[0].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 }) %}
+  | month_name __ "the"i __ ordinal_day __ year_num
+      {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 }) %}
   | month_name __ ordinal_day _ "," _ year_num
       {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | month_name __ ordinal_day __ year_num
@@ -325,13 +333,13 @@ datevalue_base ->
   | month_name __ year_num
       {% d => ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
   | "the" __ digit digit "0" "0'" "s"
-      {% d => ({ type: 'date', edtf: `${d[2]}${d[3]}XX`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${d[2]}${d[3]}XX`, confidence: 0.98 }) %}
   | digit digit "0" "0'" "s"
-      {% d => ({ type: 'date', edtf: `${d[0]}${d[1]}XX`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${d[0]}${d[1]}XX`, confidence: 0.98 }) %}
   | "the" __ digit digit "0" "0s"
-      {% d => ({ type: 'date', edtf: `${d[2]}${d[3]}XX`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${d[2]}${d[3]}XX`, confidence: 0.98 }) %}
   | digit digit "0" "0s"
-      {% d => ({ type: 'date', edtf: `${d[0]}${d[1]}XX`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${d[0]}${d[1]}XX`, confidence: 0.98 }) %}
   | "the" __ digit digit digit "0'" "s"
       {% d => ({ type: 'date', edtf: `${d[2]}${d[3]}${d[4]}X`, confidence: 0.95 }) %}
   | digit digit digit "0'" "s"
@@ -344,6 +352,68 @@ datevalue_base ->
       {% d => ({ type: 'date', edtf: `19${d[3]}X`, confidence: 0.9 }) %}
   | "'" digit digit "s"
       {% d => ({ type: 'date', edtf: `19${d[1]}X`, confidence: 0.9 }) %}
+  | "the"i __ ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const centuryNum = d[2];
+        const yearPrefix = String(centuryNum - 1).padStart(2, '0');
+        return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
+      } %}
+  | ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const centuryNum = d[0];
+        const yearPrefix = String(centuryNum - 1).padStart(2, '0');
+        return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
+      } %}
+  | "the"i __ spelled_ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const centuryNum = d[2];
+        const yearPrefix = String(centuryNum - 1).padStart(2, '0');
+        return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
+      } %}
+  | spelled_ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const centuryNum = d[0];
+        const yearPrefix = String(centuryNum - 1).padStart(2, '0');
+        return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
+      } %}
+  | "the"i __ spelled_century __ "century"i __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const centuryPrefix = d[2];
+        const year = parseInt(centuryPrefix, 10) * 100;
+        return { type: 'date', edtf: `-${pad4(year - 1)}XX`, confidence: 0.95 };
+      } %}
+  | spelled_century __ "century"i __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const centuryPrefix = d[0];
+        const year = parseInt(centuryPrefix, 10) * 100;
+        return { type: 'date', edtf: `-${pad4(year - 1)}XX`, confidence: 0.95 };
+      } %}
+  | "the"i __ ordinal_century __ ("century"i | "c"i ".") __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const centuryNum = d[2];
+        const year = (centuryNum - 1) * 100;
+        const yearPrefix = String(year).substring(0, 2);
+        return { type: 'date', edtf: `${yearPrefix}XX`, confidence: 0.95 };
+      } %}
+  | ordinal_century __ ("century"i | "c"i ".") __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const centuryNum = d[0];
+        const year = (centuryNum - 1) * 100;
+        const yearPrefix = String(year).substring(0, 2);
+        return { type: 'date', edtf: `${yearPrefix}XX`, confidence: 0.95 };
+      } %}
+  | "the"i __ spelled_century __ "century"i __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const centuryPrefix = d[2];
+        const year = (parseInt(centuryPrefix, 10) - 1) * 100;
+        return { type: 'date', edtf: `${String(year).padStart(2, '0')}XX`, confidence: 0.95 };
+      } %}
+  | spelled_century __ "century"i __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const centuryPrefix = d[0];
+        const year = (parseInt(centuryPrefix, 10) - 1) * 100;
+        return { type: 'date', edtf: `${String(year).padStart(2, '0')}XX`, confidence: 0.95 };
+      } %}
   | "the"i __ ordinal_century __ ("century"i | "c"i ".")
       {% d => {
         const centuryNum = d[2];
@@ -359,6 +429,10 @@ datevalue_base ->
   | "the"i __ spelled_century __ "century"i
       {% d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 }) %}
   | spelled_century __ "century"i
+      {% d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 }) %}
+  | "the"i __ spelled_number_word __ "hundreds"i
+      {% d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 }) %}
+  | spelled_number_word __ "hundreds"i
       {% d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 }) %}
   | "the"i __ spelled_decade
       {% d => ({ type: 'date', edtf: `19${d[2]}X`, confidence: 0.9 }) %}
@@ -471,6 +545,43 @@ ordinal_day ->
 ordinal_century ->
     digit digit ("st"i | "nd"i | "rd"i | "th"i) {% d => parseInt(d[0] + d[1], 10) %}
   | digit ("st"i | "nd"i | "rd"i | "th"i) {% d => parseInt(d[0], 10) %}
+
+# Spelled-out ordinal numbers for centuries
+spelled_ordinal_century ->
+    "first"i {% () => 1 %}
+  | "second"i {% () => 2 %}
+  | "third"i {% () => 3 %}
+  | "fourth"i {% () => 4 %}
+  | "fifth"i {% () => 5 %}
+  | "sixth"i {% () => 6 %}
+  | "seventh"i {% () => 7 %}
+  | "eighth"i {% () => 8 %}
+  | "ninth"i {% () => 9 %}
+  | "tenth"i {% () => 10 %}
+  | "eleventh"i {% () => 11 %}
+  | "twelfth"i {% () => 12 %}
+  | "thirteenth"i {% () => 13 %}
+  | "fourteenth"i {% () => 14 %}
+  | "fifteenth"i {% () => 15 %}
+  | "sixteenth"i {% () => 16 %}
+  | "seventeenth"i {% () => 17 %}
+  | "eighteenth"i {% () => 18 %}
+  | "nineteenth"i {% () => 19 %}
+  | "twentieth"i {% () => 20 %}
+  | "twenty-first"i {% () => 21 %}
+
+# Spelled-out number words (for "eighteen hundreds", etc.)
+spelled_number_word ->
+    "eighteen"i {% () => '18' %}
+  | "seventeen"i {% () => '17' %}
+  | "sixteen"i {% () => '16' %}
+  | "fifteen"i {% () => '15' %}
+  | "fourteen"i {% () => '14' %}
+  | "thirteen"i {% () => '13' %}
+  | "twelve"i {% () => '12' %}
+  | "eleven"i {% () => '11' %}
+  | "nineteen"i {% () => '19' %}
+  | "twenty"i {% () => '20' %}
 
 # Spelled-out centuries
 spelled_century ->

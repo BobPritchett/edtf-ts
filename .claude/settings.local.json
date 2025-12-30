@@ -22,7 +22,8 @@
       "Bash(pnpm run build:*)",
       "Bash(npx vitest:*)",
       "Bash(pnpm run dev)",
-      "Bash(pnpm -r --filter @edtf-ts/utils run build:*)"
+      "Bash(pnpm -r --filter @edtf-ts/utils run build:*)",
+      "Bash(pnpm list:*)"
     ]
   }
 }
