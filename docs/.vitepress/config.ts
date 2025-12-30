@@ -76,7 +76,9 @@ export default defineConfig({
           text: 'API Reference',
           items: [
             { text: '@edtf-ts/core', link: '/api/core' },
-            { text: '@edtf-ts/utils', link: '/api/utils' }
+            { text: '@edtf-ts/utils', link: '/api/utils' },
+            { text: '@edtf-ts/compare', link: '/api/compare' },
+            { text: '@edtf-ts/natural', link: '/api/natural' }
           ]
         },
         {
@@ -87,7 +89,8 @@ export default defineConfig({
             { text: 'EDTFInterval', link: '/api/types/interval' },
             { text: 'EDTFSeason', link: '/api/types/season' },
             { text: 'EDTFSet', link: '/api/types/set' },
-            { text: 'EDTFList', link: '/api/types/list' }
+            { text: 'EDTFList', link: '/api/types/list' },
+            { text: 'Member (Four-Bound)', link: '/api/types/member' }
           ]
         },
         {

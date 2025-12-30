@@ -305,10 +305,10 @@ export function during(a: Member, b: Member): Truth {
     // A is definitely not during B if:
     // - A's latest possible start is before or equal to B's earliest possible start
     //   (A cannot start strictly after B)
-    if (a.sMax <= b.sMin) return 'NO';
+    if (a.sMax !== null && b.sMin !== null && a.sMax <= b.sMin) return 'NO';
     // - A's earliest possible end is after or equal to B's latest possible end
     //   (A cannot end strictly before B)
-    if (a.eMin >= b.eMax) return 'NO';
+    if (a.eMin !== null && b.eMax !== null && a.eMin >= b.eMax) return 'NO';
   }
 
   return 'MAYBE';

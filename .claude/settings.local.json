@@ -24,7 +24,8 @@
       "Bash(pnpm run dev)",
       "Bash(pnpm -r --filter @edtf-ts/utils run build:*)",
       "Bash(pnpm list:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(ls:*)"
     ]
   }
 }
