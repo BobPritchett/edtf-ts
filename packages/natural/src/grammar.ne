@@ -81,7 +81,37 @@ __ -> [\s]:+ {% () => null %}
 # ==========================================
 
 interval ->
-    "before" __ datevalue
+    numeric_year _ "-" _ numeric_year __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const startYear = parseInt(d[0], 10) - 1;
+        const endYear = parseInt(d[4], 10) - 1;
+        return { type: 'interval', edtf: `-${pad4(startYear)}/-${pad4(endYear)}`, confidence: 0.98 };
+      } %}
+  | numeric_year __ "to"i __ numeric_year __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const startYear = parseInt(d[0], 10) - 1;
+        const endYear = parseInt(d[4], 10) - 1;
+        return { type: 'interval', edtf: `-${pad4(startYear)}/-${pad4(endYear)}`, confidence: 0.98 };
+      } %}
+  | numeric_year _ "-" _ numeric_year __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const startYear = parseInt(d[0], 10);
+        const endYear = parseInt(d[4], 10);
+        return { type: 'interval', edtf: `${pad4(startYear)}/${pad4(endYear)}`, confidence: 0.98 };
+      } %}
+  | numeric_year __ "to"i __ numeric_year __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const startYear = parseInt(d[0], 10);
+        const endYear = parseInt(d[4], 10);
+        return { type: 'interval', edtf: `${pad4(startYear)}/${pad4(endYear)}`, confidence: 0.98 };
+      } %}
+  | "from"i __ month_name __ "to"i __ month_name __ year_num
+      {% d => ({ type: 'interval', edtf: `${pad4(d[8])}-${months[d[2].toLowerCase()]}/${pad4(d[8])}-${months[d[6].toLowerCase()]}`, confidence: 0.95 }) %}
+  | month_name __ "to"i __ month_name __ year_num
+      {% d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}/${pad4(d[6])}-${months[d[4].toLowerCase()]}`, confidence: 0.9 }) %}
+  | month_name _ "-" _ month_name __ year_num
+      {% d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}/${pad4(d[6])}-${months[d[4].toLowerCase()]}`, confidence: 0.9 }) %}
+  | "before" __ datevalue
       {% d => ({ type: 'interval', edtf: `../${d[2].edtf}`, confidence: 0.95 }) %}
   | "earlier" __ "than" __ datevalue
       {% d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 }) %}
@@ -175,9 +205,9 @@ list ->
 
 season ->
     qualifier __ season_name __ year_num
-      {% d => ({ type: 'season', edtf: `${d[4]}-${seasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${seasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 }) %}
   | season_name __ year_num
-      {% d => ({ type: 'season', edtf: `${d[2]}-${seasons[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'season', edtf: `${pad4(d[2])}-${seasons[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
 
 season_name -> ("spring"i | "summer"i | "autumn"i | "fall"i | "winter"i) {% d => d[0][0] %}
 
@@ -221,17 +251,17 @@ datevalue ->
 
 datevalue_base ->
     "sometime"i __ "in"i __ month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[6]}-${months[d[4].toLowerCase()]}-XX`, confidence: 0.9 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4].toLowerCase()]}-XX`, confidence: 0.9 }) %}
   | "some"i __ "day"i __ "in"i __ month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[8]}-${months[d[6].toLowerCase()]}-XX`, confidence: 0.9 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6].toLowerCase()]}-XX`, confidence: 0.9 }) %}
   | "a"i __ "day"i __ "in"i __ month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[8]}-${months[d[6].toLowerCase()]}-XX`, confidence: 0.9 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6].toLowerCase()]}-XX`, confidence: 0.9 }) %}
   | "sometime"i __ "in"i __ year_num
-      {% d => ({ type: 'date', edtf: `${d[4]}-XX-XX`, confidence: 0.9 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[4])}-XX-XX`, confidence: 0.9 }) %}
   | "some"i __ "month"i __ "in"i __ year_num
-      {% d => ({ type: 'date', edtf: `${d[6]}-XX`, confidence: 0.9 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[6])}-XX`, confidence: 0.9 }) %}
   | "a"i __ "month"i __ "in"i __ year_num
-      {% d => ({ type: 'date', edtf: `${d[6]}-XX`, confidence: 0.9 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[6])}-XX`, confidence: 0.9 }) %}
   | numeric_year __ "Before"i __ "Common"i __ "Era"i
       {% d => {
         const year = parseInt(d[0], 10);
@@ -273,27 +303,27 @@ datevalue_base ->
   | numeric_year _ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
       {% d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 }) %}
   | "the"i __ ordinal_day __ "of"i __ month_name _ "," _ year_num
-      {% d => ({ type: 'date', edtf: `${d[10]}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[10])}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | "the"i __ ordinal_day __ "of"i __ month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[8]}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | ordinal_day __ "of"i __ month_name _ "," _ year_num
-      {% d => ({ type: 'date', edtf: `${d[8]}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
   | ordinal_day __ "of"i __ month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[6]}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
   | month_name __ ordinal_day _ "," _ year_num
-      {% d => ({ type: 'date', edtf: `${d[6]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | month_name __ ordinal_day __ year_num
-      {% d => ({ type: 'date', edtf: `${d[4]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | ordinal_day __ month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[4]}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
   | month_name __ day_num _ "," _ year_num
-      {% d => ({ type: 'date', edtf: `${d[6]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | month_name __ day_num __ year_num
-      {% d => ({ type: 'date', edtf: `${d[4]}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 }) %}
   | day_num __ month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[4]}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 }) %}
   | month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${d[2]}-${months[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
   | "the" __ digit digit "0" "0'" "s"
       {% d => ({ type: 'date', edtf: `${d[2]}${d[3]}XX`, confidence: 0.95 }) %}
   | digit digit "0" "0'" "s"
@@ -343,10 +373,10 @@ datevalue_base ->
         return { type: 'date', edtf: `${String(fullYear).substring(0, 3)}X`, confidence: 0.9 };
       } %}
   | year_num _ "-ish"
-      {% d => ({ type: 'date', edtf: `${d[0]}~`, confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 }) %}
   | year_num "ish"
-      {% d => ({ type: 'date', edtf: `${d[0]}~`, confidence: 0.95 }) %}
-  | year_num {% d => ({ type: 'date', edtf: d[0], confidence: 0.95 }) %}
+      {% d => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 }) %}
+  | year_num {% d => ({ type: 'date', edtf: pad4(d[0]), confidence: 0.95 }) %}
 
 # ==========================================
 # QUALIFIERS
@@ -417,6 +447,9 @@ month_name ->
 
 year_num ->
     digit digit digit digit {% d => d[0] + d[1] + d[2] + d[3] %}
+  | digit digit digit {% d => d[0] + d[1] + d[2] %}
+  | digit digit {% d => d[0] + d[1] %}
+  | digit {% d => d[0] %}
 
 # Numeric year for BC/AD/BCE/CE (1-4 digits)
 numeric_year ->
