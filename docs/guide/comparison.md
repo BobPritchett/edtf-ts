@@ -461,21 +461,74 @@ switch (result) {
 }
 ```
 
-### 2. Use Appropriate Quantifiers
+### 2. Understanding Set and List Semantics
 
-For Sets and Lists, choose the right quantifier:
+Sets and Lists have special semantics that can produce surprising results:
+
+#### Sets Use "One Of" Semantics
+
+A Set like `[1667,1668,1670..1672]` means **"one of these years"**. When comparing Sets, the library checks each member individually and combines results using the `ANY` quantifier.
+
+```typescript
+import { equals, normalize } from '@edtf-ts/compare';
+
+// Set: "one of these years"
+const set = parse('[1667,1668,1670..1672]').value;  // Years: 1667, 1668, 1670, 1671, 1672
+const year = parse('1671').value;
+
+// Does the set equal 1671?
+equals(set, year);  // 'YES' - because 1671 is one of the values in the set!
+
+// The set has 5 members
+const normalized = normalize(set);
+console.log(normalized.members.length);  // 5
+
+// But equals() checks: "Does ANY member equal 1671?"
+// Since member 4 (year 1671) equals 1671, the answer is YES
+```
+
+**Why this is correct:** The Set represents "one of these years". Since 1671 is literally one of the possible values, saying the Set equals 1671 is semantically valid - the Set *could be* 1671.
+
+**Important:** Allen relations operate on the **full EDTF semantics**, not just the bounds. For Sets:
+- Bounds show the **convex hull** (earliest start to latest end)
+- Relations check **each member** and combine with `ANY` quantifier
+- This means `equals([1667,1668,1670..1672], 1671)` returns `YES` even though the convex hull spans 1667-1672
+
+#### Lists Use "All Of" Semantics
+
+Lists with `{...}` syntax mean **"all of these"** and use the `ALL` quantifier:
+
+```typescript
+const list = parse('{1985,1990}').value;  // Both years
+const period = parse('1980/2000').value;
+
+// Are all dates during the period?
+during(list, period);  // 'YES' - both are during
+
+// Does the list equal 1985?
+equals(list, parse('1985').value);  // 'NO' - the list is not just 1985
+```
+
+#### Choosing Quantifiers Explicitly
+
+You can override the default quantifier:
 
 ```typescript
 import { during } from '@edtf-ts/compare';
 
-const dates = parse('[1985, 1990, 1995]').value;  // Set
+const dates = parse('[1985, 1990, 1995]').value;  // Set (defaults to ANY)
 const period = parse('1980/2000').value;
 
 // ANY: Is any date during the period?
-during(dates, period, 'ANY');  // 'YES' - all are during
+during(dates, period, 'ANY');  // 'YES' - all happen to be during
 
 // ALL: Are all dates during the period?
 during(dates, period, 'ALL');  // 'YES' - all are during
+
+// For a set spanning outside the period
+const widerSet = parse('[1970, 1985, 2010]').value;
+during(widerSet, period, 'ANY');  // 'YES' - 1985 is during
+during(widerSet, period, 'ALL');  // 'NO' - 1970 and 2010 are not
 ```
 
 ### 3. Display Bounds for Debugging

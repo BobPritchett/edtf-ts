@@ -205,7 +205,25 @@ equals(parse('1985').value, parse('1985-01').value);  // 'NO'
 
 // Unspecified digits create uncertainty
 equals(parse('198X').value, parse('1985').value);  // 'MAYBE'
+
+// Sets use "one of" semantics with ANY quantifier
+const set = parse('[1667,1668,1670..1672]').value;  // 5 years
+const year = parse('1671').value;
+equals(set, year);  // 'YES' - 1671 is one of the values in the set!
 ```
+
+::: warning Set and List Semantics
+Sets (`[...]`) and Lists (`{...}`) have special comparison semantics:
+
+- **Sets** use `ANY` quantifier: Relations check if **any member** satisfies the relation
+  - `equals([1667,1668,1671], 1671)` → `YES` because 1671 is in the set
+  - Even though the convex hull spans 1667-1671, the relation checks individual members
+
+- **Lists** use `ALL` quantifier: Relations check if **all members** satisfy the relation
+  - `equals({1985,1990}, 1985)` → `NO` because the list includes both years
+
+The bounds displayed are the **convex hull** (min to max), but relations operate on **individual members**.
+:::
 
 ## Derived Relations
 
@@ -408,9 +426,91 @@ Also available with `derived` prefix:
 import { derivedIntersects, derivedDisjoint } from '@edtf-ts/compare';
 ```
 
+## Sets and Lists
+
+EDTF Sets and Lists have special comparison semantics that check individual members.
+
+### Set Semantics (One Of)
+
+Sets use **"one of"** semantics with the `ANY` quantifier. A Set like `[1667,1668,1671]` means "one of these years".
+
+```typescript
+import { parse } from '@edtf-ts/core';
+import { equals, normalize } from '@edtf-ts/compare';
+
+// Set: one of these years
+const set = parse('[1667,1668,1670..1672]').value;
+
+// Normalization creates 5 members (years 1667, 1668, 1670, 1671, 1672)
+const normalized = normalize(set);
+console.log(normalized.members.length);  // 5
+console.log(normalized.listMode);        // 'oneOf'
+
+// Comparing with a single year
+const year1671 = parse('1671').value;
+equals(set, year1671);  // 'YES' - because 1671 is one of the values!
+
+// The comparison checks: "Does ANY member equal 1671?"
+// Member 4 (year 1671) equals 1671, so the result is YES
+```
+
+**Important:** The convex hull spans 1667-1672, but relations check **individual members**, not the hull.
+
+### List Semantics (All Of)
+
+Lists use **"all of"** semantics with the `ALL` quantifier. A List like `{1985,1990}` means "all of these years".
+
+```typescript
+const list = parse('{1985,1990}').value;
+const normalized = normalize(list);
+console.log(normalized.listMode);  // 'allOf'
+
+// Comparing with a single year
+equals(list, parse('1985').value);  // 'NO' - list is not just 1985
+
+// The comparison checks: "Do ALL members equal 1985?"
+// Only member 1 equals 1985, member 2 does not, so result is NO
+```
+
+### Quantifier Override
+
+You can explicitly override the default quantifier:
+
+```typescript
+import { during } from '@edtf-ts/compare';
+
+const set = parse('[1970, 1985, 2010]').value;
+const period = parse('1980/2000').value;
+
+// Default for Sets is ANY
+during(set, period);         // 'YES' - 1985 is during the period
+
+// Explicit quantifiers
+during(set, period, 'ANY');  // 'YES' - at least one (1985) is during
+during(set, period, 'ALL');  // 'NO' - not all are during (1970, 2010 outside)
+```
+
+### Why This Matters
+
+This semantic distinction is crucial for correct temporal reasoning:
+
+```typescript
+// Museum artifact dated to "one of these years"
+const possibleDates = parse('[1667,1668,1670..1672]').value;
+
+// Exhibition in 1671
+const exhibition = parse('1671').value;
+
+// Could the artifact be from the exhibition year?
+equals(possibleDates, exhibition);  // 'YES' - it could be 1671!
+
+// This is semantically correct: the artifact might be from 1671,
+// even though it might also be from 1667, 1668, 1670, or 1672
+```
+
 ## Truth Value Combinators
 
-Combine multiple truth values with quantifiers.
+Combine multiple truth values with quantifiers. These are used internally for Set/List comparison.
 
 ### combineWithAny()
 
@@ -418,7 +518,7 @@ Combine multiple truth values with quantifiers.
 function combineWithAny(truths: Truth[]): Truth
 ```
 
-Returns YES if **any** value is YES, otherwise propagates UNKNOWN/MAYBE/NO.
+Returns YES if **any** value is YES, otherwise propagates UNKNOWN/MAYBE/NO. Used for Sets.
 
 ```typescript
 import { combineWithAny } from '@edtf-ts/compare';

@@ -262,15 +262,62 @@ function parseSet(input: string): ParseResult<EDTFSet> {
         if (!startResult.success) return startResult;
         if (!endResult.success) return endResult;
 
-        // Expand range (only for years)
-        if (typeof (startResult.value as EDTFDate).year === 'number' &&
-            typeof (endResult.value as EDTFDate).year === 'number') {
-          const startYear = (startResult.value as EDTFDate).year as number;
-          const endYear = (endResult.value as EDTFDate).year as number;
-          for (let y = startYear; y <= endYear; y++) {
-            const yearResult = parseSetValue(y.toString());
-            if (yearResult.success) {
-              values.push(yearResult.value as EDTFDate);
+        // Expand range based on precision
+        const startDate = startResult.value as EDTFDate;
+        const endDate = endResult.value as EDTFDate;
+
+        if (typeof startDate.year === 'number' && typeof endDate.year === 'number') {
+          const precision = startDate.precision;
+
+          // Validate that both dates have the same precision for range expansion
+          if (startDate.precision !== endDate.precision) {
+            return {
+              success: false,
+              errors: [{ code: 'INVALID_RANGE', message: 'Range endpoints must have the same precision' }]
+            };
+          }
+
+          if (precision === 'day') {
+            // Expand day range (e.g., 2025-01-15..2025-01-20)
+            const startTime = startDate.min.getTime();
+            const endTime = endDate.min.getTime();
+            const oneDayMs = 24 * 60 * 60 * 1000;
+
+            for (let time = startTime; time <= endTime; time += oneDayMs) {
+              const d = new Date(time);
+              const dateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+              const result = parseSetValue(dateStr);
+              if (result.success) {
+                values.push(result.value as EDTFDate);
+              }
+            }
+          } else if (precision === 'month') {
+            // Expand month range (e.g., 2025-01..2026-11)
+            let currentYear = startDate.year;
+            let currentMonth = (startDate.month as number);
+            const endYear = endDate.year;
+            const endMonth = (endDate.month as number);
+
+            while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
+              const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+              const result = parseSetValue(dateStr);
+              if (result.success) {
+                values.push(result.value as EDTFDate);
+              }
+
+              currentMonth++;
+              if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+              }
+            }
+          } else {
+            // Expand year range (e.g., 1670..1672)
+            for (let y = startDate.year; y <= endDate.year; y++) {
+              const yearResult = parseSetValue(y.toString());
+              if (yearResult.success) {
+                values.push(yearResult.value as EDTFDate);
+              }
             }
           }
         }

@@ -287,11 +287,27 @@
           <div v-if="comparisonBounds" class="bounds-display">
             <div class="bounds-line">
               <span class="bounds-label">{{ result.value.edtf }}:</span>
-              <span class="bounds-values">sMin={{ formatBound(comparisonBounds.a.sMin) }} sMax={{ formatBound(comparisonBounds.a.sMax) }} eMin={{ formatBound(comparisonBounds.a.eMin) }} eMax={{ formatBound(comparisonBounds.a.eMax) }}</span>
+              <span class="bounds-values">
+                sMin={{ formatBound(comparisonBounds.a.display.sMin) }}
+                sMax={{ formatBound(comparisonBounds.a.display.sMax) }}
+                eMin={{ formatBound(comparisonBounds.a.display.eMin) }}
+                eMax={{ formatBound(comparisonBounds.a.display.eMax) }}
+                <span v-if="comparisonBounds.a.display.isConvexHull" class="convex-hull-note">
+                  (convex hull of {{ comparisonBounds.a.display.memberCount }} members)
+                </span>
+              </span>
             </div>
             <div class="bounds-line">
               <span class="bounds-label">{{ result2.value.edtf }}:</span>
-              <span class="bounds-values">sMin={{ formatBound(comparisonBounds.b.sMin) }} sMax={{ formatBound(comparisonBounds.b.sMax) }} eMin={{ formatBound(comparisonBounds.b.eMin) }} eMax={{ formatBound(comparisonBounds.b.eMax) }}</span>
+              <span class="bounds-values">
+                sMin={{ formatBound(comparisonBounds.b.display.sMin) }}
+                sMax={{ formatBound(comparisonBounds.b.display.sMax) }}
+                eMin={{ formatBound(comparisonBounds.b.display.eMin) }}
+                eMax={{ formatBound(comparisonBounds.b.display.eMax) }}
+                <span v-if="comparisonBounds.b.display.isConvexHull" class="convex-hull-note">
+                  (convex hull of {{ comparisonBounds.b.display.memberCount }} members)
+                </span>
+              </span>
             </div>
           </div>
 
@@ -685,9 +701,20 @@ async function performComparison() {
     // Get normalized bounds for display
     const normA = compareModule.normalize(result.value.value);
     const normB = compareModule.normalize(result2.value.value);
+
+    // Store all members and computed bounds for display
     comparisonBounds.value = {
-      a: normA.members[0],
-      b: normB.members[0]
+      a: {
+        members: normA.members,
+        listMode: normA.listMode,
+        // For display: show first member if single, or convex hull bounds if multiple
+        display: normA.members.length === 1 ? normA.members[0] : computeConvexHull(normA.members)
+      },
+      b: {
+        members: normB.members,
+        listMode: normB.listMode,
+        display: normB.members.length === 1 ? normB.members[0] : computeConvexHull(normB.members)
+      }
     };
 
     // Evaluate all Allen relations
@@ -718,6 +745,29 @@ async function performComparison() {
     console.error('Comparison error:', error);
     comparisonResult.value = null;
   }
+}
+
+function computeConvexHull(members: any[]): any {
+  // Compute the convex hull (min of all sMin, max of all sMax, etc.)
+  const validMembers = members.filter(m => m);
+  if (validMembers.length === 0) return null;
+
+  const sMinValues = validMembers.map(m => m.sMin).filter(v => v !== null);
+  const sMaxValues = validMembers.map(m => m.sMax).filter(v => v !== null);
+  const eMinValues = validMembers.map(m => m.eMin).filter(v => v !== null);
+  const eMaxValues = validMembers.map(m => m.eMax).filter(v => v !== null);
+
+  return {
+    sMin: sMinValues.length > 0 ? sMinValues.reduce((a, b) => a < b ? a : b) : null,
+    sMax: sMaxValues.length > 0 ? sMaxValues.reduce((a, b) => a > b ? a : b) : null,
+    eMin: eMinValues.length > 0 ? eMinValues.reduce((a, b) => a < b ? a : b) : null,
+    eMax: eMaxValues.length > 0 ? eMaxValues.reduce((a, b) => a > b ? a : b) : null,
+    startKind: validMembers[0].startKind,
+    endKind: validMembers[0].endKind,
+    precision: 'mixed',
+    isConvexHull: true,
+    memberCount: validMembers.length
+  };
 }
 
 function formatBound(value: bigint | null): string {
@@ -1391,6 +1441,17 @@ onMounted(() => {
   font-family: var(--vp-font-family-mono);
   color: var(--vp-c-text-2);
   word-break: break-all;
+}
+
+.convex-hull-note {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.125rem 0.375rem;
+  background: var(--vp-c-yellow-soft);
+  color: var(--vp-c-yellow-dark);
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
 .legend {
