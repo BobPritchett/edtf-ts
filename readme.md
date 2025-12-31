@@ -187,6 +187,42 @@ equals(parse('198X').value, parse('1985').value); // 'MAYBE'
 overlaps(parse('1985/').value, parse('1990').value); // 'UNKNOWN'
 ```
 
+## Extended Years and BigInt Support
+
+JavaScript `Date` objects can only represent dates within approximately ±270,000 years from the epoch. For extended years beyond this range (e.g., `Y2000123456` for year 2 billion), the library provides:
+
+- **`minMs` / `maxMs`** - BigInt epoch milliseconds, always accurate for any year
+- **`min` / `max`** - JavaScript Date objects, clamped to valid range when necessary
+- **`isBoundsClamped`** - Boolean flag indicating if Date values were clamped
+
+```typescript
+import { parse } from '@edtf-ts/core';
+
+// Extended year (2 billion years in the future)
+const result = parse('Y2000123456');
+if (result.success) {
+  console.log(result.value.year);           // 2000123456
+  console.log(result.value.isBoundsClamped); // true
+
+  // Date objects are clamped to valid range
+  console.log(result.value.min);  // +275760-09-13T00:00:00.000Z (max Date)
+
+  // BigInt values are always accurate
+  console.log(result.value.minMs); // 63117737727846912000n
+  console.log(result.value.maxMs); // 63117737759469311999n
+}
+
+// Normal dates work as expected
+const normal = parse('2024-06-15');
+if (normal.success) {
+  console.log(normal.value.isBoundsClamped); // undefined (not clamped)
+  console.log(normal.value.min);   // 2024-06-15T00:00:00.000Z
+  console.log(normal.value.minMs); // 1718409600000n
+}
+```
+
+This enables accurate temporal reasoning for astronomical and geological timescales while maintaining compatibility with standard JavaScript Date APIs for typical use cases.
+
 ## Use Cases
 
 - **Cultural heritage** - Museum artifacts, archival materials

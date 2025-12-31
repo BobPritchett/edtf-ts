@@ -121,6 +121,33 @@ if (decade.success) {
 }
 ```
 
+### Extended Years (BigInt Support)
+
+For dates beyond JavaScript's ~±270,000 year Date limit, use `minMs` and `maxMs` (BigInt values):
+
+```typescript
+import { parse } from '@edtf-ts/core';
+
+// Parse an extended year (2 million years in the future)
+const extended = parse('Y2000000');
+
+if (extended.success) {
+  // Check if Date values were clamped
+  if (extended.value.isBoundsClamped) {
+    // Use BigInt for accurate values
+    console.log(extended.value.minMs);  // Accurate epoch milliseconds
+    console.log(extended.value.maxMs);
+  }
+
+  // Year is always accurate
+  console.log(extended.value.year);  // 2000000
+}
+```
+
+::: tip
+For normal dates within the ~±270,000 year range, `min`/`max` Date properties work perfectly. The `isBoundsClamped` flag tells you when to use BigInt values instead.
+:::
+
 ## Using Utilities
 
 The `@edtf-ts/utils` package provides formatting, validation, and comparison utilities:

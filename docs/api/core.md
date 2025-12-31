@@ -186,3 +186,82 @@ The current version of @edtf-ts/core.
 import { VERSION } from '@edtf-ts/core';
 console.log(VERSION);  // "0.1.0"
 ```
+
+### DATE_MIN_MS / DATE_MAX_MS
+
+```typescript
+const DATE_MIN_MS: bigint  // -8640000000000000n
+const DATE_MAX_MS: bigint  //  8640000000000000n
+```
+
+The minimum and maximum epoch milliseconds that JavaScript `Date` objects can represent (approximately ±270,000 years from epoch).
+
+```typescript
+import { DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts/core';
+
+// Use these to detect if a bigint epoch value exceeds Date limits
+const ms = someEdtfValue.minMs;
+if (ms < DATE_MIN_MS || ms > DATE_MAX_MS) {
+  console.log('Date beyond JavaScript Date range');
+}
+```
+
+## Extended Years and Date Clamping
+
+JavaScript `Date` objects have a limited range of approximately ±270,000 years from the Unix epoch. EDTF supports extended years (e.g., `Y2000123456` for year 2 billion) that exceed this range.
+
+To handle this, all EDTF objects provide:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `min` | `Date` | Earliest date (clamped to valid Date range if needed) |
+| `max` | `Date` | Latest date (clamped to valid Date range if needed) |
+| `minMs` | `bigint` | Earliest date as epoch milliseconds (always accurate) |
+| `maxMs` | `bigint` | Latest date as epoch milliseconds (always accurate) |
+| `isBoundsClamped` | `boolean?` | `true` if Date values were clamped |
+
+### Example: Extended Year
+
+```typescript
+import { parse } from '@edtf-ts/core';
+
+// Parse an extended year (2 billion years in the future)
+const result = parse('Y2000123456');
+
+if (result.success) {
+  const value = result.value;
+
+  console.log(value.year);            // 2000123456
+  console.log(value.isBoundsClamped); // true
+
+  // Date objects are clamped to the maximum representable date
+  console.log(value.min.toISOString());
+  // +275760-09-13T00:00:00.000Z (max Date)
+
+  // BigInt values are always accurate
+  console.log(value.minMs); // 63117737727846912000n
+  console.log(value.maxMs); // 63117737759469311999n
+}
+```
+
+### Example: Normal Date
+
+```typescript
+// Normal dates work as expected
+const normal = parse('2024-06-15');
+
+if (normal.success) {
+  console.log(normal.value.isBoundsClamped); // undefined (not clamped)
+  console.log(normal.value.min.toISOString());
+  // 2024-06-15T00:00:00.000Z
+  console.log(normal.value.minMs);
+  // 1718409600000n
+}
+```
+
+### When to Use BigInt Values
+
+- **Normal use**: Use `min`/`max` Date properties for typical date ranges
+- **Extended years**: Check `isBoundsClamped`, use `minMs`/`maxMs` for accurate values
+- **Database storage**: Use `minMs`/`maxMs` for precise storage of any date
+- **Comparison**: The `@edtf-ts/compare` package uses BigInt internally for accurate temporal reasoning

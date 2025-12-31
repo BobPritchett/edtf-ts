@@ -31,6 +31,13 @@ export type EDTFType =
   | 'Century';
 
 /**
+ * JavaScript Date range limits (approximately ±270,000 years from epoch).
+ * Dates outside this range will be clamped when using min/max Date properties.
+ */
+export const DATE_MIN_MS = -8640000000000000n;
+export const DATE_MAX_MS = 8640000000000000n;
+
+/**
  * Base interface for all EDTF types.
  * All EDTF objects extend this interface.
  */
@@ -43,10 +50,33 @@ export interface EDTFBase {
   readonly edtf: string;
   /** Precision of the date/time */
   readonly precision: Precision;
-  /** Earliest possible date represented by this EDTF object */
+  /**
+   * Earliest possible date represented by this EDTF object.
+   * Note: For extended years beyond JavaScript Date range (~±270,000 years),
+   * this will be clamped to Date.MIN or Date.MAX. Use minMs for accurate values.
+   */
   readonly min: Date;
-  /** Latest possible date represented by this EDTF object */
+  /**
+   * Latest possible date represented by this EDTF object.
+   * Note: For extended years beyond JavaScript Date range (~±270,000 years),
+   * this will be clamped to Date.MIN or Date.MAX. Use maxMs for accurate values.
+   */
   readonly max: Date;
+  /**
+   * Earliest possible date as epoch milliseconds (bigint).
+   * Always accurate, even for astronomical dates beyond JavaScript Date range.
+   */
+  readonly minMs: bigint;
+  /**
+   * Latest possible date as epoch milliseconds (bigint).
+   * Always accurate, even for astronomical dates beyond JavaScript Date range.
+   */
+  readonly maxMs: bigint;
+  /**
+   * True if min or max Date values were clamped due to JavaScript Date limitations.
+   * When true, use minMs/maxMs for accurate values.
+   */
+  readonly isBoundsClamped?: boolean;
   /** Serialize to JSON */
   toJSON(): object;
   /** Convert to string (returns original EDTF string) */

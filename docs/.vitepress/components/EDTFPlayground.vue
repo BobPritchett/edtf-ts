@@ -190,6 +190,9 @@
           <code class="row-value">{{ formatDate(result.value.min) }}</code>
           <span class="row-label-sub">Latest</span>
           <code class="row-value">{{ formatDate(result.value.max) }}</code>
+          <span v-if="result.value.isBoundsClamped" class="row-label-sub warning">
+            Extended year (beyond JavaScript Date range)
+          </span>
         </div>
 
         <div v-if="isInterval" class="result-section">
@@ -584,6 +587,23 @@ async function parseNaturalInput() {
 }
 
 function formatDate(date: Date): string {
+  // Check if the date is at the clamped boundaries (extended year range)
+  const minMs = -8640000000000000;
+  const maxMs = 8640000000000000;
+  const time = date.getTime();
+
+  if (time === minMs) {
+    return '< ~-270,000 (clamped)';
+  }
+  if (time === maxMs) {
+    return '> ~270,000 (clamped)';
+  }
+
+  // Check if the Date is valid
+  if (isNaN(time)) {
+    return 'Invalid date';
+  }
+
   return date.toISOString();
 }
 
@@ -1009,6 +1029,13 @@ onMounted(() => {
   font-size: 0.8rem;
   color: var(--vp-c-text-2);
   margin-left: 0.35rem;
+}
+
+.row-label-sub.warning {
+  color: var(--vp-c-warning-1);
+  font-style: italic;
+  display: block;
+  margin-top: 0.25rem;
 }
 
 .row-value {

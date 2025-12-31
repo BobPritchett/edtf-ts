@@ -28,9 +28,16 @@ interface EDTFDate {
   // Date-level qualification (Level 1)
   readonly qualification?: Qualification;
 
-  // Calculated bounds
+  // Calculated bounds (Date objects - may be clamped for extended years)
   readonly min: Date;
   readonly max: Date;
+
+  // Calculated bounds (BigInt - always accurate)
+  readonly minMs: bigint;
+  readonly maxMs: bigint;
+
+  // True if min/max Date values were clamped due to JavaScript Date limitations
+  readonly isBoundsClamped?: boolean;
 
   // Serialization
   toJSON(): object;
@@ -267,6 +274,46 @@ parse('1985-XX').value.max;       // Date('1985-12-31T23:59:59.999Z')
 `min` and `max` represent the **full time range** of the precision level. A year spans from January 1st 00:00:00.000 to December 31st 23:59:59.999.
 :::
 
+::: warning Extended Years
+For extended years (using `Y` prefix) that exceed JavaScript's Date range (~±270,000 years), `min` and `max` are clamped to the valid range. Use `minMs` and `maxMs` for accurate values. See [Extended Years](#extended-years) below.
+:::
+
+#### minMs
+```typescript
+readonly minMs: bigint
+```
+
+Earliest possible date as epoch milliseconds (BigInt). Always accurate, even for extended years.
+
+```typescript
+parse('1985').value.minMs;       // 473385600000n
+parse('Y2000000').value.minMs;   // Accurate bigint for year 2,000,000
+```
+
+#### maxMs
+```typescript
+readonly maxMs: bigint
+```
+
+Latest possible date as epoch milliseconds (BigInt). Always accurate, even for extended years.
+
+```typescript
+parse('1985').value.maxMs;       // 504921599999n
+parse('Y2000000').value.maxMs;   // Accurate bigint for year 2,000,000
+```
+
+#### isBoundsClamped
+```typescript
+readonly isBoundsClamped?: boolean
+```
+
+`true` if `min`/`max` Date values were clamped due to JavaScript Date limitations. When this is `true`, use `minMs`/`maxMs` for accurate bounds.
+
+```typescript
+parse('1985').value.isBoundsClamped;      // undefined (not clamped)
+parse('Y2000000').value.isBoundsClamped;  // true (clamped)
+```
+
 ## Methods
 
 ### toJSON()
@@ -439,6 +486,88 @@ const inRange = specific >= date.min && specific <= date.max;  // true
 // Use with utilities
 const target = parse('1985-04-15').value;
 isInRange(target, date, date);  // true
+```
+
+## Extended Years
+
+EDTF supports extended years using the `Y` prefix for years with 5 or more digits. JavaScript's `Date` object can only represent dates within approximately ±270,000 years from the Unix epoch.
+
+### The Problem
+
+```typescript
+// This year is ~2 billion years in the future
+const result = parse('Y2000123456');
+
+if (result.success) {
+  // Date objects are clamped - these are NOT accurate!
+  console.log(result.value.min);  // Clamped to max Date (~year 275760)
+  console.log(result.value.max);  // Clamped to max Date (~year 275760)
+}
+```
+
+### The Solution
+
+Use `minMs` and `maxMs` (BigInt values) for accurate epoch milliseconds:
+
+```typescript
+const result = parse('Y2000123456');
+
+if (result.success) {
+  const value = result.value;
+
+  // Check if clamping occurred
+  if (value.isBoundsClamped) {
+    console.log('Date values are clamped, use BigInt properties');
+  }
+
+  // BigInt values are always accurate
+  console.log(value.minMs);  // 63117737727846912000n
+  console.log(value.maxMs);  // 63117737759469311999n
+
+  // Year is always accurate
+  console.log(value.year);   // 2000123456
+}
+```
+
+### When to Use BigInt Values
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Normal dates (within ~±270,000 years) | Use `min`/`max` Date properties |
+| Extended years | Check `isBoundsClamped`, use `minMs`/`maxMs` |
+| Database storage | Use `minMs`/`maxMs` for precise storage |
+| Temporal comparison | The `@edtf-ts/compare` package handles this automatically |
+
+### Example: Safe Bounds Access
+
+```typescript
+import { parse, DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts/core';
+
+function getAccurateBounds(edtfString: string) {
+  const result = parse(edtfString);
+
+  if (!result.success) {
+    throw new Error('Invalid EDTF');
+  }
+
+  const value = result.value;
+
+  if (value.isBoundsClamped) {
+    // Use BigInt for accurate values
+    return {
+      minMs: value.minMs,
+      maxMs: value.maxMs,
+      clamped: true
+    };
+  }
+
+  // Safe to use Date objects
+  return {
+    min: value.min,
+    max: value.max,
+    clamped: false
+  };
+}
 ```
 
 ## See Also

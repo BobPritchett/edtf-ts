@@ -1,4 +1,9 @@
 import type { ParseResult, EDTFDate, EDTFDateTime, EDTFInterval } from '../types/index.js';
+import {
+  calculateEpochMs,
+  dateFromMs,
+  daysInMonth,
+} from '../utils/date-helpers.js';
 
 /**
  * Parse EDTF Level 0 strings
@@ -71,6 +76,14 @@ function parseDate(input: string): ParseResult<EDTFDate> {
     }
   }
 
+  // Pre-calculate bounds
+  const minMonth = month ?? 1;
+  const maxMonth = month ?? 12;
+  const minDay = day ?? 1;
+  const maxDay = day ?? daysInMonth(year, maxMonth);
+  const minMsValue = calculateEpochMs(year, minMonth, minDay, 0, 0, 0, 0);
+  const maxMsValue = calculateEpochMs(year, maxMonth, maxDay, 23, 59, 59, 999);
+
   const edtfDate: EDTFDate = {
     type: 'Date',
     level: 0,
@@ -80,10 +93,16 @@ function parseDate(input: string): ParseResult<EDTFDate> {
     month,
     day,
     get min() {
-      return calculateMinDate(this);
+      return dateFromMs(minMsValue);
     },
     get max() {
-      return calculateMaxDate(this);
+      return dateFromMs(maxMsValue);
+    },
+    get minMs() {
+      return minMsValue;
+    },
+    get maxMs() {
+      return maxMsValue;
     },
     isBefore(other: EDTFDate | Date) {
       const otherDate = other instanceof Date ? other : other.max;
@@ -199,6 +218,10 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
     };
   }
 
+  // Pre-calculate bounds
+  const minMsValue = calculateEpochMs(year, month, day, hour, minute, second, 0);
+  const maxMsValue = calculateEpochMs(year, month, day, hour, minute, second, 999);
+
   const edtfDateTime: EDTFDateTime = {
     type: 'DateTime',
     level: 0,
@@ -212,10 +235,16 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
     second,
     timezone,
     get min() {
-      return calculateMinDateTime(this);
+      return dateFromMs(minMsValue);
     },
     get max() {
-      return calculateMaxDateTime(this);
+      return dateFromMs(maxMsValue);
+    },
+    get minMs() {
+      return minMsValue;
+    },
+    get maxMs() {
+      return maxMsValue;
     },
     toJSON() {
       const result: { type: string; year: number; month: number; day: number; hour: number; minute: number; second: number; timezone?: string } = {
@@ -319,6 +348,12 @@ function parseInterval(input: string): ParseResult<EDTFInterval> {
     get max() {
       return this.end!.max;
     },
+    get minMs() {
+      return start.minMs;
+    },
+    get maxMs() {
+      return end.maxMs;
+    },
     contains(date: EDTFDate | EDTFDateTime | Date) {
       const testDate = date instanceof Date ? date : date.min;
       return testDate >= this.min && testDate <= this.max;
@@ -377,57 +412,3 @@ function parseInterval(input: string): ParseResult<EDTFInterval> {
   return { success: true, value: edtfInterval, level: 0 };
 }
 
-// Helper: Days in month (accounting for leap years)
-function daysInMonth(year: number, month: number): number {
-  const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  if (month === 2 && isLeapYear(year)) {
-    return 29;
-  }
-  return days[month - 1] || 0;
-}
-
-function isLeapYear(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-// Helper: Calculate min date for a Date (Level 0 - values are always numbers)
-function calculateMinDate(date: EDTFDate): Date {
-  const year = date.year as number;
-  const month = (date.month as number | undefined) ?? 1;
-  const day = (date.day as number | undefined) ?? 1;
-  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-}
-
-// Helper: Calculate max date for a Date (Level 0 - values are always numbers)
-function calculateMaxDate(date: EDTFDate): Date {
-  const year = date.year as number;
-  const month = (date.month as number | undefined) ?? 12;
-  const day = (date.day as number | undefined) ?? daysInMonth(year, month);
-  return new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
-}
-
-// Helper: Calculate min date for a DateTime
-function calculateMinDateTime(datetime: EDTFDateTime): Date {
-  return new Date(Date.UTC(
-    datetime.year,
-    datetime.month - 1,
-    datetime.day,
-    datetime.hour,
-    datetime.minute,
-    datetime.second,
-    0
-  ));
-}
-
-// Helper: Calculate max date for a DateTime
-function calculateMaxDateTime(datetime: EDTFDateTime): Date {
-  return new Date(Date.UTC(
-    datetime.year,
-    datetime.month - 1,
-    datetime.day,
-    datetime.hour,
-    datetime.minute,
-    datetime.second,
-    999
-  ));
-}

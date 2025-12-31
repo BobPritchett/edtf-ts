@@ -24,6 +24,9 @@ export type {
   UnspecifiedDigits
 } from './types/index.js';
 
+// Export Date range constants
+export { DATE_MIN_MS, DATE_MAX_MS } from './types/index.js';
+
 // Export parsers
 export { parseLevel0 } from './parser/level0.js';
 export { parseLevel1 } from './parser/level1.js';

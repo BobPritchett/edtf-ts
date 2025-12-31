@@ -6,6 +6,15 @@ import type {
   Qualification,
   UnspecifiedDigits,
 } from '../types/index.js';
+import {
+  calculateEpochMs,
+  yearStartMs,
+  yearEndMs,
+  dateFromMs,
+  needsClamping,
+  daysInMonth,
+  isLeapYear,
+} from '../utils/date-helpers.js';
 
 /**
  * Parse EDTF Level 1 strings
@@ -64,8 +73,11 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
   // Check for extended year format (Y prefix)
   const extendedYearMatch = dateStr.match(/^Y(-?\d{5,})$/);
   if (extendedYearMatch) {
-    console.log('[EDTF Debug] Extended year match:', extendedYearMatch[1], '-> parsed:', parseInt(extendedYearMatch[1]!, 10));
     const year = parseInt(extendedYearMatch[1]!, 10);
+    const minMsValue = yearStartMs(year);
+    const maxMsValue = yearEndMs(year);
+    const isClamped = needsClamping(minMsValue) || needsClamping(maxMsValue);
+
     const edtfDate: EDTFDate = {
       type: 'Date',
       level: 1,
@@ -74,11 +86,18 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
       year,
       significantDigits: extendedYearMatch[1]!.replace('-', '').length,
       ...(Object.keys(qualification).length > 0 && { qualification }),
+      ...(isClamped && { isBoundsClamped: true }),
       get min() {
-        return calculateMinDate(this);
+        return dateFromMs(minMsValue);
       },
       get max() {
-        return calculateMaxDate(this);
+        return dateFromMs(maxMsValue);
+      },
+      get minMs() {
+        return minMsValue;
+      },
+      get maxMs() {
+        return maxMsValue;
       },
       toJSON() {
         const result: any = {
@@ -89,6 +108,7 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
         if (this.day !== undefined) result.day = this.day;
         if (this.qualification) result.qualification = this.qualification;
         if (this.unspecified) result.unspecified = this.unspecified;
+        if (this.isBoundsClamped) result.isBoundsClamped = this.isBoundsClamped;
         return result;
       },
       toString() {
@@ -199,6 +219,9 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
     precision = 'year';
   }
 
+  // Pre-calculate bounds for closure
+  const boundsResult = calculateBounds(year, month, day);
+
   const edtfDate: EDTFDate = {
     type: 'Date',
     level: 1,
@@ -210,10 +233,16 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
     ...(Object.keys(qualification).length > 0 && { qualification }),
     ...(hasUnspecified && { unspecified }),
     get min() {
-      return calculateMinDate(this);
+      return dateFromMs(boundsResult.minMs);
     },
     get max() {
-      return calculateMaxDate(this);
+      return dateFromMs(boundsResult.maxMs);
+    },
+    get minMs() {
+      return boundsResult.minMs;
+    },
+    get maxMs() {
+      return boundsResult.maxMs;
     },
     toJSON() {
       const result: any = {
@@ -275,6 +304,9 @@ export function parseSeason(input: string): ParseResult<EDTFSeason> {
   const year = parseInt(match[1]!, 10);
   const season = parseInt(match[2]!, 10);
 
+  // Pre-calculate season bounds
+  const seasonBounds = calculateSeasonBounds(year, season);
+
   const edtfSeason: EDTFSeason = {
     type: 'Season',
     level: 1,
@@ -284,10 +316,16 @@ export function parseSeason(input: string): ParseResult<EDTFSeason> {
     season,
     ...(Object.keys(qualification).length > 0 && { qualification }),
     get min() {
-      return calculateSeasonMin(this);
+      return dateFromMs(seasonBounds.minMs);
     },
     get max() {
-      return calculateSeasonMax(this);
+      return dateFromMs(seasonBounds.maxMs);
+    },
+    get minMs() {
+      return seasonBounds.minMs;
+    },
+    get maxMs() {
+      return seasonBounds.maxMs;
     },
     toJSON() {
       const result: any = {
@@ -393,6 +431,10 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
     }
   }
 
+  // Import DATE_MIN_MS and DATE_MAX_MS constants
+  const DATE_MIN_MS_VAL = -8640000000000000n;
+  const DATE_MAX_MS_VAL = 8640000000000000n;
+
   const edtfInterval: EDTFInterval = {
     type: 'Interval',
     level: 1,
@@ -403,12 +445,20 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
     ...(openStart && { openStart }),
     ...(openEnd && { openEnd }),
     get min() {
-      if (this.openStart) return new Date(-8640000000000000); // Min date
+      if (this.openStart) return new Date(-8640000000000000);
       return this.start ? this.start.min : new Date(-8640000000000000);
     },
     get max() {
-      if (this.openEnd) return new Date(8640000000000000); // Max date
+      if (this.openEnd) return new Date(8640000000000000);
       return this.end ? this.end.max : new Date(8640000000000000);
+    },
+    get minMs() {
+      if (openStart) return DATE_MIN_MS_VAL;
+      return start ? start.minMs : DATE_MIN_MS_VAL;
+    },
+    get maxMs() {
+      if (openEnd) return DATE_MAX_MS_VAL;
+      return end ? end.maxMs : DATE_MAX_MS_VAL;
     },
     toJSON() {
       return {
@@ -429,91 +479,84 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
 
 // Helper functions
 
-function daysInMonth(year: number, month: number): number {
-  const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  if (month === 2 && isLeapYear(year)) {
-    return 29;
+/**
+ * Calculate min and max bounds as bigint milliseconds.
+ * Handles unspecified digits (X) by expanding to min/max values.
+ */
+function calculateBounds(
+  year: number | string,
+  month?: number | string,
+  day?: number | string
+): { minMs: bigint; maxMs: bigint } {
+  // Calculate minimum values
+  let minYear: number;
+  if (typeof year === 'string') {
+    minYear = parseInt(year.replace(/X/g, '0'), 10);
+  } else {
+    minYear = year;
   }
-  return days[month - 1] || 0;
+
+  let minMonth: number;
+  if (month === undefined || month === 'XX') {
+    minMonth = 1;
+  } else if (typeof month === 'string') {
+    const m = parseInt(month.replace(/X/g, '0'), 10);
+    minMonth = m === 0 ? 1 : m;
+  } else {
+    minMonth = month;
+  }
+
+  let minDay: number;
+  if (day === undefined || day === 'XX') {
+    minDay = 1;
+  } else if (typeof day === 'string') {
+    const d = parseInt(day.replace(/X/g, '0'), 10);
+    minDay = d === 0 ? 1 : d;
+  } else {
+    minDay = day;
+  }
+
+  // Calculate maximum values
+  let maxYear: number;
+  if (typeof year === 'string') {
+    maxYear = parseInt(year.replace(/X/g, '9'), 10);
+  } else {
+    maxYear = year;
+  }
+
+  let maxMonth: number;
+  if (month === undefined || month === 'XX') {
+    maxMonth = 12;
+  } else if (typeof month === 'string') {
+    const m = parseInt(month.replace(/X/g, '9'), 10);
+    maxMonth = Math.min(m, 12);
+  } else {
+    maxMonth = month;
+  }
+
+  let maxDay: number;
+  if (day === undefined || day === 'XX') {
+    maxDay = daysInMonth(maxYear, maxMonth);
+  } else if (typeof day === 'string') {
+    const d = parseInt(day.replace(/X/g, '9'), 10);
+    maxDay = Math.min(d, daysInMonth(maxYear, maxMonth));
+  } else {
+    maxDay = day;
+  }
+
+  return {
+    minMs: calculateEpochMs(minYear, minMonth, minDay, 0, 0, 0, 0),
+    maxMs: calculateEpochMs(maxYear, maxMonth, maxDay, 23, 59, 59, 999),
+  };
 }
 
-function isLeapYear(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-function calculateMinDate(date: EDTFDate): Date {
-  // Handle unspecified digits by using minimum values
-  let year: number;
-  if (typeof date.year === 'string') {
-    // Replace X with 0 for minimum
-    year = parseInt(date.year.replace(/X/g, '0'), 10);
-  } else {
-    year = date.year;
-  }
-
-  let month: number;
-  if (date.month === undefined || date.month === 'XX') {
-    month = 1;
-  } else if (typeof date.month === 'string') {
-    // Replace X with 0 for minimum (but ensure valid month)
-    const m = parseInt(date.month.replace(/X/g, '0'), 10);
-    month = m === 0 ? 1 : m;
-  } else {
-    month = date.month;
-  }
-
-  let day: number;
-  if (date.day === undefined || date.day === 'XX') {
-    day = 1;
-  } else if (typeof date.day === 'string') {
-    // Replace X with 0 for minimum (but ensure valid day)
-    const d = parseInt(date.day.replace(/X/g, '0'), 10);
-    day = d === 0 ? 1 : d;
-  } else {
-    day = date.day;
-  }
-
-  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-}
-
-function calculateMaxDate(date: EDTFDate): Date {
-  // Handle unspecified digits by using maximum values
-  let year: number;
-  if (typeof date.year === 'string') {
-    // Replace X with 9 for maximum
-    year = parseInt(date.year.replace(/X/g, '9'), 10);
-  } else {
-    year = date.year;
-  }
-
-  let month: number;
-  if (date.month === undefined || date.month === 'XX') {
-    month = 12;
-  } else if (typeof date.month === 'string') {
-    // Replace X with 9 for maximum (but cap at 12)
-    const m = parseInt(date.month.replace(/X/g, '9'), 10);
-    month = Math.min(m, 12);
-  } else {
-    month = date.month;
-  }
-
-  let day: number;
-  if (date.day === undefined || date.day === 'XX') {
-    day = daysInMonth(year, month);
-  } else if (typeof date.day === 'string') {
-    // Replace X with 9 for maximum (but cap at max days in month)
-    const d = parseInt(date.day.replace(/X/g, '9'), 10);
-    day = Math.min(d, daysInMonth(year, month));
-  } else {
-    day = date.day;
-  }
-
-  return new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
-}
-
-function calculateSeasonMin(season: EDTFSeason): Date {
-  // Seasons map approximately to months
-  // 21=Spring (Mar-May), 22=Summer (Jun-Aug), 23=Autumn (Sep-Nov), 24=Winter (Dec-Feb)
+/**
+ * Calculate season bounds as bigint milliseconds.
+ * Seasons map approximately to months:
+ * 21=Spring (Mar-May), 22=Summer (Jun-Aug), 23=Autumn (Sep-Nov), 24=Winter (Dec-Feb)
+ */
+function calculateSeasonBounds(year: number, season: number): { minMs: bigint; maxMs: bigint } {
+  // Season start months
   const seasonToMonth: { [key: number]: number } = {
     21: 3, // Spring starts in March
     22: 6, // Summer starts in June
@@ -521,12 +564,7 @@ function calculateSeasonMin(season: EDTFSeason): Date {
     24: 12, // Winter starts in December
   };
 
-  const month = seasonToMonth[season.season] || 1;
-  return new Date(Date.UTC(season.year, month - 1, 1, 0, 0, 0, 0));
-}
-
-function calculateSeasonMax(season: EDTFSeason): Date {
-  // End of each season
+  // Season end months and days
   const seasonToEndMonth: { [key: number]: { month: number; day: number } } = {
     21: { month: 5, day: 31 }, // Spring ends May 31
     22: { month: 8, day: 31 }, // Summer ends August 31
@@ -534,16 +572,20 @@ function calculateSeasonMax(season: EDTFSeason): Date {
     24: { month: 2, day: 28 }, // Winter ends February 28/29 (next year)
   };
 
-  const end = seasonToEndMonth[season.season] || { month: 12, day: 31 };
-  let year = season.year;
+  const startMonth = seasonToMonth[season] || 1;
+  const end = seasonToEndMonth[season] || { month: 12, day: 31 };
 
+  let endYear = year;
   // Winter spans across years
-  if (season.season === 24) {
-    year += 1;
+  if (season === 24) {
+    endYear += 1;
   }
 
   // Check for leap year if February
-  const day = end.month === 2 && isLeapYear(year) ? 29 : end.day;
+  const endDay = end.month === 2 && isLeapYear(endYear) ? 29 : end.day;
 
-  return new Date(Date.UTC(year, end.month - 1, day, 23, 59, 59, 999));
+  return {
+    minMs: calculateEpochMs(year, startMonth, 1, 0, 0, 0, 0),
+    maxMs: calculateEpochMs(endYear, end.month, endDay, 23, 59, 59, 999),
+  };
 }
