@@ -1287,8 +1287,9 @@ const EDTFDisplay: React.FC<EDTFDisplayProps>;
 
 #### **5.4.5 Dependencies**
 - **Core:** Zero dependencies (self-contained)
-- **Natural:** Minimal NLP utilities (consider lightweight alternatives)
-- **Format:** Intl API (built-in)
+- **Utils:** Only depends on @edtf-ts/core (includes formatting via Intl API)
+- **Natural:** Minimal NLP utilities (Nearley parser)
+- **Compare:** Only depends on @edtf-ts/core
 - **React:** React 18+ (peer dependency)
 - **Temporal:** @js-temporal/polyfill (peer/optional)
 
@@ -1309,9 +1310,8 @@ docs/
 │   └── migration.md (from edtf.js)
 ├── api/
 │   ├── core/
+│   ├── utils/
 │   ├── natural/
-│   ├── format/
-│   ├── validate/
 │   ├── compare/
 │   └── react/
 ├── examples/
