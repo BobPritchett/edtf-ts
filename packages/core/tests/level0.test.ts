@@ -231,10 +231,28 @@ describe('Level 0 - DateTime', () => {
     }
   });
 
+  it('should parse datetime with short timezone offset (hours only)', () => {
+    // Test positive short offset
+    const result1 = parse('1985-04-12T23:20:30+04');
+    expect(result1.success).toBe(true);
+    if (result1.success && isEDTFDateTime(result1.value)) {
+      expect(result1.value.timezone).toBe('+04');
+    }
+
+    // Test negative short offset (from spec compliance document)
+    const result2 = parse('1985-04-12T23:20:30-04');
+    expect(result2.success).toBe(true);
+    if (result2.success && isEDTFDateTime(result2.value)) {
+      expect(result2.value.timezone).toBe('-04');
+    }
+  });
+
   it('should validate datetime correctly', () => {
     expect(isValid('1985-04-12T23:20:30Z')).toBe(true);
     expect(isValid('2023-12-25T00:00:00Z')).toBe(true);
     expect(isValid('2000-01-01T12:30:45+05:00')).toBe(true);
+    expect(isValid('1985-04-12T23:20:30-04')).toBe(true); // Short timezone offset
+    expect(isValid('1985-04-12T23:20:30+04')).toBe(true); // Short timezone offset
   });
 
   it('should reject invalid time components', () => {

@@ -247,6 +247,61 @@ The parser assigns confidence scores based on:
 - Ambiguity (unambiguous results get higher scores)
 - Number of valid interpretations (single valid interpretation = 0.9)
 
+## Round-Trip Conversion
+
+The natural language parser supports **bidirectional conversion** - you can parse EDTF-formatted output back into EDTF. This is particularly useful when displaying formatted dates to users and allowing them to type natural language that gets parsed back.
+
+```typescript
+import { parse } from '@edtf-ts/core';
+import { formatHuman } from '@edtf-ts/utils';
+import { parseNatural } from '@edtf-ts/natural';
+
+// Parse EDTF → Format to natural language → Parse back to EDTF
+const edtf = '1985/..';
+const result = parse(edtf);
+
+if (result.success) {
+  const formatted = formatHuman(result.value);
+  console.log(formatted);  // "1985 to open end"
+
+  // Parse the formatted text back to EDTF
+  const roundTrip = parseNatural(formatted);
+  console.log(roundTrip[0].edtf);  // "1985/.."
+}
+```
+
+### Supported Round-Trip Patterns
+
+**Open and Unknown Endpoints:**
+```typescript
+// Open end
+parseNatural('1985 to open end');     // '1985/..'
+parseNatural('1985 onward');          // '1985/..'
+parseNatural('1985 onwards');         // '1985/..'
+
+// Open start
+parseNatural('open start to 1985');   // '../1985'
+
+// Unknown endpoints
+parseNatural('1985 to unknown');      // '1985/'
+parseNatural('unknown to 1985');      // '/1985'
+```
+
+**Qualified Dates:**
+```typescript
+parseNatural('1984 (uncertain)');                          // '1984?'
+parseNatural('June 2004 (approximate)');                   // '2004-06~'
+parseNatural('June 11, 2004 (uncertain/approximate)');     // '2004-06-11%'
+```
+
+**Intervals:**
+```typescript
+parseNatural('February 1, 2004 to February 2005');         // '2004-02-01/2005-02'
+parseNatural('1964 to 2008');                              // '1964/2008'
+```
+
+This round-trip capability makes @edtf-ts/natural ideal for building user interfaces where users need to view and edit EDTF dates in natural language.
+
 ## Development Status
 
 This package is in active development. The grammar currently supports:

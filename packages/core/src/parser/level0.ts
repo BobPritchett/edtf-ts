@@ -119,11 +119,12 @@ function parseDate(input: string): ParseResult<EDTFDate> {
 
 /**
  * Parse a datetime in ISO 8601 format
- * Format: YYYY-MM-DDTHH:MM:SS[.sss][Z|±HH:MM]
+ * Format: YYYY-MM-DDTHH:MM:SS[.sss][Z|±HH:MM|±HH]
  */
 function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   // Match ISO 8601 datetime with optional timezone
-  const match = input.match(/^(-?\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})?$/);
+  // Supports: Z, ±HH:MM, or ±HH
+  const match = input.match(/^(-?\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}(?::\d{2})?)?$/);
 
   if (!match) {
     return {
@@ -131,7 +132,7 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
       errors: [{
         code: 'INVALID_FORMAT',
         message: `Invalid datetime format: ${input}`,
-        suggestion: 'Use format: YYYY-MM-DDTHH:MM:SS[Z|±HH:MM]'
+        suggestion: 'Use format: YYYY-MM-DDTHH:MM:SS[Z|±HH:MM|±HH]'
       }]
     };
   }

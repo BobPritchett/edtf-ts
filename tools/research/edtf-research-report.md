@@ -1188,14 +1188,41 @@ const EDTFDisplay: React.FC<EDTFDisplayProps>;
 - Intl API integration for locale-aware formatting
 - Comprehensive README with examples
 
-#### **Phase 3: Natural Language (Month 5)**
-- [ ] Natural language parser framework
-- [ ] English pattern library
-- [ ] Confidence scoring
-- [ ] Multi-interpretation support
-- [ ] Integration tests
+#### **Phase 2.75: Comparison & Database Integration** ✅ **COMPLETED**
+- [x] Four-bound range normalization (Member with sMin, sMax, eMin, eMax)
+- [x] Allen's interval algebra (13 base temporal relations)
+- [x] Four-valued truth logic (YES/NO/MAYBE/UNKNOWN)
+- [x] BigInt epoch conversion for extreme years
+- [x] Database preparation utilities (DbColumns with epoch milliseconds)
+- [x] Set/List convex hull flattening
+- [x] Query builders for overlap/containment
+- [x] Comprehensive test suite
 
-**Deliverable:** `@edtf-ts/natural@0.1.0`
+**Deliverable:** `@edtf-ts/compare@0.1.0` ✅
+
+**Notes:**
+- Implements full Allen interval algebra with semantic precision
+- Handles extreme years beyond JavaScript Date limits using BigInt
+- Database-agnostic column preparation for efficient querying
+- Zero dependencies beyond @edtf-ts/core
+- Complete API documentation with examples
+
+#### **Phase 3: Natural Language (Month 5)** ⚠️ **MOSTLY COMPLETED**
+- [x] Natural language parser framework (Nearley grammar)
+- [x] English pattern library (comprehensive)
+- [x] Bidirectional conversion (NL → EDTF and EDTF → NL)
+- [x] Integration tests
+- [x] Round-trip support for intervals (open start/end, unknown endpoints)
+- [ ] Confidence scoring
+- [ ] Multi-interpretation support for ambiguous dates
+
+**Deliverable:** `@edtf-ts/natural@0.1.0` ✅ (with limitations)
+
+**Notes:**
+- Natural language parser is functional and well-documented (287-line README)
+- Round-trip conversion works: formatted EDTF can be parsed back
+- Missing confidence scoring and multi-interpretation (e.g., "02/03/1988" ambiguity)
+- Additional locales (ES, DE, FR, IT, PT, ZH, JA, AR) not yet implemented
 
 #### **Phase 4: Integration Packages (Month 6)**
 - [ ] React hooks and components (useEDTF, EDTFInput, EDTFDisplay)

@@ -4,7 +4,7 @@ Based on [https://www.loc.gov/standards/datetime/](https://www.loc.gov/standards
 
 ## Overall Status
 
-- **Parsing**: 52/64 examples (81.3%) ✅
+- **Parsing**: 53/64 examples (82.8%) ✅
 - **Formatting**: 27/27 examples (100%) ✅
 
 ## Level 0 - ISO 8601 Profile
@@ -18,7 +18,7 @@ Based on [https://www.loc.gov/standards/datetime/](https://www.loc.gov/standards
 | `1985` | ✅ | Year |
 | `1985-04-12T23:20:30` | ✅ | DateTime with time |
 | `1985-04-12T23:20:30Z` | ✅ | DateTime with Z timezone |
-| `1985-04-12T23:20:30-04` | ❌ | DateTime with negative offset (missing) |
+| `1985-04-12T23:20:30-04` | ✅ | DateTime with negative offset |
 | `1985-04-12T23:20:30+04:30` | ✅ | DateTime with positive offset |
 | `1964/2008` | ✅ | Year interval |
 | `2004-06/2006-08` | ✅ | Year-month interval |
@@ -27,7 +27,7 @@ Based on [https://www.loc.gov/standards/datetime/](https://www.loc.gov/standards
 | `2004-02-01/2005` | ✅ | Mixed precision interval |
 | `2005/2006-02` | ✅ | Mixed precision interval |
 
-**Level 0 Score: 12/13 (92.3%)**
+**Level 0 Score: 13/13 (100%)** ✅
 
 ### Formatting
 
@@ -136,7 +136,7 @@ All Level 0 values format sensibly with appropriate human-readable output.
 
 ### Parsing Issues
 
-1. **DateTime timezone offset** (`-04` format) - Not yet implemented
+1. ~~**DateTime timezone offset** (`-04` format)~~ ✅ **FIXED** (2025-12-31)
 2. **Significant digits with long/exponential years** - Not yet implemented
 3. **Level detection** - Some Level 2 patterns with unspecified digits detected as Level 1
 
@@ -175,6 +175,17 @@ Fixed all formatting issues and added natural language round-trip support:
      - "unknown to 1985" → `/1985`
 
 **Result**: 100% formatting compliance! All 27 formatting tests pass and formatted output is parseable.
+
+### Timezone Offset Support (2025-12-31)
+
+Implemented short timezone offset format for Level 0 compliance:
+
+- ✅ **Level 0: 100% Complete** - Added support for `±HH` timezone format
+- ✅ Before: `1985-04-12T23:20:30-04` failed to parse
+- ✅ After: `1985-04-12T23:20:30-04` parses successfully
+- ✅ Supports both formats: `±HH:MM` and `±HH`
+
+**Impact**: Level 0 compliance increased from 92.3% (12/13) to 100% (13/13)!
 
 ### Set Range Expansion (2025-12-30)
 
@@ -225,7 +236,7 @@ parse('2004-06-~11')
 
 ### Medium Priority
 
-1. **Implement timezone offset `-04` format** - Complete Level 0 support
+1. ~~**Implement timezone offset `-04` format**~~ ✅ **COMPLETED** - Level 0 now at 100%
 2. **Implement significant digits for long/exponential years** - Complete Level 2 support
 
 ### Low Priority
@@ -237,11 +248,12 @@ parse('2004-06-~11')
 
 EDTF-TS has **excellent specification compliance**:
 
-- ✅ **81.3% parsing compliance** - 52/64 examples from official spec parse correctly
+- ✅ **82.8% parsing compliance** - 53/64 examples from official spec parse correctly
+- ✅ **100% Level 0 compliance** - All ISO 8601 profile features working
 - ✅ **100% formatting compliance** - All 27 formatting tests pass
 - ✅ All examples parse successfully (or fail expectedly for unimplemented features)
 - ✅ All examples format to sensible human-readable output
 - ✅ Critical features (Sets, Lists, Intervals, Qualifications, Unspecified) work correctly
-- ✅ Recent fixes for Set range expansion and formatting significantly improve usability
+- ✅ Recent fixes for Set range expansion, formatting, and timezone offsets significantly improve usability
 
 The library is **production-ready** with only minor unimplemented features that don't affect core functionality.
