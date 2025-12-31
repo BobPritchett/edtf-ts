@@ -178,8 +178,31 @@ export function parseNatural(
   // Sort by confidence (highest first)
   filtered.sort((a, b) => b.confidence - a.confidence);
 
+  // Deduplicate results with the same EDTF string, keeping highest confidence
+  const deduped = deduplicateResults(filtered);
+
   // Return all or just the best result
-  return returnAllResults ? filtered : filtered.slice(0, 1);
+  return returnAllResults ? deduped : deduped.slice(0, 1);
+}
+
+/**
+ * Deduplicate parse results by EDTF string, keeping the highest confidence version
+ */
+function deduplicateResults(results: ParseResult[]): ParseResult[] {
+  const seen = new Map<string, ParseResult>();
+
+  for (const result of results) {
+    const key = result.edtf;
+    const existing = seen.get(key);
+
+    // Keep the result with higher confidence, or if same confidence, the first one
+    if (!existing || result.confidence > existing.confidence) {
+      seen.set(key, result);
+    }
+  }
+
+  // Return in original order (sorted by confidence)
+  return Array.from(seen.values()).sort((a, b) => b.confidence - a.confidence);
 }
 
 /**

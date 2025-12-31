@@ -33,6 +33,110 @@ function twoDigitYear(yy) {
   return year >= 30 ? 1900 + year : 2000 + year;
 }
 
+// Check if a year is a leap year
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+// Get the number of days in a given month
+function getDaysInMonth(year, month) {
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return daysInMonth[month - 1] || 0;
+}
+
+// Build intervals for early/mid/late modifiers
+// Month: 10-10-Remaining split (1-10, 11-20, 21-end)
+function buildMonthModifierInterval(year, month, modifier) {
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+  const lastDay = getDaysInMonth(y, m);
+
+  switch (modifier) {
+    case 'early':
+      return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-10`;
+    case 'mid':
+      return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-20`;
+    case 'late':
+      return `${pad4(y)}-${pad2(m)}-21/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
+    default:
+      return `${pad4(y)}-${pad2(m)}`;
+  }
+}
+
+// Year: Quarterly trisections (Jan-Apr, May-Aug, Sep-Dec)
+function buildYearModifierInterval(year, modifier) {
+  const y = parseInt(year, 10);
+
+  switch (modifier) {
+    case 'early':
+      return `${pad4(y)}-01/${pad4(y)}-04`;
+    case 'mid':
+      return `${pad4(y)}-05/${pad4(y)}-08`;
+    case 'late':
+      return `${pad4(y)}-09/${pad4(y)}-12`;
+    default:
+      return pad4(y);
+  }
+}
+
+// Decade: 4-3-3 Rule (0-3, 4-6, 7-9)
+function buildDecadeModifierInterval(decadeStart, modifier) {
+  const d = parseInt(decadeStart, 10);
+
+  switch (modifier) {
+    case 'early':
+      return `${d}/${d + 3}`;
+    case 'mid':
+      return `${d + 4}/${d + 6}`;
+    case 'late':
+      return `${d + 7}/${d + 9}`;
+    default:
+      return `${d}/${d + 9}`;
+  }
+}
+
+// Century: Mathematical thirds (01-33, 34-66, 67-00)
+// Note: centuries are 1-indexed (20th century = 1901-2000)
+function buildCenturyModifierInterval(centuryNum, modifier) {
+  const c = parseInt(centuryNum, 10);
+  const centuryStart = (c - 1) * 100 + 1; // 20th century starts at 1901
+
+  switch (modifier) {
+    case 'early':
+      return `${pad4(centuryStart)}/${pad4(centuryStart + 32)}`;
+    case 'mid':
+      return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 65)}`;
+    case 'late':
+      return `${pad4(centuryStart + 66)}/${pad4(centuryStart + 99)}`;
+    default:
+      return `${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
+// BCE Century intervals (negative years)
+function buildBCECenturyModifierInterval(centuryNum, modifier) {
+  const c = parseInt(centuryNum, 10);
+  // For BCE, 1st century BCE = -0099 to -0001 (years 100 BCE to 1 BCE)
+  const centuryEnd = -((c - 1) * 100); // End year (closer to 0)
+  const centuryStart = -(c * 100 - 1);  // Start year (further from 0)
+
+  switch (modifier) {
+    case 'early':
+      // Early part of BCE century is further from year 0
+      return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 67)}`;
+    case 'mid':
+      return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100 + 34)}`;
+    case 'late':
+      // Late part of BCE century is closer to year 0
+      return `-${pad4((c - 1) * 100 + 33)}/-${pad4((c - 1) * 100)}`;
+    default:
+      return `-${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
 function bceToBCE(year) {
   return -(parseInt(year, 10) - 1);
 }
@@ -65,6 +169,7 @@ var grammar = {
     ParserRules: [
     {"name": "main", "symbols": ["_", "value", "_"], "postprocess": d => d[1]},
     {"name": "value", "symbols": ["interval"], "postprocess": id},
+    {"name": "value", "symbols": ["temporal_modifier"], "postprocess": id},
     {"name": "value", "symbols": ["set"], "postprocess": id},
     {"name": "value", "symbols": ["list"], "postprocess": id},
     {"name": "value", "symbols": ["season"], "postprocess": id},
@@ -75,6 +180,190 @@ var grammar = {
     {"name": "__$ebnf$1", "symbols": [/[\s]/]},
     {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", /[\s]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "__", "symbols": ["__$ebnf$1"], "postprocess": () => null},
+    {"name": "temporal_modifier_word$subexpression$1", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$1"], "postprocess": () => 'early'},
+    {"name": "temporal_modifier_word$subexpression$2", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$2"], "postprocess": () => 'mid'},
+    {"name": "temporal_modifier_word$subexpression$3", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$3"], "postprocess": () => 'mid'},
+    {"name": "temporal_modifier_word$subexpression$4", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$4"], "postprocess": () => 'late'},
+    {"name": "modifier_sep", "symbols": ["__"], "postprocess": id},
+    {"name": "modifier_sep", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
+          const modifier = d[0];
+          const month = months[d[2].toLowerCase()];
+          const year = d[4];
+          return { type: 'interval', edtf: buildMonthModifierInterval(year, month, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess":  d => {
+          const modifier = d[0];
+          const month = months[d[2].toLowerCase()];
+          const year = d[6];
+          return { type: 'interval', edtf: buildMonthModifierInterval(year, month, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "year_num"], "postprocess":  d => {
+          const modifier = d[0];
+          const year = d[2];
+          return { type: 'interval', edtf: buildYearModifierInterval(year, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$1", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier$subexpression$1", "symbols": []},
+    {"name": "temporal_modifier$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$1", "temporal_modifier$subexpression$2"], "postprocess":  d => {
+          const modifier = d[0];
+          const decadeStart = parseInt(d[2] + d[3] + d[4] + '0', 10);
+          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$4", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier$subexpression$4", "symbols": []},
+    {"name": "temporal_modifier$subexpression$5", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "__", "temporal_modifier$subexpression$3", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$4", "temporal_modifier$subexpression$5"], "postprocess":  d => {
+          const modifier = d[0];
+          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$6", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$7", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier$subexpression$7", "symbols": []},
+    {"name": "temporal_modifier$subexpression$8", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$6", "__", "temporal_modifier_word", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$7", "temporal_modifier$subexpression$8"], "postprocess":  d => {
+          const modifier = d[2];
+          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$9$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$9", "symbols": ["temporal_modifier$subexpression$9$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$9$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$9", "symbols": ["temporal_modifier$subexpression$9$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$9"], "postprocess":  d => {
+          const modifier = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$10", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$11$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$11", "symbols": ["temporal_modifier$subexpression$11$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$11$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$11", "symbols": ["temporal_modifier$subexpression$11$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$10", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier$subexpression$11"], "postprocess":  d => {
+          const modifier = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$12$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$12", "symbols": ["temporal_modifier$subexpression$12$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$12$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$12", "symbols": ["temporal_modifier$subexpression$12$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$13$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$13$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$13$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$13$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$13$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$13$subexpression$4", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$13$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$5"]},
+    {"name": "temporal_modifier$subexpression$13$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$6"]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$12", "__", "temporal_modifier$subexpression$13"], "postprocess":  d => {
+          const modifier = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$14", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$15$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$15", "symbols": ["temporal_modifier$subexpression$15$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$15$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$15", "symbols": ["temporal_modifier$subexpression$15$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$16$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$16$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$16$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$16$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$16$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$16$subexpression$4", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$16$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$5"]},
+    {"name": "temporal_modifier$subexpression$16$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$6"]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$14", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier$subexpression$15", "__", "temporal_modifier$subexpression$16"], "postprocess":  d => {
+          const modifier = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$17$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$17", "symbols": ["temporal_modifier$subexpression$17$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$17$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$17", "symbols": ["temporal_modifier$subexpression$17$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$18$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$18$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$18$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$18$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$18$subexpression$3", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$18$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$18$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$18$subexpression$5", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$18$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$6"]},
+    {"name": "temporal_modifier$subexpression$18$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$7"]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$17", "__", "temporal_modifier$subexpression$18"], "postprocess":  d => {
+          const modifier = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildBCECenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$19", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$20$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$20", "symbols": ["temporal_modifier$subexpression$20$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$20$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$20", "symbols": ["temporal_modifier$subexpression$20$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$21$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$21$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$21$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$21$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$21$subexpression$3", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$21$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$21$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$21$subexpression$5", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$21$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$6"]},
+    {"name": "temporal_modifier$subexpression$21$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$7"]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$19", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier$subexpression$20", "__", "temporal_modifier$subexpression$21"], "postprocess":  d => {
+          const modifier = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildBCECenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$22$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$22", "symbols": ["temporal_modifier$subexpression$22$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$22$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$22", "symbols": ["temporal_modifier$subexpression$22$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$22"], "postprocess":  d => {
+          const modifier = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$23", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$24$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$24", "symbols": ["temporal_modifier$subexpression$24$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$24$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$24", "symbols": ["temporal_modifier$subexpression$24$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$23", "__", "temporal_modifier_word", "__", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$24"], "postprocess":  d => {
+          const modifier = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess":  d => {
+          const modifier = d[0];
+          const decadeDigit = d[2];
+          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
+        } },
+    {"name": "temporal_modifier$subexpression$25", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$25", "__", "temporal_modifier_word", "__", "spelled_decade"], "postprocess":  d => {
+          const modifier = d[2];
+          const decadeDigit = d[4];
+          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
+        } },
     {"name": "interval$subexpression$1$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "interval$subexpression$1$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "interval$subexpression$1$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},

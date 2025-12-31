@@ -32,6 +32,110 @@ function twoDigitYear(yy) {
   return year >= 30 ? 1900 + year : 2000 + year;
 }
 
+// Check if a year is a leap year
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+// Get the number of days in a given month
+function getDaysInMonth(year, month) {
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return daysInMonth[month - 1] || 0;
+}
+
+// Build intervals for early/mid/late modifiers
+// Month: 10-10-Remaining split (1-10, 11-20, 21-end)
+function buildMonthModifierInterval(year, month, modifier) {
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+  const lastDay = getDaysInMonth(y, m);
+
+  switch (modifier) {
+    case 'early':
+      return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-10`;
+    case 'mid':
+      return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-20`;
+    case 'late':
+      return `${pad4(y)}-${pad2(m)}-21/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
+    default:
+      return `${pad4(y)}-${pad2(m)}`;
+  }
+}
+
+// Year: Quarterly trisections (Jan-Apr, May-Aug, Sep-Dec)
+function buildYearModifierInterval(year, modifier) {
+  const y = parseInt(year, 10);
+
+  switch (modifier) {
+    case 'early':
+      return `${pad4(y)}-01/${pad4(y)}-04`;
+    case 'mid':
+      return `${pad4(y)}-05/${pad4(y)}-08`;
+    case 'late':
+      return `${pad4(y)}-09/${pad4(y)}-12`;
+    default:
+      return pad4(y);
+  }
+}
+
+// Decade: 4-3-3 Rule (0-3, 4-6, 7-9)
+function buildDecadeModifierInterval(decadeStart, modifier) {
+  const d = parseInt(decadeStart, 10);
+
+  switch (modifier) {
+    case 'early':
+      return `${d}/${d + 3}`;
+    case 'mid':
+      return `${d + 4}/${d + 6}`;
+    case 'late':
+      return `${d + 7}/${d + 9}`;
+    default:
+      return `${d}/${d + 9}`;
+  }
+}
+
+// Century: Mathematical thirds (01-33, 34-66, 67-00)
+// Note: centuries are 1-indexed (20th century = 1901-2000)
+function buildCenturyModifierInterval(centuryNum, modifier) {
+  const c = parseInt(centuryNum, 10);
+  const centuryStart = (c - 1) * 100 + 1; // 20th century starts at 1901
+
+  switch (modifier) {
+    case 'early':
+      return `${pad4(centuryStart)}/${pad4(centuryStart + 32)}`;
+    case 'mid':
+      return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 65)}`;
+    case 'late':
+      return `${pad4(centuryStart + 66)}/${pad4(centuryStart + 99)}`;
+    default:
+      return `${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
+// BCE Century intervals (negative years)
+function buildBCECenturyModifierInterval(centuryNum, modifier) {
+  const c = parseInt(centuryNum, 10);
+  // For BCE, 1st century BCE = -0099 to -0001 (years 100 BCE to 1 BCE)
+  const centuryEnd = -((c - 1) * 100); // End year (closer to 0)
+  const centuryStart = -(c * 100 - 1);  // Start year (further from 0)
+
+  switch (modifier) {
+    case 'early':
+      // Early part of BCE century is further from year 0
+      return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 67)}`;
+    case 'mid':
+      return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100 + 34)}`;
+    case 'late':
+      // Late part of BCE century is closer to year 0
+      return `-${pad4((c - 1) * 100 + 33)}/-${pad4((c - 1) * 100)}`;
+    default:
+      return `-${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
 function bceToBCE(year) {
   return -(parseInt(year, 10) - 1);
 }
@@ -67,6 +171,7 @@ main -> _ value _ {% d => d[1] %}
 # Top-level value types
 value ->
     interval {% id %}
+  | temporal_modifier {% id %}
   | set {% id %}
   | list {% id %}
   | season {% id %}
@@ -75,6 +180,138 @@ value ->
 # Whitespace
 _ -> [\s]:* {% () => null %}
 __ -> [\s]:+ {% () => null %}
+
+# ==========================================
+# TEMPORAL MODIFIERS (Early/Mid/Late)
+# ==========================================
+
+# The modifier word (early, mid, late)
+temporal_modifier_word ->
+    "early"i {% () => 'early' %}
+  | "mid"i {% () => 'mid' %}
+  | "middle"i {% () => 'mid' %}
+  | "late"i {% () => 'late' %}
+
+# Optional separator between modifier and date (space or hyphen)
+modifier_sep -> __ {% id %} | "-" {% id %}
+
+# Main temporal modifier rules
+temporal_modifier ->
+    # Early/Mid/Late + Month + Year: "early March 2024", "mid-January 1995"
+    temporal_modifier_word modifier_sep month_name __ year_num
+      {% d => {
+        const modifier = d[0];
+        const month = months[d[2].toLowerCase()];
+        const year = d[4];
+        return { type: 'interval', edtf: buildMonthModifierInterval(year, month, modifier), confidence: 0.95 };
+      } %}
+  | temporal_modifier_word modifier_sep month_name _ "," _ year_num
+      {% d => {
+        const modifier = d[0];
+        const month = months[d[2].toLowerCase()];
+        const year = d[6];
+        return { type: 'interval', edtf: buildMonthModifierInterval(year, month, modifier), confidence: 0.95 };
+      } %}
+  # Early/Mid/Late + Year: "early 1995", "mid-2020"
+  | temporal_modifier_word modifier_sep year_num
+      {% d => {
+        const modifier = d[0];
+        const year = d[2];
+        return { type: 'interval', edtf: buildYearModifierInterval(year, modifier), confidence: 0.95 };
+      } %}
+  # Early/Mid/Late + Decade: "early 1990s", "mid-1920s", "late 1880s"
+  | temporal_modifier_word modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const modifier = d[0];
+        const decadeStart = parseInt(d[2] + d[3] + d[4] + '0', 10);
+        return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
+      } %}
+  # Early/Mid/Late + "the" + Decade: "early the 1990s"
+  | temporal_modifier_word __ "the"i __ digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const modifier = d[0];
+        const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+        return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
+      } %}
+  # "the early 1990s"
+  | "the"i __ temporal_modifier_word __ digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const modifier = d[2];
+        const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+        return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
+      } %}
+  # Early/Mid/Late + Ordinal Century + "century": "early 20th century", "mid-19th century"
+  | temporal_modifier_word modifier_sep ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const modifier = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # "the early 20th century"
+  | "the"i __ temporal_modifier_word __ ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const modifier = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # Early/Mid/Late + Ordinal Century + "century" + CE/AD: "early 20th century CE"
+  | temporal_modifier_word modifier_sep ordinal_century __ ("century"i | "c"i ".") __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const modifier = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # "the early 20th century CE"
+  | "the"i __ temporal_modifier_word __ ordinal_century __ ("century"i | "c"i ".") __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const modifier = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # Early/Mid/Late + Ordinal Century + "century" + BCE/BC: "early 5th century BCE"
+  | temporal_modifier_word modifier_sep ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const modifier = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildBCECenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # "the early 5th century BCE"
+  | "the"i __ temporal_modifier_word __ ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const modifier = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildBCECenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # Early/Mid/Late + Spelled Ordinal Century + "century": "early twentieth century"
+  | temporal_modifier_word modifier_sep spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const modifier = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # "the early twentieth century"
+  | "the"i __ temporal_modifier_word __ spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const modifier = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
+      } %}
+  # Spelled decades: "early sixties", "mid-seventies"
+  | temporal_modifier_word modifier_sep spelled_decade
+      {% d => {
+        const modifier = d[0];
+        const decadeDigit = d[2];
+        const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+        return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
+      } %}
+  # "the early sixties"
+  | "the"i __ temporal_modifier_word __ spelled_decade
+      {% d => {
+        const modifier = d[2];
+        const decadeDigit = d[4];
+        const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+        return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
+      } %}
 
 # ==========================================
 # INTERVALS
