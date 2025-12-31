@@ -17,11 +17,28 @@ const months = {
   'december': '12', 'dec': '12'
 };
 
+// Seasons (independent of location) - Level 1
 const seasons = {
   'spring': '21',
   'summer': '22',
   'autumn': '23', 'fall': '23',
   'winter': '24'
+};
+
+// Northern Hemisphere seasons - Level 2
+const northernSeasons = {
+  'spring': '25',
+  'summer': '26',
+  'autumn': '27', 'fall': '27',
+  'winter': '28'
+};
+
+// Southern Hemisphere seasons - Level 2
+const southernSeasons = {
+  'spring': '29',
+  'summer': '30',
+  'autumn': '31', 'fall': '31',
+  'winter': '32'
 };
 
 function pad2(n) { return String(n).padStart(2, '0'); }
@@ -453,12 +470,78 @@ list ->
 # ==========================================
 
 season ->
-    qualifier __ season_name __ year_num
+    # Northern Hemisphere seasons: "Spring (Northern Hemisphere) 1985"
+    qualifier __ season_name __ hemisphere_north __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[6])}-${northernSeasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 }) %}
+  | season_name __ hemisphere_north __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${northernSeasons[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
+  # Southern Hemisphere seasons: "Spring (Southern Hemisphere) 1985"
+  | qualifier __ season_name __ hemisphere_south __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[6])}-${southernSeasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 }) %}
+  | season_name __ hemisphere_south __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${southernSeasons[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
+  # Quarters: "Q1 1985", "Quarter 1 1985", "1st Quarter 1985"
+  | qualifier __ quarter_name __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 }) %}
+  | quarter_name __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 }) %}
+  # Quadrimesters: "Quadrimester 1 1985", "1st Quadrimester 1985"
+  | qualifier __ quadrimester_name __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 }) %}
+  | quadrimester_name __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 }) %}
+  # Semesters: "Semester 1 1985", "1st Semester 1985"
+  | qualifier __ semester_name __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 }) %}
+  | semester_name __ year_num
+      {% d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 }) %}
+  # Basic seasons (independent of location): "Spring 1985"
+  | qualifier __ season_name __ year_num
       {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${seasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 }) %}
   | season_name __ year_num
       {% d => ({ type: 'season', edtf: `${pad4(d[2])}-${seasons[d[0].toLowerCase()]}`, confidence: 0.95 }) %}
 
 season_name -> ("spring"i | "summer"i | "autumn"i | "fall"i | "winter"i) {% d => d[0][0] %}
+
+# Hemisphere indicators
+hemisphere_north ->
+    "(" _ ("northern"i __ "hemisphere"i | "north"i) _ ")" {% () => 'north' %}
+  | "," _ ("northern"i __ "hemisphere"i | "north"i) {% () => 'north' %}
+
+hemisphere_south ->
+    "(" _ ("southern"i __ "hemisphere"i | "south"i) _ ")" {% () => 'south' %}
+  | "," _ ("southern"i __ "hemisphere"i | "south"i) {% () => 'south' %}
+
+# Quarter names (codes 33-36)
+quarter_name ->
+    "Q"i "1" {% () => '33' %}
+  | "Q"i "2" {% () => '34' %}
+  | "Q"i "3" {% () => '35' %}
+  | "Q"i "4" {% () => '36' %}
+  | "quarter"i __ "1" {% () => '33' %}
+  | "quarter"i __ "2" {% () => '34' %}
+  | "quarter"i __ "3" {% () => '35' %}
+  | "quarter"i __ "4" {% () => '36' %}
+  | ("1st"i | "first"i) __ "quarter"i {% () => '33' %}
+  | ("2nd"i | "second"i) __ "quarter"i {% () => '34' %}
+  | ("3rd"i | "third"i) __ "quarter"i {% () => '35' %}
+  | ("4th"i | "fourth"i) __ "quarter"i {% () => '36' %}
+
+# Quadrimester names (codes 37-39)
+quadrimester_name ->
+    "quadrimester"i __ "1" {% () => '37' %}
+  | "quadrimester"i __ "2" {% () => '38' %}
+  | "quadrimester"i __ "3" {% () => '39' %}
+  | ("1st"i | "first"i) __ "quadrimester"i {% () => '37' %}
+  | ("2nd"i | "second"i) __ "quadrimester"i {% () => '38' %}
+  | ("3rd"i | "third"i) __ "quadrimester"i {% () => '39' %}
+
+# Semester names (codes 40-41)
+semester_name ->
+    "semester"i __ "1" {% () => '40' %}
+  | "semester"i __ "2" {% () => '41' %}
+  | ("1st"i | "first"i) __ "semester"i {% () => '40' %}
+  | ("2nd"i | "second"i) __ "semester"i {% () => '41' %}
 
 # ==========================================
 # DATES

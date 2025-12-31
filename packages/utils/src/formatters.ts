@@ -359,24 +359,33 @@ function formatIntervalHuman(interval: EDTFInterval, options: FormatOptions): st
 
 function formatSeasonHuman(season: EDTFSeason, options: FormatOptions): string {
   const seasonNames: Record<number, string> = {
+    // Seasons (independent of location) - Level 1
     21: 'Spring',
     22: 'Summer',
     23: 'Autumn',
     24: 'Winter',
-    25: 'Spring (Southern Hemisphere)',
-    26: 'Summer (Southern Hemisphere)',
-    27: 'Autumn (Southern Hemisphere)',
-    28: 'Winter (Southern Hemisphere)',
-    29: 'Quarter 1',
-    30: 'Quarter 2',
-    31: 'Quarter 3',
-    32: 'Quarter 4',
-    33: 'Quadrimester 1',
-    34: 'Quadrimester 2',
-    35: 'Quadrimester 3',
-    36: 'Quadrimester 1',
-    37: 'Semester 1',
-    38: 'Semester 2',
+    // Northern Hemisphere seasons - Level 2
+    25: 'Spring (Northern Hemisphere)',
+    26: 'Summer (Northern Hemisphere)',
+    27: 'Autumn (Northern Hemisphere)',
+    28: 'Winter (Northern Hemisphere)',
+    // Southern Hemisphere seasons - Level 2
+    29: 'Spring (Southern Hemisphere)',
+    30: 'Summer (Southern Hemisphere)',
+    31: 'Autumn (Southern Hemisphere)',
+    32: 'Winter (Southern Hemisphere)',
+    // Quarters - Level 2
+    33: 'Quarter 1',
+    34: 'Quarter 2',
+    35: 'Quarter 3',
+    36: 'Quarter 4',
+    // Quadrimesters - Level 2
+    37: 'Quadrimester 1',
+    38: 'Quadrimester 2',
+    39: 'Quadrimester 3',
+    // Semesters - Level 2
+    40: 'Semester 1',
+    41: 'Semester 2',
   };
 
   let result = `${seasonNames[season.season] || `Season ${season.season}`} ${season.year}`;

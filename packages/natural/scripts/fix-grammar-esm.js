@@ -20,6 +20,12 @@ content = content.replace(
   ''
 );
 
+// Remove module.exports assignment (causes issues when bundled)
+content = content.replace(
+  /if\s*\(typeof module !== 'undefined'&& typeof module\.exports !== 'undefined'\)\s*{\s*module\.exports = grammar;\s*}\s*else\s*{\s*}/g,
+  ''
+);
+
 // Wrap the IIFE and capture its return value
 content = content.replace(
   /\(function\s*\(\)\s*{/,

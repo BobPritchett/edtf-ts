@@ -6,7 +6,7 @@ export default defineConfig({
 
   base: '/edtf-ts/',
 
-  ignoreDeadLinks: true,  // TODO: Remove when all pages are created
+  ignoreDeadLinks: true, // TODO: Remove when all pages are created
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/edtf-ts/logo.svg' }],
@@ -27,10 +27,16 @@ export default defineConfig({
       {
         text: 'v0.1.0',
         items: [
-          { text: 'Changelog', link: 'https://github.com/yourusername/edtf-ts/blob/main/CHANGELOG.md' },
-          { text: 'Contributing', link: 'https://github.com/yourusername/edtf-ts/blob/main/CONTRIBUTING.md' }
-        ]
-      }
+          {
+            text: 'Changelog',
+            link: 'https://github.com/BobPritchett/edtf-ts/blob/main/CHANGELOG.md',
+          },
+          {
+            text: 'Contributing',
+            link: 'https://github.com/BobPritchett/edtf-ts/blob/main/CONTRIBUTING.md',
+          },
+        ],
+      },
     ],
 
     sidebar: {
@@ -40,17 +46,17 @@ export default defineConfig({
           items: [
             { text: 'What is EDTF?', link: '/guide/what-is-edtf' },
             { text: 'Getting Started', link: '/guide/getting-started' },
-            { text: 'Why EDTF-TS?', link: '/guide/why-edtf-ts' }
-          ]
+            { text: 'Why EDTF-TS?', link: '/guide/why-edtf-ts' },
+          ],
         },
         {
           text: 'Working with Dates',
           items: [
             { text: 'Parsing', link: '/guide/parsing' },
             { text: 'Formatting', link: '/guide/formatting' },
-            { text: 'Comparison', link: '/guide/comparison' }
-          ]
-        }
+            { text: 'Comparison', link: '/guide/comparison' },
+          ],
+        },
       ],
       '/api/': [
         {
@@ -59,8 +65,8 @@ export default defineConfig({
             { text: '@edtf-ts/core', link: '/api/core' },
             { text: '@edtf-ts/utils', link: '/api/utils' },
             { text: '@edtf-ts/compare', link: '/api/compare' },
-            { text: '@edtf-ts/natural', link: '/api/natural' }
-          ]
+            { text: '@edtf-ts/natural', link: '/api/natural' },
+          ],
         },
         {
           text: 'Core Types',
@@ -71,45 +77,43 @@ export default defineConfig({
             { text: 'EDTFSeason', link: '/api/types/season' },
             { text: 'EDTFSet', link: '/api/types/set' },
             { text: 'EDTFList', link: '/api/types/list' },
-            { text: 'Member (Four-Bound)', link: '/api/types/member' }
-          ]
+            { text: 'Member (Four-Bound)', link: '/api/types/member' },
+          ],
         },
         {
           text: 'Utilities',
           items: [
             { text: 'Validators', link: '/api/validators' },
             { text: 'Formatters', link: '/api/formatters' },
-            { text: 'Comparators', link: '/api/comparators' }
-          ]
-        }
+            { text: 'Comparators', link: '/api/comparators' },
+          ],
+        },
       ],
       '/examples/': [
         {
           text: 'Examples',
-          items: [
-            { text: 'Basic Usage', link: '/examples/basic-usage' }
-          ]
-        }
-      ]
+          items: [{ text: 'Basic Usage', link: '/examples/basic-usage' }],
+        },
+      ],
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/yourusername/edtf-ts' },
-      { icon: 'npm', link: 'https://www.npmjs.com/package/@edtf-ts/core' }
+      { icon: 'github', link: 'https://github.com/BobPritchett/edtf-ts' },
+      { icon: 'npm', link: 'https://www.npmjs.com/package/@edtf-ts/core' },
     ],
 
     editLink: {
-      pattern: 'https://github.com/yourusername/edtf-ts/edit/main/docs/:path',
-      text: 'Edit this page on GitHub'
+      pattern: 'https://github.com/BobPritchett/edtf-ts/edit/main/docs/:path',
+      text: 'Edit this page on GitHub',
     },
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2025-present'
+      copyright: 'Copyright 2025 Bob Pritchett',
     },
 
     search: {
-      provider: 'local'
-    }
-  }
+      provider: 'local',
+    },
+  },
 });

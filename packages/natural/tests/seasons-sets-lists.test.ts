@@ -58,6 +58,153 @@ describe('Seasons', () => {
       expect(results[0].edtf).toBe('2020-23~');
     });
   });
+
+  describe('Northern Hemisphere Seasons (Level 2)', () => {
+    it('should parse "Spring (Northern Hemisphere) 1985"', () => {
+      const results = parseNatural('Spring (Northern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-25');
+      expect(results[0].type).toBe('season');
+    });
+
+    it('should parse "Summer (Northern Hemisphere) 1985"', () => {
+      const results = parseNatural('Summer (Northern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-26');
+    });
+
+    it('should parse "Fall (Northern Hemisphere) 1985"', () => {
+      const results = parseNatural('Fall (Northern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-27');
+    });
+
+    it('should parse "Winter (Northern Hemisphere) 1985"', () => {
+      const results = parseNatural('Winter (Northern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-28');
+    });
+  });
+
+  describe('Southern Hemisphere Seasons (Level 2)', () => {
+    it('should parse "Spring (Southern Hemisphere) 1985"', () => {
+      const results = parseNatural('Spring (Southern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-29');
+      expect(results[0].type).toBe('season');
+    });
+
+    it('should parse "Summer (Southern Hemisphere) 1985"', () => {
+      const results = parseNatural('Summer (Southern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-30');
+    });
+
+    it('should parse "Autumn (Southern Hemisphere) 1985"', () => {
+      const results = parseNatural('Autumn (Southern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-31');
+    });
+
+    it('should parse "Winter (Southern Hemisphere) 1985"', () => {
+      const results = parseNatural('Winter (Southern Hemisphere) 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-32');
+    });
+  });
+
+  describe('Quarters (Level 2)', () => {
+    it('should parse "Q1 1985"', () => {
+      const results = parseNatural('Q1 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-33');
+      expect(results[0].type).toBe('season');
+    });
+
+    it('should parse "Q2 1985"', () => {
+      const results = parseNatural('Q2 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-34');
+    });
+
+    it('should parse "Quarter 1 1985"', () => {
+      const results = parseNatural('Quarter 1 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-33');
+    });
+
+    it('should parse "1st Quarter 1985"', () => {
+      const results = parseNatural('1st Quarter 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-33');
+    });
+
+    it('should parse "First Quarter 1985"', () => {
+      const results = parseNatural('First Quarter 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-33');
+    });
+
+    it('should parse "4th Quarter 1985"', () => {
+      const results = parseNatural('4th Quarter 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-36');
+    });
+  });
+
+  describe('Quadrimesters (Level 2)', () => {
+    it('should parse "Quadrimester 1 1985"', () => {
+      const results = parseNatural('Quadrimester 1 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-37');
+      expect(results[0].type).toBe('season');
+    });
+
+    it('should parse "1st Quadrimester 1985"', () => {
+      const results = parseNatural('1st Quadrimester 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-37');
+    });
+
+    it('should parse "Second Quadrimester 1985"', () => {
+      const results = parseNatural('Second Quadrimester 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-38');
+    });
+
+    it('should parse "3rd Quadrimester 1985"', () => {
+      const results = parseNatural('3rd Quadrimester 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-39');
+    });
+  });
+
+  describe('Semesters (Level 2)', () => {
+    it('should parse "Semester 1 1985"', () => {
+      const results = parseNatural('Semester 1 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-40');
+      expect(results[0].type).toBe('season');
+    });
+
+    it('should parse "1st Semester 1985"', () => {
+      const results = parseNatural('1st Semester 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-40');
+    });
+
+    it('should parse "Second Semester 1985"', () => {
+      const results = parseNatural('Second Semester 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-41');
+    });
+
+    it('should parse "2nd Semester 1985"', () => {
+      const results = parseNatural('2nd Semester 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-41');
+    });
+  });
 });
 
 describe('Sets (Level 2)', () => {

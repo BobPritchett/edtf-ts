@@ -8,16 +8,16 @@ EDTF-TS is a modern, TypeScript-first implementation of the Extended Date/Time F
 
 [edtf.js](https://github.com/inukshuk/edtf.js) is the most popular JavaScript EDTF library, but EDTF-TS offers several advantages:
 
-| Feature | edtf.js | EDTF-TS |
-|---------|---------|---------|
+| Feature            | edtf.js     | EDTF-TS            |
+| ------------------ | ----------- | ------------------ |
 | TypeScript Support | ❌ No types | ✅ Full TypeScript |
-| Bundle Size | ~180KB | ~35KB core |
-| Natural Language | ❌ | 🔄 Planned |
-| Human Formatting | ❌ | ✅ Built-in |
-| Utilities Package | ❌ | ✅ Yes |
-| Tree-shakeable | ⚠️ Partial | ✅ Full |
-| Dependencies | Several | Zero (core) |
-| Maintenance | Active | Active |
+| Bundle Size        | ~180KB      | ~35KB core         |
+| Natural Language   | ❌          | 🔄 Planned         |
+| Human Formatting   | ❌          | ✅ Built-in        |
+| Utilities Package  | ❌          | ✅ Yes             |
+| Tree-shakeable     | ⚠️ Partial  | ✅ Full            |
+| Dependencies       | Several     | Zero (core)        |
+| Maintenance        | Active      | Active             |
 
 **Migration from edtf.js:**
 
@@ -56,22 +56,23 @@ const result = parse('1985-04-12');
 
 if (result.success) {
   // TypeScript knows the exact type
-  result.value.min;  // Date
-  result.value.max;  // Date
+  result.value.min; // Date
+  result.value.max; // Date
 
   // Type guards for narrowing
   if (isEDTFDate(result.value)) {
-    result.value.year;   // number | string
-    result.value.month;  // number | string | undefined
+    result.value.year; // number | string
+    result.value.month; // number | string | undefined
   }
 } else {
   // TypeScript knows about errors
-  result.errors[0].code;     // string
-  result.errors[0].message;  // string
+  result.errors[0].code; // string
+  result.errors[0].message; // string
 }
 ```
 
 **Benefits:**
+
 - IntelliSense autocomplete in VS Code
 - Catch errors at compile time
 - Refactoring safety
@@ -88,6 +89,7 @@ The core package has **zero runtime dependencies**:
 ```
 
 **Benefits:**
+
 - Smaller bundle size
 - Fewer security vulnerabilities
 - Faster installs
@@ -105,13 +107,13 @@ for (const year of interval.by('year')) {
 }
 
 // Optional chaining
-result.value?.min
+result.value?.min;
 
 // Nullish coalescing
-const year = date.year ?? defaultYear
+const year = date.year ?? defaultYear;
 
 // ESM imports
-import { parse } from '@edtf-ts/core'
+import { parse } from '@edtf-ts/core';
 ```
 
 ### 4. Comprehensive Utilities
@@ -122,7 +124,7 @@ Built-in utilities package with formatting, validation, and comparison:
 import { formatHuman, isInRange, sort } from '@edtf-ts/utils';
 
 // Format dates
-formatHuman(date);  // "April 12, 1985"
+formatHuman(date); // "April 12, 1985"
 
 // Validate ranges
 isInRange(date, start, end);
@@ -152,10 +154,12 @@ if (!result.success) {
 ### 6. Smaller Bundle Size
 
 **Core package:**
+
 - ESM: 34.92 KB (unminified)
 - Gzipped: ~10 KB
 
 **Utils package:**
+
 - ESM: 12.69 KB (unminified)
 - Gzipped: ~4 KB
 
@@ -181,9 +185,9 @@ Built-in internationalization:
 ```typescript
 import { formatHuman } from '@edtf-ts/utils';
 
-formatHuman(date, { locale: 'en-US' });  // "April 12, 1985"
-formatHuman(date, { locale: 'fr-FR' });  // "12 avril 1985"
-formatHuman(date, { locale: 'de-DE' });  // "12. April 1985"
+formatHuman(date, { locale: 'en-US' }); // "April 12, 1985"
+formatHuman(date, { locale: 'fr-FR' }); // "12 avril 1985"
+formatHuman(date, { locale: 'de-DE' }); // "12. April 1985"
 ```
 
 Uses native `Intl` API for maximum compatibility.
@@ -217,7 +221,7 @@ EDTF-TS is perfect for:
 ```typescript
 // Cataloging artifacts with uncertain dates
 const pottery = parse('156X-12-25');
-formatHuman(pottery);  // "December 25, 1560s"
+formatHuman(pottery); // "December 25, 1560s"
 ```
 
 ### Historical Research
@@ -225,7 +229,7 @@ formatHuman(pottery);  // "December 25, 1560s"
 ```typescript
 // Events with approximate dates
 const battle = parse('1777-09-XX?');
-formatHuman(battle);  // "September 1777 (uncertain)"
+formatHuman(battle); // "September 1777 (uncertain)"
 ```
 
 ### Digital Archives
@@ -298,7 +302,7 @@ Ready to use EDTF-TS?
 
 ## Community
 
-- [GitHub](https://github.com/yourusername/edtf-ts) - Star the project
+- [GitHub](https://github.com/BobPritchett/edtf-ts) - Star the project
 - [npm](https://www.npmjs.com/package/@edtf-ts/core) - Package stats
-- [Issues](https://github.com/yourusername/edtf-ts/issues) - Report bugs
-- [Discussions](https://github.com/yourusername/edtf-ts/discussions) - Ask questions
+- [Issues](https://github.com/BobPritchett/edtf-ts/issues) - Report bugs
+- [Discussions](https://github.com/BobPritchett/edtf-ts/discussions) - Ask questions

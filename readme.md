@@ -28,20 +28,20 @@ import { isBefore, during, overlaps } from '@edtf-ts/compare';
 const date = parse('1985-04-12');
 const interval = parse('2004-06/2006-08');
 const uncertain = parse('1984?');
-const unspecified = parse('198X');  // Any year 1980-1989
+const unspecified = parse('198X'); // Any year 1980-1989
 
 // Temporal comparison with four-valued logic
 const a = parse('1985').value;
 const b = parse('1990').value;
 
-isBefore(a, b);   // 'YES' - definitely before
-during(a, b);     // 'NO' - not contained within
-overlaps(a, b);   // 'NO' - no time overlap
+isBefore(a, b); // 'YES' - definitely before
+during(a, b); // 'NO' - not contained within
+overlaps(a, b); // 'NO' - no time overlap
 
 // Handle uncertainty
-const decade = parse('198X').value;  // 1980-1989
+const decade = parse('198X').value; // 1980-1989
 const year = parse('1985').value;
-equals(decade, year);  // 'MAYBE' - could be 1985
+equals(decade, year); // 'MAYBE' - could be 1985
 ```
 
 ## Packages
@@ -49,6 +49,7 @@ equals(decade, year);  // 'MAYBE' - could be 1985
 ### Core Packages
 
 #### [@edtf-ts/core](./packages/core)
+
 Core EDTF parsing, validation, and type definitions.
 
 ```typescript
@@ -56,15 +57,16 @@ import { parse, isValid } from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 if (result.success) {
-  console.log(result.value.type);       // 'Date'
-  console.log(result.value.precision);  // 'day'
-  console.log(result.level);            // 0
+  console.log(result.value.type); // 'Date'
+  console.log(result.value.precision); // 'day'
+  console.log(result.level); // 0
 }
 
-isValid('2004-06-~01');  // true (Level 2)
+isValid('2004-06-~01'); // true (Level 2)
 ```
 
 #### [@edtf-ts/compare](./packages/compare)
+
 Advanced temporal comparison using Allen's interval algebra and four-valued logic.
 
 ```typescript
@@ -72,7 +74,7 @@ import { parse } from '@edtf-ts/core';
 import { normalize, isBefore, during, overlaps } from '@edtf-ts/compare';
 
 // Simple API - EDTF level
-isBefore(parse('1980').value, parse('1990').value);  // 'YES'
+isBefore(parse('1980').value, parse('1990').value); // 'YES'
 
 // Advanced API - Member level (four-bound ranges)
 const norm = normalize(parse('198X').value);
@@ -86,6 +88,7 @@ console.log(norm.members[0]);
 ```
 
 **Features:**
+
 - 13 Allen relations (before, after, meets, overlaps, starts, during, finishes, equals, + symmetrics)
 - Four-valued logic: YES/NO/MAYBE/UNKNOWN
 - Four-bound normalization (sMin, sMax, eMin, eMax)
@@ -93,6 +96,7 @@ console.log(norm.members[0]);
 - Database preparation utilities (coming soon)
 
 #### [@edtf-ts/utils](./packages/utils)
+
 Utility functions for formatting, validation, and basic comparison.
 
 ```typescript
@@ -107,10 +111,11 @@ formatHuman(parse('1984?').value);
 
 // Simple comparison and sorting
 const dates = [parse('2000').value, parse('1985').value, parse('1990').value];
-const sorted = sort(dates);  // [1985, 1990, 2000]
+const sorted = sort(dates); // [1985, 1990, 2000]
 ```
 
 #### [@edtf-ts/natural](./packages/natural)
+
 Natural language date parsing to EDTF.
 
 ```typescript
@@ -125,20 +130,24 @@ const results2 = parseNatural('sometime in the 1980s');
 
 ## Documentation
 
-- **[Getting Started Guide](./docs/guide/getting-started.md)** - Learn the basics
-- **[API Reference](./docs/api/core.md)** - Complete API documentation
-- **[Comparison Guide](./docs/guide/comparison.md)** - Understanding temporal reasoning
-- **[Interactive Playground](./docs/playground.md)** - Try it in your browser
+Full documentation is available at **[bobpritchett.github.io/edtf-ts](https://bobpritchett.github.io/edtf-ts/)**
+
+- **[Getting Started Guide](https://bobpritchett.github.io/edtf-ts/guide/getting-started)** - Learn the basics
+- **[API Reference](https://bobpritchett.github.io/edtf-ts/api/core)** - Complete API documentation
+- **[Comparison Guide](https://bobpritchett.github.io/edtf-ts/guide/comparison)** - Understanding temporal reasoning
+- **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playground)** - Try it in your browser
 
 ## EDTF Specification Support
 
 ### Level 0 (ISO 8601 Profile)
+
 - ✅ Calendar dates: `1985-04-12`
 - ✅ Reduced precision: `1985-04`, `1985`
 - ✅ Date/time: `1985-04-12T23:20:30`
 - ✅ Intervals: `1985/1990`, `1985-04-12/1985-04-15`
 
 ### Level 1 (Extended)
+
 - ✅ Uncertain/approximate: `1984?`, `1984~`, `1984%`
 - ✅ Unspecified digits: `199X`, `19XX`, `1985-XX-XX`
 - ✅ Extended intervals: `1984?/2004~`, `../1985`, `1985/..`
@@ -146,6 +155,7 @@ const results2 = parseNatural('sometime in the 1980s');
 - ✅ Seasons: `1985-21` (Spring), `1985-22` (Summer)
 
 ### Level 2 (Partial Uncertainty)
+
 - ✅ Component-level qualification: `?2004-06`, `2004-~06`, `2004-06-~11`
 - ✅ Partial unspecified: `156X-12-25`, `15XX-12-25`
 - ✅ Multiple dates: `1985-04-12, 1985-05, 1985`
@@ -165,16 +175,16 @@ The `@edtf-ts/compare` package uses four-valued logic for precise temporal reaso
 import { isBefore, equals, during } from '@edtf-ts/compare';
 
 // YES - bounds prove it
-isBefore(parse('1980').value, parse('1990').value);  // 'YES'
+isBefore(parse('1980').value, parse('1990').value); // 'YES'
 
 // NO - bounds disprove it
-during(parse('1985').value, parse('1985').value);  // 'NO' (same bounds)
+during(parse('1985').value, parse('1985').value); // 'NO' (same bounds)
 
 // MAYBE - uncertainty from unspecified digits
-equals(parse('198X').value, parse('1985').value);  // 'MAYBE'
+equals(parse('198X').value, parse('1985').value); // 'MAYBE'
 
 // UNKNOWN - missing endpoint information
-overlaps(parse('1985/').value, parse('1990').value);  // 'UNKNOWN'
+overlaps(parse('1985/').value, parse('1990').value); // 'UNKNOWN'
 ```
 
 ## Use Cases
@@ -217,7 +227,7 @@ edtf-ts/
 
 ## License
 
-MIT © 2025
+MIT Copyright 2025 Bob Pritchett
 
 ## Contributing
 

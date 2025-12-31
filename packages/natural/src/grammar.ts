@@ -18,11 +18,28 @@ const months = {
   'december': '12', 'dec': '12'
 };
 
+// Seasons (independent of location) - Level 1
 const seasons = {
   'spring': '21',
   'summer': '22',
   'autumn': '23', 'fall': '23',
   'winter': '24'
+};
+
+// Northern Hemisphere seasons - Level 2
+const northernSeasons = {
+  'spring': '25',
+  'summer': '26',
+  'autumn': '27', 'fall': '27',
+  'winter': '28'
+};
+
+// Southern Hemisphere seasons - Level 2
+const southernSeasons = {
+  'spring': '29',
+  'summer': '30',
+  'autumn': '31', 'fall': '31',
+  'winter': '32'
 };
 
 function pad2(n) { return String(n).padStart(2, '0'); }
@@ -547,6 +564,16 @@ var grammar = {
     {"name": "list", "symbols": ["datevalue", "__", "list$string$2", "__", "datevalue", "__", "list$string$3", "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf},${d[8].edtf}}`, confidence: 0.9 })},
     {"name": "list$string$4", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "list", "symbols": ["datevalue", "__", "list$string$4", "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf}}`, confidence: 0.9 })},
+    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "hemisphere_north", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[6])}-${northernSeasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["season_name", "__", "hemisphere_north", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${northernSeasons[d[0].toLowerCase()]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "hemisphere_south", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[6])}-${southernSeasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["season_name", "__", "hemisphere_south", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${southernSeasons[d[0].toLowerCase()]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["qualifier", "__", "quarter_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["quarter_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["qualifier", "__", "quadrimester_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["quadrimester_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["qualifier", "__", "semester_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["semester_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${seasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["season_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${seasons[d[0].toLowerCase()]}`, confidence: 0.95 })},
     {"name": "season_name$subexpression$1$subexpression$1", "symbols": [/[sS]/, /[pP]/, /[rR]/, /[iI]/, /[nN]/, /[gG]/], "postprocess": function(d) {return d.join(""); }},
@@ -560,6 +587,110 @@ var grammar = {
     {"name": "season_name$subexpression$1$subexpression$5", "symbols": [/[wW]/, /[iI]/, /[nN]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "season_name$subexpression$1", "symbols": ["season_name$subexpression$1$subexpression$5"]},
     {"name": "season_name", "symbols": ["season_name$subexpression$1"], "postprocess": d => d[0][0]},
+    {"name": "hemisphere_north$subexpression$1$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_north$subexpression$1$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_north$subexpression$1", "symbols": ["hemisphere_north$subexpression$1$subexpression$1", "__", "hemisphere_north$subexpression$1$subexpression$2"]},
+    {"name": "hemisphere_north$subexpression$1$subexpression$3", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_north$subexpression$1", "symbols": ["hemisphere_north$subexpression$1$subexpression$3"]},
+    {"name": "hemisphere_north", "symbols": [{"literal":"("}, "_", "hemisphere_north$subexpression$1", "_", {"literal":")"}], "postprocess": () => 'north'},
+    {"name": "hemisphere_north$subexpression$2$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_north$subexpression$2$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_north$subexpression$2", "symbols": ["hemisphere_north$subexpression$2$subexpression$1", "__", "hemisphere_north$subexpression$2$subexpression$2"]},
+    {"name": "hemisphere_north$subexpression$2$subexpression$3", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_north$subexpression$2", "symbols": ["hemisphere_north$subexpression$2$subexpression$3"]},
+    {"name": "hemisphere_north", "symbols": [{"literal":","}, "_", "hemisphere_north$subexpression$2"], "postprocess": () => 'north'},
+    {"name": "hemisphere_south$subexpression$1$subexpression$1", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_south$subexpression$1$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_south$subexpression$1", "symbols": ["hemisphere_south$subexpression$1$subexpression$1", "__", "hemisphere_south$subexpression$1$subexpression$2"]},
+    {"name": "hemisphere_south$subexpression$1$subexpression$3", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_south$subexpression$1", "symbols": ["hemisphere_south$subexpression$1$subexpression$3"]},
+    {"name": "hemisphere_south", "symbols": [{"literal":"("}, "_", "hemisphere_south$subexpression$1", "_", {"literal":")"}], "postprocess": () => 'south'},
+    {"name": "hemisphere_south$subexpression$2$subexpression$1", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_south$subexpression$2$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_south$subexpression$2", "symbols": ["hemisphere_south$subexpression$2$subexpression$1", "__", "hemisphere_south$subexpression$2$subexpression$2"]},
+    {"name": "hemisphere_south$subexpression$2$subexpression$3", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "hemisphere_south$subexpression$2", "symbols": ["hemisphere_south$subexpression$2$subexpression$3"]},
+    {"name": "hemisphere_south", "symbols": [{"literal":","}, "_", "hemisphere_south$subexpression$2"], "postprocess": () => 'south'},
+    {"name": "quarter_name$subexpression$1", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$1", {"literal":"1"}], "postprocess": () => '33'},
+    {"name": "quarter_name$subexpression$2", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$2", {"literal":"2"}], "postprocess": () => '34'},
+    {"name": "quarter_name$subexpression$3", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$3", {"literal":"3"}], "postprocess": () => '35'},
+    {"name": "quarter_name$subexpression$4", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$4", {"literal":"4"}], "postprocess": () => '36'},
+    {"name": "quarter_name$subexpression$5", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$5", "__", {"literal":"1"}], "postprocess": () => '33'},
+    {"name": "quarter_name$subexpression$6", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$6", "__", {"literal":"2"}], "postprocess": () => '34'},
+    {"name": "quarter_name$subexpression$7", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$7", "__", {"literal":"3"}], "postprocess": () => '35'},
+    {"name": "quarter_name$subexpression$8", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$8", "__", {"literal":"4"}], "postprocess": () => '36'},
+    {"name": "quarter_name$subexpression$9$subexpression$1", "symbols": [{"literal":"1"}, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$9", "symbols": ["quarter_name$subexpression$9$subexpression$1"]},
+    {"name": "quarter_name$subexpression$9$subexpression$2", "symbols": [/[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$9", "symbols": ["quarter_name$subexpression$9$subexpression$2"]},
+    {"name": "quarter_name$subexpression$10", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$9", "__", "quarter_name$subexpression$10"], "postprocess": () => '33'},
+    {"name": "quarter_name$subexpression$11$subexpression$1", "symbols": [{"literal":"2"}, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$11", "symbols": ["quarter_name$subexpression$11$subexpression$1"]},
+    {"name": "quarter_name$subexpression$11$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[cC]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$11", "symbols": ["quarter_name$subexpression$11$subexpression$2"]},
+    {"name": "quarter_name$subexpression$12", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$11", "__", "quarter_name$subexpression$12"], "postprocess": () => '34'},
+    {"name": "quarter_name$subexpression$13$subexpression$1", "symbols": [{"literal":"3"}, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$13", "symbols": ["quarter_name$subexpression$13$subexpression$1"]},
+    {"name": "quarter_name$subexpression$13$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$13", "symbols": ["quarter_name$subexpression$13$subexpression$2"]},
+    {"name": "quarter_name$subexpression$14", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$13", "__", "quarter_name$subexpression$14"], "postprocess": () => '35'},
+    {"name": "quarter_name$subexpression$15$subexpression$1", "symbols": [{"literal":"4"}, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$15", "symbols": ["quarter_name$subexpression$15$subexpression$1"]},
+    {"name": "quarter_name$subexpression$15$subexpression$2", "symbols": [/[fF]/, /[oO]/, /[uU]/, /[rR]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name$subexpression$15", "symbols": ["quarter_name$subexpression$15$subexpression$2"]},
+    {"name": "quarter_name$subexpression$16", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$15", "__", "quarter_name$subexpression$16"], "postprocess": () => '36'},
+    {"name": "quadrimester_name$subexpression$1", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$1", "__", {"literal":"1"}], "postprocess": () => '37'},
+    {"name": "quadrimester_name$subexpression$2", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$2", "__", {"literal":"2"}], "postprocess": () => '38'},
+    {"name": "quadrimester_name$subexpression$3", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$3", "__", {"literal":"3"}], "postprocess": () => '39'},
+    {"name": "quadrimester_name$subexpression$4$subexpression$1", "symbols": [{"literal":"1"}, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name$subexpression$4", "symbols": ["quadrimester_name$subexpression$4$subexpression$1"]},
+    {"name": "quadrimester_name$subexpression$4$subexpression$2", "symbols": [/[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name$subexpression$4", "symbols": ["quadrimester_name$subexpression$4$subexpression$2"]},
+    {"name": "quadrimester_name$subexpression$5", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$4", "__", "quadrimester_name$subexpression$5"], "postprocess": () => '37'},
+    {"name": "quadrimester_name$subexpression$6$subexpression$1", "symbols": [{"literal":"2"}, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name$subexpression$6", "symbols": ["quadrimester_name$subexpression$6$subexpression$1"]},
+    {"name": "quadrimester_name$subexpression$6$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[cC]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name$subexpression$6", "symbols": ["quadrimester_name$subexpression$6$subexpression$2"]},
+    {"name": "quadrimester_name$subexpression$7", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$6", "__", "quadrimester_name$subexpression$7"], "postprocess": () => '38'},
+    {"name": "quadrimester_name$subexpression$8$subexpression$1", "symbols": [{"literal":"3"}, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name$subexpression$8", "symbols": ["quadrimester_name$subexpression$8$subexpression$1"]},
+    {"name": "quadrimester_name$subexpression$8$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name$subexpression$8", "symbols": ["quadrimester_name$subexpression$8$subexpression$2"]},
+    {"name": "quadrimester_name$subexpression$9", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$8", "__", "quadrimester_name$subexpression$9"], "postprocess": () => '39'},
+    {"name": "semester_name$subexpression$1", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name", "symbols": ["semester_name$subexpression$1", "__", {"literal":"1"}], "postprocess": () => '40'},
+    {"name": "semester_name$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name", "symbols": ["semester_name$subexpression$2", "__", {"literal":"2"}], "postprocess": () => '41'},
+    {"name": "semester_name$subexpression$3$subexpression$1", "symbols": [{"literal":"1"}, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name$subexpression$3", "symbols": ["semester_name$subexpression$3$subexpression$1"]},
+    {"name": "semester_name$subexpression$3$subexpression$2", "symbols": [/[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name$subexpression$3", "symbols": ["semester_name$subexpression$3$subexpression$2"]},
+    {"name": "semester_name$subexpression$4", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name", "symbols": ["semester_name$subexpression$3", "__", "semester_name$subexpression$4"], "postprocess": () => '40'},
+    {"name": "semester_name$subexpression$5$subexpression$1", "symbols": [{"literal":"2"}, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name$subexpression$5", "symbols": ["semester_name$subexpression$5$subexpression$1"]},
+    {"name": "semester_name$subexpression$5$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[cC]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name$subexpression$5", "symbols": ["semester_name$subexpression$5$subexpression$2"]},
+    {"name": "semester_name$subexpression$6", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "semester_name", "symbols": ["semester_name$subexpression$5", "__", "semester_name$subexpression$6"], "postprocess": () => '41'},
     {"name": "date", "symbols": ["datevalue", "_", "parenthetical_qualification"], "postprocess":  d => {
           const qual = d[2];
           if (qual.type === 'global') {
@@ -1214,10 +1345,7 @@ var grammar = {
 ]
   , ParserStart: "main"
 }
-if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
-   module.exports = grammar;
-} else {
-}
+
 
   return grammar;
 })();

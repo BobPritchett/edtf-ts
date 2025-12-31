@@ -124,8 +124,41 @@ describe('Formatters - Seasons', () => {
     const season = parse('2001-33');
     if (season.success && isEDTFSeason(season.value)) {
       const formatted = formatHuman(season.value);
-      expect(formatted).toContain('Quadrimester');
+      expect(formatted).toContain('Quarter 1');
       expect(formatted).toContain('2001');
+    }
+  });
+
+  it('should format quadrimester', () => {
+    const season = parse('2001-37');
+    if (season.success && isEDTFSeason(season.value)) {
+      const formatted = formatHuman(season.value);
+      expect(formatted).toContain('Quadrimester 1');
+      expect(formatted).toContain('2001');
+    }
+  });
+
+  it('should format northern hemisphere season', () => {
+    const season = parse('2001-25');
+    if (season.success && isEDTFSeason(season.value)) {
+      const formatted = formatHuman(season.value);
+      expect(formatted).toBe('Spring (Northern Hemisphere) 2001');
+    }
+  });
+
+  it('should format southern hemisphere season', () => {
+    const season = parse('2001-29');
+    if (season.success && isEDTFSeason(season.value)) {
+      const formatted = formatHuman(season.value);
+      expect(formatted).toBe('Spring (Southern Hemisphere) 2001');
+    }
+  });
+
+  it('should format semester', () => {
+    const season = parse('2001-40');
+    if (season.success && isEDTFSeason(season.value)) {
+      const formatted = formatHuman(season.value);
+      expect(formatted).toBe('Semester 1 2001');
     }
   });
 });
