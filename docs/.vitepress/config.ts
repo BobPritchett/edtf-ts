@@ -44,30 +44,11 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Core Concepts',
-          items: [
-            { text: 'EDTF Levels', link: '/guide/edtf-levels' },
-            { text: 'Date Types', link: '/guide/date-types' },
-            { text: 'Uncertainty & Approximation', link: '/guide/uncertainty' },
-            { text: 'Intervals & Ranges', link: '/guide/intervals' }
-          ]
-        },
-        {
           text: 'Working with Dates',
           items: [
             { text: 'Parsing', link: '/guide/parsing' },
             { text: 'Formatting', link: '/guide/formatting' },
-            { text: 'Validation', link: '/guide/validation' },
             { text: 'Comparison', link: '/guide/comparison' }
-          ]
-        },
-        {
-          text: 'Advanced',
-          items: [
-            { text: 'Sets & Lists', link: '/guide/sets-lists' },
-            { text: 'Seasons', link: '/guide/seasons' },
-            { text: 'Type Safety', link: '/guide/type-safety' },
-            { text: 'Migration Guide', link: '/guide/migration' }
           ]
         }
       ],
@@ -106,21 +87,7 @@ export default defineConfig({
         {
           text: 'Examples',
           items: [
-            { text: 'Basic Usage', link: '/examples/basic-usage' },
-            { text: 'Parsing Dates', link: '/examples/parsing' },
-            { text: 'Formatting Output', link: '/examples/formatting' },
-            { text: 'Working with Intervals', link: '/examples/intervals' },
-            { text: 'Uncertainty Handling', link: '/examples/uncertainty' },
-            { text: 'Sets & Lists', link: '/examples/sets-lists' }
-          ]
-        },
-        {
-          text: 'Use Cases',
-          items: [
-            { text: 'Cultural Heritage', link: '/examples/cultural-heritage' },
-            { text: 'Historical Research', link: '/examples/historical-research' },
-            { text: 'Genealogy', link: '/examples/genealogy' },
-            { text: 'Archives', link: '/examples/archives' }
+            { text: 'Basic Usage', link: '/examples/basic-usage' }
           ]
         }
       ]
