@@ -27,7 +27,9 @@
       "Bash(done)",
       "Bash(ls:*)",
       "Bash(pnpm --filter @edtf-ts/core build:*)",
-      "Bash(pnpm --filter @edtf-ts/core test)"
+      "Bash(pnpm --filter @edtf-ts/core test)",
+      "Bash(pnpm -r run build:*)",
+      "Bash(pnpm -r test:*)"
     ]
   }
 }

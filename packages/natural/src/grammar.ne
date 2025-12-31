@@ -141,8 +141,14 @@ interval ->
       {% d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 }) %}
   | "from" __ datevalue __ "to" __ interval_endpoint
       {% d => ({ type: 'interval', edtf: `${d[2].edtf}/`, confidence: 0.95 }) %}
+  | "from" __ datevalue __ "to" __ open_endpoint
+      {% d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 }) %}
   | datevalue __ "to" __ interval_endpoint
       {% d => ({ type: 'interval', edtf: `${d[0].edtf}/`, confidence: 0.95 }) %}
+  | datevalue __ "to" __ open_endpoint
+      {% d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 }) %}
+  | open_endpoint __ "to" __ datevalue
+      {% d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 }) %}
   | datevalue __ "to" __ datevalue
       {% d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 }) %}
   | datevalue _ "-" _ datevalue
@@ -162,6 +168,12 @@ interval ->
 interval_endpoint ->
     "unknown"i {% () => '' %}
   | "?" {% () => '' %}
+
+# Open endpoints for intervals (returns '..' for EDTF)
+open_endpoint ->
+    ("open"i __ ("start"i | "end"i)) {% () => '..' %}
+  | "onward"i {% () => '..' %}
+  | "onwards"i {% () => '..' %}
 
 # ==========================================
 # SETS (Level 2)

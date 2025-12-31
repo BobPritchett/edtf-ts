@@ -266,16 +266,29 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
     if (date.qualification?.approximate) quals.push('approximate');
     if (date.qualification?.uncertainApproximate) quals.push('uncertain/approximate');
 
-    // Partial qualifications
-    if (date.yearQualification || date.monthQualification || date.dayQualification) {
-      const parts: string[] = [];
-      if (date.yearQualification?.uncertain) parts.push('year uncertain');
-      if (date.yearQualification?.approximate) parts.push('year approximate');
-      if (date.monthQualification?.uncertain) parts.push('month uncertain');
-      if (date.monthQualification?.approximate) parts.push('month approximate');
-      if (date.dayQualification?.uncertain) parts.push('day uncertain');
-      if (date.dayQualification?.approximate) parts.push('day approximate');
-      quals.push(...parts);
+    // Check if all individual qualifications are the same (Level 1 style trailing qualification)
+    const hasIndividualQuals = date.yearQualification || date.monthQualification || date.dayQualification;
+    if (hasIndividualQuals && !date.qualification) {
+      const allSame =
+        JSON.stringify(date.yearQualification) === JSON.stringify(date.monthQualification) &&
+        JSON.stringify(date.monthQualification) === JSON.stringify(date.dayQualification);
+
+      if (allSame && date.yearQualification) {
+        // All components have the same qualification - show it as a whole-date qualification
+        if (date.yearQualification.uncertain) quals.push('uncertain');
+        if (date.yearQualification.approximate) quals.push('approximate');
+        if (date.yearQualification.uncertainApproximate) quals.push('uncertain/approximate');
+      } else {
+        // Partial qualifications (Level 2 style)
+        const parts: string[] = [];
+        if (date.yearQualification?.uncertain) parts.push('year uncertain');
+        if (date.yearQualification?.approximate) parts.push('year approximate');
+        if (date.monthQualification?.uncertain) parts.push('month uncertain');
+        if (date.monthQualification?.approximate) parts.push('month approximate');
+        if (date.dayQualification?.uncertain) parts.push('day uncertain');
+        if (date.dayQualification?.approximate) parts.push('day approximate');
+        quals.push(...parts);
+      }
     }
 
     if (quals.length > 0) {
@@ -321,14 +334,14 @@ function formatIntervalHuman(interval: EDTFInterval, options: FormatOptions): st
   const startStr = interval.start
     ? formatHuman(interval.start, options)
     : interval.openStart
-    ? 'unknown start'
-    : 'open start';
+    ? 'open start'
+    : 'unknown';
 
   const endStr = interval.end
     ? formatHuman(interval.end, options)
     : interval.openEnd
-    ? 'unknown end'
-    : 'open end';
+    ? 'open end'
+    : 'unknown';
 
   let result = `${startStr} to ${endStr}`;
 
