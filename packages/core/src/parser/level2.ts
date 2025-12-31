@@ -40,12 +40,17 @@ export function parseLevel2(input: string): ParseResult {
     }
   }
 
-  // Try to parse exponential year (Y-17E7 format)
+  // Try to parse exponential year with optional significant digits (Y-17E7 or Y3388E2S3 format)
   if (/^Y-?\d+E\d+/.test(input)) {
     return parseExponentialYear(input);
   }
 
-  // Try to parse significant digits (1950S2 format)
+  // Try to parse extended year with significant digits (Y171010000S3 format)
+  if (/^Y-?\d+S\d/.test(input)) {
+    return parseExtendedYearSignificantDigits(input);
+  }
+
+  // Try to parse significant digits (1950S2 format - 4-digit year)
   if (/^\d{4}S\d/.test(input)) {
     return parseSignificantDigits(input);
   }
@@ -455,11 +460,12 @@ function parseSetValue(value: string): ParseResult<EDTFDate | EDTFSeason> {
 }
 
 /**
- * Parse exponential year notation
+ * Parse exponential year notation with optional significant digits
  * Format: Y-17E7 means -17 * 10^7 = -170,000,000
+ * Format: Y3388E2S3 means 3388 * 10^2 = 338800 with 3 significant digits
  */
 function parseExponentialYear(input: string): ParseResult<EDTFDate> {
-  const match = input.match(/^Y(-?\d+)E(\d+)$/);
+  const match = input.match(/^Y(-?\d+)E(\d+)(?:S(\d+))?$/);
   if (!match) {
     return {
       success: false,
@@ -469,6 +475,7 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
 
   const base = parseInt(match[1]!, 10);
   const exponent = parseInt(match[2]!, 10);
+  const sigDigits = match[3] ? parseInt(match[3], 10) : undefined;
   const year = base * Math.pow(10, exponent);
 
   const edtfDate: EDTFDate = {
@@ -478,6 +485,55 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
     precision: 'year',
     year,
     exponential: exponent,
+    ...(sigDigits !== undefined && { significantDigitsYear: sigDigits }),
+    get min() {
+      return new Date(Date.UTC(this.year as number, 0, 1, 0, 0, 0, 0));
+    },
+    get max() {
+      return new Date(Date.UTC(this.year as number, 11, 31, 23, 59, 59, 999));
+    },
+    toJSON() {
+      const result: any = {
+        type: this.type,
+        year: this.year,
+        exponential: this.exponential
+      };
+      if (this.significantDigitsYear !== undefined) {
+        result.significantDigits = this.significantDigitsYear;
+      }
+      return result;
+    },
+    toString() {
+      return this.edtf;
+    }
+  };
+
+  return { success: true, value: edtfDate, level: 2 };
+}
+
+/**
+ * Parse extended year with significant digits
+ * Format: Y171010000S3 means year 171010000 with 3 significant digits
+ */
+function parseExtendedYearSignificantDigits(input: string): ParseResult<EDTFDate> {
+  const match = input.match(/^Y(-?\d{5,})S(\d+)$/);
+  if (!match) {
+    return {
+      success: false,
+      errors: [{ code: 'INVALID_EXTENDED_YEAR', message: 'Invalid extended year with significant digits format' }]
+    };
+  }
+
+  const year = parseInt(match[1]!, 10);
+  const sigDigits = parseInt(match[2]!, 10);
+
+  const edtfDate: EDTFDate = {
+    type: 'Date',
+    level: 2,
+    edtf: input,
+    precision: 'year',
+    year,
+    significantDigitsYear: sigDigits,
     get min() {
       return new Date(Date.UTC(this.year as number, 0, 1, 0, 0, 0, 0));
     },
@@ -488,7 +544,7 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
       return {
         type: this.type,
         year: this.year,
-        exponential: this.exponential
+        significantDigits: this.significantDigitsYear
       };
     },
     toString() {

@@ -113,17 +113,17 @@ EDTF-TS includes a powerful natural language parser that converts human-readable
 import { parseNatural } from '@edtf-ts/natural';
 
 // Parse human-readable dates
-parseNatural('January 12, 1940');       // → '1940-01-12'
-parseNatural('circa 1950');              // → '1950~'
-parseNatural('possibly 1984');           // → '1984?'
-parseNatural('from 1964 to 2008');       // → '1964/2008'
-parseNatural('Spring 2001');             // → '2001-21'
-parseNatural('the 1960s');               // → '196X'
+parseNatural('January 12, 1940'); // → '1940-01-12'
+parseNatural('circa 1950'); // → '1950~'
+parseNatural('possibly 1984'); // → '1984?'
+parseNatural('from 1964 to 2008'); // → '1964/2008'
+parseNatural('Spring 2001'); // → '2001-21'
+parseNatural('the 1960s'); // → '196X'
 
 // Temporal modifiers for precision
-parseNatural('early January 1985');      // → '1985-01-01/1985-01-10'
-parseNatural('mid 1990s');               // → '1994/1996'
-parseNatural('late 19th century');       // → '1867/1900'
+parseNatural('early January 1985'); // → '1985-01-01/1985-01-10'
+parseNatural('mid 1990s'); // → '1994/1996'
+parseNatural('late 19th century'); // → '1867/1900'
 
 // Handles ambiguous dates with confidence scoring
 const results = parseNatural('02/03/2020', { locale: 'en-US' });
@@ -138,14 +138,14 @@ Convert EDTF dates back to natural language with full i18n support:
 import { parse } from '@edtf-ts/core';
 import { formatHuman } from '@edtf-ts/utils';
 
-formatHuman(parse('1985-04-12').value);  // "April 12, 1985"
-formatHuman(parse('1984?').value);       // "1984 (uncertain)"
-formatHuman(parse('1950~').value);       // "circa 1950"
-formatHuman(parse('2001-21').value);     // "Spring 2001"
+formatHuman(parse('1985-04-12').value); // "April 12, 1985"
+formatHuman(parse('1984?').value); // "1984 (uncertain)"
+formatHuman(parse('1950~').value); // "circa 1950"
+formatHuman(parse('2001-21').value); // "Spring 2001"
 
 // Localization support
-formatHuman(parse('1985-04-12').value, { locale: 'de-DE' });  // "12. April 1985"
-formatHuman(parse('1985-04-12').value, { locale: 'ja-JP' });  // "1985年4月12日"
+formatHuman(parse('1985-04-12').value, { locale: 'de-DE' }); // "12. April 1985"
+formatHuman(parse('1985-04-12').value, { locale: 'ja-JP' }); // "1985年4月12日"
 ```
 
 ## Why EDTF-TS?
@@ -159,12 +159,12 @@ formatHuman(parse('1985-04-12').value, { locale: 'ja-JP' });  // "1985年4月12�
 
 ## Packages
 
-| Package                           | Description                              | Size         |
-| --------------------------------- | ---------------------------------------- | ------------ |
-| [@edtf-ts/core](./api/core)       | Core EDTF parsing and types              | 34.92 KB ESM |
-| [@edtf-ts/compare](./api/compare) | Temporal reasoning with Allen's algebra  | 8.5 KB ESM   |
-| [@edtf-ts/utils](./api/utils)     | Validators, formatters, comparators      | 12.69 KB ESM |
-| [@edtf-ts/natural](./api/natural) | Natural language parsing and formatting  | 15.2 KB ESM  |
+| Package                           | Description                             | Size         |
+| --------------------------------- | --------------------------------------- | ------------ |
+| [@edtf-ts/core](./api/core)       | Core EDTF parsing and types             | 34.92 KB ESM |
+| [@edtf-ts/compare](./api/compare) | Temporal reasoning with Allen's algebra | 8.5 KB ESM   |
+| [@edtf-ts/utils](./api/utils)     | Validators, formatters, comparators     | 12.69 KB ESM |
+| [@edtf-ts/natural](./api/natural) | Natural language parsing and formatting | 15.2 KB ESM  |
 
 ## What is EDTF?
 

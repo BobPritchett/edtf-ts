@@ -4,7 +4,7 @@ import type {
   EDTFSeason,
   EDTFInterval,
   Qualification,
-  UnspecifiedDigits
+  UnspecifiedDigits,
 } from '../types/index.js';
 
 /**
@@ -64,6 +64,7 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
   // Check for extended year format (Y prefix)
   const extendedYearMatch = dateStr.match(/^Y(-?\d{5,})$/);
   if (extendedYearMatch) {
+    console.log('[EDTF Debug] Extended year match:', extendedYearMatch[1], '-> parsed:', parseInt(extendedYearMatch[1]!, 10));
     const year = parseInt(extendedYearMatch[1]!, 10);
     const edtfDate: EDTFDate = {
       type: 'Date',
@@ -82,7 +83,7 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
       toJSON() {
         const result: any = {
           type: this.type,
-          year: this.year
+          year: this.year,
         };
         if (this.month !== undefined) result.month = this.month;
         if (this.day !== undefined) result.day = this.day;
@@ -92,7 +93,7 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
       },
       toString() {
         return this.edtf;
-      }
+      },
     };
     return { success: true, value: edtfDate, level: 1 };
   }
@@ -104,11 +105,14 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
   if (!match) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_FORMAT',
-        message: `Invalid Level 1 date format: ${input}`,
-        suggestion: 'Use format: YYYY, YYYY-MM, or YYYY-MM-DD (with optional ?, ~, or % and X for unspecified digits)'
-      }]
+      errors: [
+        {
+          code: 'INVALID_FORMAT',
+          message: `Invalid Level 1 date format: ${input}`,
+          suggestion:
+            'Use format: YYYY, YYYY-MM, or YYYY-MM-DD (with optional ?, ~, or % and X for unspecified digits)',
+        },
+      ],
     };
   }
 
@@ -146,10 +150,12 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
       if (month < 1 || month > 12) {
         return {
           success: false,
-          errors: [{
-            code: 'INVALID_MONTH',
-            message: `Month must be 01-12, got: ${monthStr}`
-          }]
+          errors: [
+            {
+              code: 'INVALID_MONTH',
+              message: `Month must be 01-12, got: ${monthStr}`,
+            },
+          ],
         };
       }
     }
@@ -171,10 +177,12 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
         if (day < 1 || day > maxDay) {
           return {
             success: false,
-            errors: [{
-              code: 'INVALID_DAY',
-              message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${dayStr}`
-            }]
+            errors: [
+              {
+                code: 'INVALID_DAY',
+                message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${dayStr}`,
+              },
+            ],
           };
         }
       }
@@ -210,7 +218,7 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
     toJSON() {
       const result: any = {
         type: this.type,
-        year: this.year
+        year: this.year,
       };
       if (this.month !== undefined) result.month = this.month;
       if (this.day !== undefined) result.day = this.day;
@@ -220,7 +228,7 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfDate, level: 1 };
@@ -253,11 +261,14 @@ export function parseSeason(input: string): ParseResult<EDTFSeason> {
   if (!match) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_SEASON',
-        message: `Invalid season format: ${input}`,
-        suggestion: 'Use format: YYYY-2X where X is 1 (Spring), 2 (Summer), 3 (Autumn), or 4 (Winter)'
-      }]
+      errors: [
+        {
+          code: 'INVALID_SEASON',
+          message: `Invalid season format: ${input}`,
+          suggestion:
+            'Use format: YYYY-2X where X is 1 (Spring), 2 (Summer), 3 (Autumn), or 4 (Winter)',
+        },
+      ],
     };
   }
 
@@ -268,7 +279,7 @@ export function parseSeason(input: string): ParseResult<EDTFSeason> {
     type: 'Season',
     level: 1,
     edtf: input,
-    precision: 'month',  // Seasons are roughly 3 months
+    precision: 'month', // Seasons are roughly 3 months
     year,
     season,
     ...(Object.keys(qualification).length > 0 && { qualification }),
@@ -282,14 +293,14 @@ export function parseSeason(input: string): ParseResult<EDTFSeason> {
       const result: any = {
         type: this.type,
         year: this.year,
-        season: this.season
+        season: this.season,
       };
       if (this.qualification) result.qualification = this.qualification;
       return result;
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfSeason, level: 1 };
@@ -310,10 +321,12 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
   if (parts.length !== 2) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_INTERVAL',
-        message: 'Interval must have exactly one "/" separator'
-      }]
+      errors: [
+        {
+          code: 'INVALID_INTERVAL',
+          message: 'Interval must have exactly one "/" separator',
+        },
+      ],
     };
   }
 
@@ -329,16 +342,18 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
   if (startStr === '..') {
     openStart = true;
   } else if (startStr === '') {
-    start = null;  // Unknown start
+    start = null; // Unknown start
   } else {
-    const startResult = startStr.match(/^\d{4}-2[1-4]/) ? parseSeason(startStr) : parseLevel1Date(startStr);
+    const startResult = startStr.match(/^\d{4}-2[1-4]/)
+      ? parseSeason(startStr)
+      : parseLevel1Date(startStr);
     if (!startResult.success) {
       return {
         success: false,
-        errors: startResult.errors.map(err => ({
+        errors: startResult.errors.map((err) => ({
           ...err,
-          message: `Invalid interval start: ${err.message}`
-        }))
+          message: `Invalid interval start: ${err.message}`,
+        })),
       };
     }
     start = startResult.value as EDTFDate | EDTFSeason;
@@ -348,16 +363,16 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
   if (endStr === '..') {
     openEnd = true;
   } else if (endStr === '') {
-    end = null;  // Unknown end
+    end = null; // Unknown end
   } else {
     const endResult = endStr.match(/^\d{4}-2[1-4]/) ? parseSeason(endStr) : parseLevel1Date(endStr);
     if (!endResult.success) {
       return {
         success: false,
-        errors: endResult.errors.map(err => ({
+        errors: endResult.errors.map((err) => ({
           ...err,
-          message: `Invalid interval end: ${err.message}`
-        }))
+          message: `Invalid interval end: ${err.message}`,
+        })),
       };
     }
     end = endResult.value as EDTFDate | EDTFSeason;
@@ -368,10 +383,12 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
     if (start.min > end.max) {
       return {
         success: false,
-        errors: [{
-          code: 'INVALID_INTERVAL_ORDER',
-          message: 'Interval start must be before or equal to end'
-        }]
+        errors: [
+          {
+            code: 'INVALID_INTERVAL_ORDER',
+            message: 'Interval start must be before or equal to end',
+          },
+        ],
       };
     }
   }
@@ -386,11 +403,11 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
     ...(openStart && { openStart }),
     ...(openEnd && { openEnd }),
     get min() {
-      if (this.openStart) return new Date(-8640000000000000);  // Min date
+      if (this.openStart) return new Date(-8640000000000000); // Min date
       return this.start ? this.start.min : new Date(-8640000000000000);
     },
     get max() {
-      if (this.openEnd) return new Date(8640000000000000);  // Max date
+      if (this.openEnd) return new Date(8640000000000000); // Max date
       return this.end ? this.end.max : new Date(8640000000000000);
     },
     toJSON() {
@@ -399,12 +416,12 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
         start: this.start ? this.start.toJSON() : null,
         end: this.end ? this.end.toJSON() : null,
         ...(this.openStart && { openStart: true }),
-        ...(this.openEnd && { openEnd: true })
+        ...(this.openEnd && { openEnd: true }),
       };
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfInterval, level: 1 };
@@ -498,10 +515,10 @@ function calculateSeasonMin(season: EDTFSeason): Date {
   // Seasons map approximately to months
   // 21=Spring (Mar-May), 22=Summer (Jun-Aug), 23=Autumn (Sep-Nov), 24=Winter (Dec-Feb)
   const seasonToMonth: { [key: number]: number } = {
-    21: 3,   // Spring starts in March
-    22: 6,   // Summer starts in June
-    23: 9,   // Autumn starts in September
-    24: 12   // Winter starts in December
+    21: 3, // Spring starts in March
+    22: 6, // Summer starts in June
+    23: 9, // Autumn starts in September
+    24: 12, // Winter starts in December
   };
 
   const month = seasonToMonth[season.season] || 1;
@@ -511,10 +528,10 @@ function calculateSeasonMin(season: EDTFSeason): Date {
 function calculateSeasonMax(season: EDTFSeason): Date {
   // End of each season
   const seasonToEndMonth: { [key: number]: { month: number; day: number } } = {
-    21: { month: 5, day: 31 },    // Spring ends May 31
-    22: { month: 8, day: 31 },    // Summer ends August 31
-    23: { month: 11, day: 30 },   // Autumn ends November 30
-    24: { month: 2, day: 28 }     // Winter ends February 28/29 (next year)
+    21: { month: 5, day: 31 }, // Spring ends May 31
+    22: { month: 8, day: 31 }, // Summer ends August 31
+    23: { month: 11, day: 30 }, // Autumn ends November 30
+    24: { month: 2, day: 28 }, // Winter ends February 28/29 (next year)
   };
 
   const end = seasonToEndMonth[season.season] || { month: 12, day: 31 };

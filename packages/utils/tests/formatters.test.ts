@@ -95,7 +95,7 @@ describe('Formatters - Intervals', () => {
     const interval = parse('../2000');
     if (interval.success && isEDTFInterval(interval.value)) {
       const formatted = formatHuman(interval.value);
-      expect(formatted).toContain('unknown start');
+      expect(formatted).toContain('open start');
       expect(formatted).toContain('2000');
     }
   });
@@ -219,6 +219,74 @@ describe('Formatters - Range', () => {
       expect(formatted).toContain('April');
       expect(formatted).toContain('12');
       expect(formatted).toContain('1985');
+    }
+  });
+});
+
+describe('Formatters - Extended Years', () => {
+  it('should format extended year (Y prefix)', () => {
+    const date = parse('Y170000002');
+    if (date.success && isEDTFDate(date.value)) {
+      const formatted = formatHuman(date.value);
+      expect(formatted).toContain('170');
+      expect(formatted).toContain('million');
+    }
+  });
+
+  it('should format negative extended year', () => {
+    const date = parse('Y-170000002');
+    if (date.success && isEDTFDate(date.value)) {
+      const formatted = formatHuman(date.value);
+      expect(formatted).toContain('170');
+      expect(formatted).toContain('million');
+      expect(formatted).toContain('BC');
+    }
+  });
+
+  it('should format exponential year', () => {
+    const date = parse('Y17E7');
+    if (date.success && isEDTFDate(date.value)) {
+      const formatted = formatHuman(date.value);
+      expect(formatted).toContain('170');
+      expect(formatted).toContain('million');
+    }
+  });
+
+  it('should format negative exponential year', () => {
+    const date = parse('Y-17E7');
+    if (date.success && isEDTFDate(date.value)) {
+      const formatted = formatHuman(date.value);
+      expect(formatted).toContain('170');
+      expect(formatted).toContain('million');
+      expect(formatted).toContain('BC');
+    }
+  });
+
+  it('should format year with significant digits (4-digit)', () => {
+    const date = parse('1950S2');
+    if (date.success && isEDTFDate(date.value)) {
+      const formatted = formatHuman(date.value);
+      expect(formatted).toContain('1950');
+      expect(formatted).toContain('century precision');
+    }
+  });
+
+  it('should format extended year with significant digits', () => {
+    const date = parse('Y171010000S3');
+    if (date.success && isEDTFDate(date.value)) {
+      const formatted = formatHuman(date.value);
+      expect(formatted).toContain('171');
+      expect(formatted).toContain('million');
+      expect(formatted).toContain('significant digits');
+    }
+  });
+
+  it('should format exponential year with significant digits', () => {
+    const date = parse('Y3388E2S3');
+    if (date.success && isEDTFDate(date.value)) {
+      const formatted = formatHuman(date.value);
+      expect(formatted).toContain('338,800');
+      expect(formatted).toContain('precision');
     }
   });
 });

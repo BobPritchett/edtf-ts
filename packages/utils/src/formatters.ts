@@ -93,6 +93,60 @@ function formatUnspecifiedYear(year: string): string {
 }
 
 /**
+ * Format a large number with appropriate scale suffix
+ * e.g., 170000000 -> "170 million", 1500000000 -> "1.5 billion"
+ */
+function formatLargeNumber(num: number): string {
+  const absNum = Math.abs(num);
+  const sign = num < 0 ? '-' : '';
+
+  if (absNum >= 1_000_000_000_000) {
+    const val = absNum / 1_000_000_000_000;
+    return `${sign}${val % 1 === 0 ? val : val.toFixed(1)} trillion`;
+  } else if (absNum >= 1_000_000_000) {
+    const val = absNum / 1_000_000_000;
+    return `${sign}${val % 1 === 0 ? val : val.toFixed(1)} billion`;
+  } else if (absNum >= 1_000_000) {
+    const val = absNum / 1_000_000;
+    return `${sign}${val % 1 === 0 ? val : val.toFixed(1)} million`;
+  } else if (absNum >= 10_000) {
+    // For numbers like 170,000 - use comma formatting
+    return `${sign}${absNum.toLocaleString('en-US')}`;
+  }
+  return `${sign}${absNum}`;
+}
+
+/**
+ * Format significant digits description
+ * e.g., sigDigits=2 for year 1950 means "19th-20th century" (first 2 digits are significant)
+ */
+function formatSignificantDigits(year: number, sigDigits: number): string {
+  const absYear = Math.abs(year);
+  const yearStr = String(absYear);
+  const totalDigits = yearStr.length;
+
+  if (sigDigits >= totalDigits) {
+    // All digits are significant, no special handling needed
+    return '';
+  }
+
+  // The significant portion
+  const sigPart = yearStr.slice(0, sigDigits);
+  const insignificantCount = totalDigits - sigDigits;
+
+  // Describe the precision level
+  if (insignificantCount === 1) {
+    return `(decade precision: ${sigPart}0s)`;
+  } else if (insignificantCount === 2) {
+    return `(century precision: ${sigPart}00s)`;
+  } else if (insignificantCount === 3) {
+    return `(millennium precision)`;
+  } else {
+    return `(${sigDigits} significant digits)`;
+  }
+}
+
+/**
  * Cache for month names by locale and style
  * Key format: "locale|style" (e.g., "en-US|short", "fr-FR|long")
  * Value: Array of 12 month names (index 0 = January)
@@ -198,15 +252,33 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   const isNegativeYear = typeof year === 'number' && year < 0;
   const shouldShowEra = eraDisplay === 'always' || (eraDisplay === 'auto' && isNegativeYear);
 
+  // Check for extended year features (exponential, significant digits)
+  const hasExponential = date.exponential !== undefined;
+  const hasSigDigits = date.significantDigitsYear !== undefined || date.significantDigits !== undefined;
+  const isExtendedYear = typeof year === 'number' && (Math.abs(year) > 9999 || hasExponential);
+
   // For BC/BCE dates, convert from astronomical to historical year numbering
   const displayYear = typeof year === 'number' && isNegativeYear
     ? astronomicalToHistoricalYear(year)
     : year;
 
   // Handle unspecified digits in year (e.g., "18XX", "19XX")
-  const yearStr = typeof displayYear === 'string'
-    ? formatUnspecifiedYear(displayYear)
-    : String(Math.abs(displayYear));
+  let yearStr: string;
+  if (typeof displayYear === 'string') {
+    yearStr = formatUnspecifiedYear(displayYear);
+  } else if (isExtendedYear) {
+    // Format large/extended years with readable notation
+    yearStr = formatLargeNumber(displayYear as number);
+  } else {
+    yearStr = String(Math.abs(displayYear as number));
+  }
+
+  // Add significant digits annotation if present
+  const sigDigits = date.significantDigitsYear ?? date.significantDigits;
+  let sigDigitsSuffix = '';
+  if (hasSigDigits && typeof year === 'number' && sigDigits !== undefined) {
+    sigDigitsSuffix = ' ' + formatSignificantDigits(year, sigDigits);
+  }
 
   // Check for unspecified components
   if (day === 'XX' && month === 'XX' && typeof year === 'number') {
@@ -256,6 +328,11 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   if (shouldShowEra && typeof year === 'number') {
     const eraMarker = formatEra(year, { era, eraNotation });
     result = `${result} ${eraMarker}`;
+  }
+
+  // Add significant digits suffix if present
+  if (sigDigitsSuffix) {
+    result = `${result}${sigDigitsSuffix}`;
   }
 
   // Add qualifications

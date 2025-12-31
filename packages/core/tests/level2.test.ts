@@ -101,9 +101,32 @@ describe('Level 2 - Significant Digits', () => {
     }
   });
 
+  it('should parse extended year with significant digits', () => {
+    const result = parse('Y171010000S3');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(171010000);
+      expect(result.value.significantDigitsYear).toBe(3);
+      expect(result.level).toBe(2);
+    }
+  });
+
+  it('should parse exponential year with significant digits', () => {
+    const result = parse('Y3388E2S3');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(338800);
+      expect(result.value.exponential).toBe(2);
+      expect(result.value.significantDigitsYear).toBe(3);
+      expect(result.level).toBe(2);
+    }
+  });
+
   it('should validate significant digits', () => {
     expect(isValid('1950S2')).toBe(true);
     expect(isValid('2000S3')).toBe(true);
+    expect(isValid('Y171010000S3')).toBe(true);
+    expect(isValid('Y3388E2S3')).toBe(true);
   });
 });
 
@@ -278,5 +301,69 @@ describe('Level 2 - Partial Qualification', () => {
       expect(json).toHaveProperty('yearQualification');
       expect(json).toHaveProperty('dayQualification');
     }
+  });
+});
+
+describe('Level 2 - Group Qualification', () => {
+  // Group Qualification: qualifier to the RIGHT of a component applies to
+  // that component AND all components to the left
+
+  it('should parse uncertain year (2004?-06-11)', () => {
+    const result = parse('2004?-06-11');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(2004);
+      expect(result.value.month).toBe(6);
+      expect(result.value.day).toBe(11);
+      expect(result.level).toBe(2);
+      // Year is uncertain, month and day are known
+      expect(result.value.yearQualification?.uncertain).toBe(true);
+    }
+  });
+
+  it('should parse approximate year and month (2004-06~-11)', () => {
+    const result = parse('2004-06~-11');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(2004);
+      expect(result.value.month).toBe(6);
+      expect(result.value.day).toBe(11);
+      expect(result.level).toBe(2);
+      // Year and month are approximate, day is known
+      expect(result.value.yearQualification?.approximate).toBe(true);
+      expect(result.value.monthQualification?.approximate).toBe(true);
+    }
+  });
+
+  it('should parse uncertain-approximate entire date (2004-06-11%)', () => {
+    const result = parse('2004-06-11%');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(2004);
+      expect(result.value.month).toBe(6);
+      expect(result.value.day).toBe(11);
+      // % at end means entire date is uncertain and approximate
+      expect(result.value.qualification?.uncertainApproximate).toBe(true);
+    }
+  });
+
+  it('should parse approximate year (2004~-06-11)', () => {
+    const result = parse('2004~-06-11');
+    expect(result.success).toBe(true);
+    if (result.success && isEDTFDate(result.value)) {
+      expect(result.value.year).toBe(2004);
+      expect(result.value.month).toBe(6);
+      expect(result.value.day).toBe(11);
+      expect(result.level).toBe(2);
+      expect(result.value.yearQualification?.approximate).toBe(true);
+    }
+  });
+
+  it('should validate group qualification dates', () => {
+    expect(isValid('2004?-06-11')).toBe(true);
+    expect(isValid('2004-06~-11')).toBe(true);
+    expect(isValid('2004~-06-11')).toBe(true);
+    expect(isValid('2004%-06-11')).toBe(true);
+    expect(isValid('2004-06%-11')).toBe(true);
   });
 });

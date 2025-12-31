@@ -429,7 +429,9 @@ describe('Level 1 - Error Cases', () => {
   });
 
   it('should reject malformed uncertain dates', () => {
-    expect(isValid('?1984')).toBe(false); // Qualification must be at end
+    // Note: '?1984' is actually valid Level 2 (Individual Qualification)
+    // so we only reject truly malformed patterns
+    expect(isValid('1984??')).toBe(false); // Double qualifier is invalid
   });
 
   it('should provide helpful error messages', () => {

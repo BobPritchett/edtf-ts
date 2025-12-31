@@ -114,7 +114,9 @@ function detectLevel(input: string): EDTFLevel {
     /S\d/,             // Significant digits
     /-[234]\d(?:[?~%]|$)/, // Extended seasons (25-41 range)
     /^[?~%]/,          // Individual qualification (qualifier at start)
-    /-[?~%]\d{2}/      // Individual qualification (qualifier before month or day, not at end)
+    /-[?~%]\d{2}/,     // Individual qualification (qualifier before month or day, not at end)
+    /\d{4}[?~%]-/,     // Group qualification (qualifier after year: 2004?-06)
+    /\d{2}[?~%]-\d{2}/ // Group qualification (qualifier after month: 2004-06~-11)
   ];
 
   for (const indicator of level2Indicators) {
