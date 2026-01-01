@@ -836,9 +836,10 @@ function parseQualificationChar(char: string): import('../types/index.js').Quali
 /**
  * Parse extended seasons (Level 2)
  * 25-28: Southern Hemisphere seasons
- * 29-32: Quarters
- * 33-36: Quadrimesters
- * 37-41: Semesters
+ * 29-32: Meteorological seasons
+ * 33-36: Quarters
+ * 37-39: Quadrimesters
+ * 40-41: Semestrals
  */
 function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
   const match = input.match(/^(\d{4})-([234]\d)$/);

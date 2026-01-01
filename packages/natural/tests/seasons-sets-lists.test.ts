@@ -179,30 +179,37 @@ describe('Seasons', () => {
     });
   });
 
-  describe('Semesters (Level 2)', () => {
-    it('should parse "Semester 1 1985"', () => {
-      const results = parseNatural('Semester 1 1985');
+  describe('Semestrals (Level 2)', () => {
+    it('should parse "Semestral 1 1985"', () => {
+      const results = parseNatural('Semestral 1 1985');
       expect(results).toHaveLength(1);
       expect(results[0].edtf).toBe('1985-40');
       expect(results[0].type).toBe('season');
     });
 
-    it('should parse "1st Semester 1985"', () => {
-      const results = parseNatural('1st Semester 1985');
+    it('should parse "1st Semestral 1985"', () => {
+      const results = parseNatural('1st Semestral 1985');
       expect(results).toHaveLength(1);
       expect(results[0].edtf).toBe('1985-40');
     });
 
-    it('should parse "Second Semester 1985"', () => {
-      const results = parseNatural('Second Semester 1985');
+    it('should parse "Second Semestral 1985"', () => {
+      const results = parseNatural('Second Semestral 1985');
       expect(results).toHaveLength(1);
       expect(results[0].edtf).toBe('1985-41');
     });
 
-    it('should parse "2nd Semester 1985"', () => {
-      const results = parseNatural('2nd Semester 1985');
+    it('should parse "2nd Semestral 1985"', () => {
+      const results = parseNatural('2nd Semestral 1985');
       expect(results).toHaveLength(1);
       expect(results[0].edtf).toBe('1985-41');
+    });
+
+    // Also accept "Semester" for backward compatibility
+    it('should parse "Semester 1 1985" (backward compat)', () => {
+      const results = parseNatural('Semester 1 1985');
+      expect(results).toHaveLength(1);
+      expect(results[0].edtf).toBe('1985-40');
     });
   });
 });

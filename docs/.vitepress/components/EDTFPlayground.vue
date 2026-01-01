@@ -621,8 +621,9 @@ function getSeasonName(code: number): string {
     25: 'Spring (Southern)', 26: 'Summer (Southern)',
     27: 'Autumn (Southern)', 28: 'Winter (Southern)',
     29: 'Q1', 30: 'Q2', 31: 'Q3', 32: 'Q4',
-    33: 'Quadrimester 1', 34: 'Quadrimester 2', 35: 'Quadrimester 3',
-    37: 'Semester 1', 38: 'Semester 2',
+    33: 'Quarter 1', 34: 'Quarter 2', 35: 'Quarter 3', 36: 'Quarter 4',
+    37: 'Quadrimester 1', 38: 'Quadrimester 2', 39: 'Quadrimester 3',
+    40: 'Semestral 1', 41: 'Semestral 2',
   };
   return seasons[code] || `Season ${code}`;
 }

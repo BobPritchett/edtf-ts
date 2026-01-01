@@ -490,10 +490,10 @@ season ->
       {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 }) %}
   | quadrimester_name __ year_num
       {% d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 }) %}
-  # Semesters: "Semester 1 1985", "1st Semester 1985"
-  | qualifier __ semester_name __ year_num
+  # Semestrals: "Semestral 1 1985", "1st Semestral 1985" (also accepts "Semester")
+  | qualifier __ semestral_name __ year_num
       {% d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 }) %}
-  | semester_name __ year_num
+  | semestral_name __ year_num
       {% d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 }) %}
   # Basic seasons (independent of location): "Spring 1985"
   | qualifier __ season_name __ year_num
@@ -536,12 +536,13 @@ quadrimester_name ->
   | ("2nd"i | "second"i) __ "quadrimester"i {% () => '38' %}
   | ("3rd"i | "third"i) __ "quadrimester"i {% () => '39' %}
 
-# Semester names (codes 40-41)
-semester_name ->
-    "semester"i __ "1" {% () => '40' %}
-  | "semester"i __ "2" {% () => '41' %}
-  | ("1st"i | "first"i) __ "semester"i {% () => '40' %}
-  | ("2nd"i | "second"i) __ "semester"i {% () => '41' %}
+# Semestral names (codes 40-41)
+# Accept both "semestral" (spec term) and "semester" (common term)
+semestral_name ->
+    ("semestral"i | "semester"i) __ "1" {% () => '40' %}
+  | ("semestral"i | "semester"i) __ "2" {% () => '41' %}
+  | ("1st"i | "first"i) __ ("semestral"i | "semester"i) {% () => '40' %}
+  | ("2nd"i | "second"i) __ ("semestral"i | "semester"i) {% () => '41' %}
 
 # ==========================================
 # DATES

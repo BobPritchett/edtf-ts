@@ -151,9 +151,9 @@ parse('{1960,1961-12}')          // Mixed precision
 #### Extended Seasons
 ```typescript
 parse('2001-25')     // Southern Hemisphere Spring
-parse('2001-29')     // Q1 (quarter)
-parse('2001-33')     // Quadrimester 1
-parse('2001-37')     // Semester 1
+parse('2001-33')     // Quarter 1
+parse('2001-37')     // Quadrimester 1
+parse('2001-40')     // Semestral 1
 ```
 
 #### Exponential Years

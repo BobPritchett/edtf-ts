@@ -78,12 +78,12 @@ interface EDTFSeason extends EDTFBase {
 | 38 | Quadrimester 2 | May - August |
 | 39 | Quadrimester 3 | September - December |
 
-### Semesters (Level 2)
+### Semestrals (Level 2)
 
-| Code | Semester | Months |
-|------|----------|--------|
-| 40 | Semester 1 | January - June |
-| 41 | Semester 2 | July - December |
+| Code | Semestral | Months |
+|------|-----------|--------|
+| 40 | Semestral 1 | January - June |
+| 41 | Semestral 2 | July - December |
 
 ## Usage
 
@@ -134,9 +134,9 @@ parse('2001-37');  // Quadrimester 1 2001
 parse('2001-38');  // Quadrimester 2 2001
 parse('2001-39');  // Quadrimester 3 2001
 
-// Semesters
-parse('2001-40');  // Semester 1 2001
-parse('2001-41');  // Semester 2 2001
+// Semestrals
+parse('2001-40');  // Semestral 1 2001
+parse('2001-41');  // Semestral 2 2001
 ```
 
 ## Qualified Seasons

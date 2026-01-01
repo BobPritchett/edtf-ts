@@ -460,9 +460,9 @@ function formatSeasonHuman(season: EDTFSeason, options: FormatOptions): string {
     37: 'Quadrimester 1',
     38: 'Quadrimester 2',
     39: 'Quadrimester 3',
-    // Semesters - Level 2
-    40: 'Semester 1',
-    41: 'Semester 2',
+    // Semestrals - Level 2
+    40: 'Semestral 1',
+    41: 'Semestral 2',
   };
 
   let result = `${seasonNames[season.season] || `Season ${season.season}`} ${season.year}`;

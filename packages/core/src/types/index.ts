@@ -183,9 +183,10 @@ export interface EDTFDateTime extends EDTFBase {
  * Represents a season within a year.
  * - 21-24: Northern Hemisphere seasons (Spring, Summer, Autumn, Winter)
  * - 25-28: Southern Hemisphere seasons
- * - 29-32: Quarters
- * - 33-36: Quadrimesters
- * - 37-41: Semesters
+ * - 29-32: Meteorological seasons
+ * - 33-36: Quarters
+ * - 37-39: Quadrimesters
+ * - 40-41: Semestrals
  */
 export interface EDTFSeason extends EDTFBase {
   type: 'Season';

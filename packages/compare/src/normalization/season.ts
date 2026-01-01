@@ -32,7 +32,7 @@ export interface SeasonMapping {
  * Codes 29-32: Meteorological seasons
  * Codes 33-36: Quarters
  * Codes 37-39: Quadrimesters
- * Codes 40-41: Semesters
+ * Codes 40-41: Semestrals
  */
 export const DEFAULT_SEASON_MAPPINGS: Record<number, SeasonMapping> = {
   // Northern Hemisphere seasons
@@ -58,9 +58,9 @@ export const DEFAULT_SEASON_MAPPINGS: Record<number, SeasonMapping> = {
   38: { startMonth: 5, endMonth: 8, name: 'Quadrimester 2' },
   39: { startMonth: 9, endMonth: 12, name: 'Quadrimester 3' },
 
-  // Semesters
-  40: { startMonth: 1, endMonth: 6, name: 'Semester 1' },
-  41: { startMonth: 7, endMonth: 12, name: 'Semester 2' },
+  // Semestrals
+  40: { startMonth: 1, endMonth: 6, name: 'Semestral 1' },
+  41: { startMonth: 7, endMonth: 12, name: 'Semestral 2' },
 };
 
 /**

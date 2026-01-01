@@ -154,11 +154,11 @@ describe('Formatters - Seasons', () => {
     }
   });
 
-  it('should format semester', () => {
+  it('should format semestral', () => {
     const season = parse('2001-40');
     if (season.success && isEDTFSeason(season.value)) {
       const formatted = formatHuman(season.value);
-      expect(formatted).toBe('Semester 1 2001');
+      expect(formatted).toBe('Semestral 1 2001');
     }
   });
 });
