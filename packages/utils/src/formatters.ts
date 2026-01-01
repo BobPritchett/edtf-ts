@@ -360,10 +360,13 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
         const parts: string[] = [];
         if (date.yearQualification?.uncertain) parts.push('year uncertain');
         if (date.yearQualification?.approximate) parts.push('year approximate');
+        if (date.yearQualification?.uncertainApproximate) parts.push('year uncertain/approximate');
         if (date.monthQualification?.uncertain) parts.push('month uncertain');
         if (date.monthQualification?.approximate) parts.push('month approximate');
+        if (date.monthQualification?.uncertainApproximate) parts.push('month uncertain/approximate');
         if (date.dayQualification?.uncertain) parts.push('day uncertain');
         if (date.dayQualification?.approximate) parts.push('day approximate');
+        if (date.dayQualification?.uncertainApproximate) parts.push('day uncertain/approximate');
         quals.push(...parts);
       }
     }

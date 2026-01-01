@@ -38,7 +38,9 @@
       "Bash(timeout 60 pnpm:*)",
       "Bash(pnpm --filter @edtf-ts/natural run build:grammar)",
       "Bash(pnpm --filter @edtf-ts/natural test:*)",
-      "Bash(pnpm --filter @edtf-ts/natural build:*)"
+      "Bash(pnpm --filter @edtf-ts/natural build:*)",
+      "Bash(pnpm --filter @edtf-ts/utils test:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }
