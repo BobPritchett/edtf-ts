@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: EDTF-TS
-  text: Extended Date/Time Format
-  tagline: Modern TypeScript implementation with full Level 0, 1, and 2 support
+  text: Dates, the Way Humans Mean Them
+  tagline: Because real time is messy—and pretending otherwise loses information
   image:
     src: /logo.svg
     alt: EDTF-TS
@@ -21,16 +21,16 @@ hero:
 
 features:
   - icon: 🗣️
-    title: Natural Language Parsing
-    details: Parse human-readable dates like "circa 1950", "early January 1985", and "the 1960s" into EDTF format with confidence scoring.
+    title: Speak Human. Parse Human.
+    details: Parse dates the way people think—"circa 1950", "early January 1985", "the 1960s"—instead of forcing rigid timestamps.
 
   - icon: 📅
-    title: Full EDTF Support
-    details: Complete implementation of Levels 0, 1, and 2 including uncertainty, approximation, and complex date expressions.
+    title: Full EDTF Specification
+    details: Complete Levels 0, 1, and 2 support. Uncertainty, approximation, unspecified digits, seasons, sets, and intervals.
 
   - icon: 🔒
     title: Type-Safe
-    details: Built with TypeScript 5.0+ with strict mode. Full type inference and IntelliSense support.
+    details: Built with TypeScript 5.0+ strict mode. Full type inference and IntelliSense for every edge case.
 
   - icon: 🪶
     title: Zero Dependencies
@@ -38,11 +38,11 @@ features:
 
   - icon: 🌍
     title: Locale Support
-    details: Built-in internationalization for formatting dates in multiple locales using Intl API. Parse and format in any language.
+    details: Built-in i18n for formatting dates in any locale using the Intl API. Parse and format worldwide.
 
   - icon: ⚖️
     title: Temporal Reasoning
-    details: Allen's interval algebra with four-valued logic (YES/NO/MAYBE/UNKNOWN) for precise temporal comparisons.
+    details: Allen's interval algebra with four-valued logic (YES/NO/MAYBE/UNKNOWN) for honest temporal comparisons.
 
   - icon: 🚀
     title: Modern Tooling
@@ -52,6 +52,18 @@ features:
     title: AI-Powered Development
     details: Developed collaboratively using advanced AI tools, including Claude Code, Gemini, ChatGPT, and Grok.
 ---
+
+## Dates Aren't Always Exact — and That's OK
+
+People don't experience time like computers do.
+
+We remember *seasons*, *eras*, and *approximate moments*.
+We inherit records that are incomplete, contradictory, or deliberately vague.
+We say "around," "before," "after," "early," "late," and "sometime between."
+
+Yet most software still insists on **rigid ISO 8601 dates**, forcing humans to pretend they know more than they do.
+
+EDTF exists because **real time is messy** — and pretending otherwise loses information.
 
 ## Quick Start
 
@@ -76,7 +88,7 @@ yarn add @edtf-ts
 Parse your first EDTF date:
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts';
+import { parse, isEDTFDate, isEDTFInterval } from '@edtf-ts';
 
 // Parse a simple date
 const result = parse('1985-04-12');
@@ -97,13 +109,31 @@ if (uncertain.success && isEDTFDate(uncertain.value)) {
 
 // Parse intervals
 const interval = parse('1990/2000');
-// Iterate through years
 if (interval.success && isEDTFInterval(interval.value)) {
   for (const year of interval.value.by('year')) {
     console.log(year.edtf);
   }
 }
+
+// These will fail - parse returns { success: false }
+parse('April 12, 1985');  // ❌ Natural language, not EDTF syntax
+parse('1985/13/01');      // ❌ Invalid month (13)
+parse('85-04-12');        // ❌ Two-digit year not allowed
+parse('1985-04-12/1980'); // ❌ Interval end before start
 ```
+
+## Humans Speak in Time Ranges, Not Timestamps
+
+Think about how people actually describe dates:
+
+* "Shakespeare was born **in late April 1564**."
+* "The photo was taken **sometime in the 1930s**."
+* "She moved to New York **in the early 2000s**."
+* "This letter dates to **around the end of the 18th century**."
+
+None of these are bugs. They are *truthful descriptions of what is known*.
+
+ISO 8601 can't express this without lying or guessing. EDTF can.
 
 ## Natural Language Parsing
 
@@ -113,22 +143,68 @@ EDTF-TS includes a powerful natural language parser that converts human-readable
 import { parseNatural } from '@edtf-ts/natural';
 
 // Parse human-readable dates
-parseNatural('January 12, 1940'); // → '1940-01-12'
-parseNatural('circa 1950'); // → '1950~'
-parseNatural('possibly 1984'); // → '1984?'
-parseNatural('from 1964 to 2008'); // → '1964/2008'
-parseNatural('Spring 2001'); // → '2001-21'
-parseNatural('the 1960s'); // → '196X'
+parseNatural('January 12, 1940');     // → '1940-01-12'
+parseNatural('circa 1950');           // → '1950~'
+parseNatural('possibly 1984');        // → '1984?'
+parseNatural('from 1964 to 2008');    // → '1964/2008'
+parseNatural('Spring 2001');          // → '2001-21'
+parseNatural('the 1960s');            // → '196X'
 
 // Temporal modifiers for precision
-parseNatural('early January 1985'); // → '1985-01-01/1985-01-10'
-parseNatural('mid 1990s'); // → '1994/1996'
-parseNatural('late 19th century'); // → '1867/1900'
+parseNatural('early January 1985');   // → '1985-01-01/1985-01-10'
+parseNatural('mid 1990s');            // → '1994/1996'
+parseNatural('late 19th century');    // → '1867/1900'
 
 // Handles ambiguous dates with confidence scoring
 const results = parseNatural('02/03/2020', { locale: 'en-US' });
 // Returns both MM/DD and DD/MM interpretations with confidence scores
+
+// These won't parse - returns empty array []
+parseNatural('next Tuesday');     // ❌ Relative dates not supported
+parseNatural('in 3 weeks');       // ❌ Relative durations not supported
+parseNatural('ASAP');             // ❌ Not a date expression
+parseNatural('the distant past'); // ❌ Too vague to map to EDTF
 ```
+
+## Real History Is Full of Uncertainty
+
+### William Shakespeare's Birth
+
+We do **not** know Shakespeare's exact birthdate.
+
+What we know:
+* He was baptized on **April 26, 1564**
+* Infants were typically baptized within a few days of birth
+
+So historians infer: *Born circa late April 1564*
+
+With EDTF, that uncertainty is preserved:
+
+```typescript
+import { parse, formatHuman } from '@edtf-ts';
+
+// Approximate month
+parse('1564-04~');
+formatHuman(parse('1564-04~').value); // "circa April 1564"
+
+// Or as an interval
+parse('1564-04-20/1564-04-26');
+formatHuman(parse('1564-04-20/1564-04-26').value);
+// "April 20, 1564 to April 26, 1564"
+```
+
+No false precision. No invented birthday. Just honest data.
+
+### Photographs, Letters, and Archives
+
+Archivists deal with dates like:
+
+* "**Probably 1918**" → `1918?`
+* "**After the war, but before 1925**" → `1919/1924`
+* "**Mid-19th century**" → `1850/1870`
+* "**No earlier than 1870**" → `../1870`
+
+Forcing these into `YYYY-MM-DD` destroys information. EDTF preserves it.
 
 ## Human-Readable Formatting
 
@@ -138,14 +214,46 @@ Convert EDTF dates back to natural language with full i18n support:
 import { parse, formatHuman } from '@edtf-ts';
 
 formatHuman(parse('1985-04-12').value); // "April 12, 1985"
-formatHuman(parse('1984?').value); // "1984 (uncertain)"
-formatHuman(parse('1950~').value); // "circa 1950"
-formatHuman(parse('2001-21').value); // "Spring 2001"
+formatHuman(parse('1984?').value);      // "1984 (uncertain)"
+formatHuman(parse('1950~').value);      // "circa 1950"
+formatHuman(parse('2001-21').value);    // "Spring 2001"
 
 // Localization support
 formatHuman(parse('1985-04-12').value, { locale: 'de-DE' }); // "12. April 1985"
 formatHuman(parse('1985-04-12').value, { locale: 'ja-JP' }); // "1985年4月12日"
 ```
+
+## Stop Making People Lie to Databases
+
+When software only accepts exact dates, users are forced to:
+
+* **Guess** — picking a plausible date
+* **Invent** — making something up entirely
+* **Default** — choosing January 1st "just to make it work"
+* **Omit** — leaving fields blank
+
+All four options lose valuable information.
+
+EDTF allows users to say: *"This is everything we know — no more, no less."*
+
+That's better data.
+
+## Precision When You Have It. Flexibility When You Don't.
+
+EDTF doesn't replace ISO 8601 — it *extends* it.
+
+* If you know the exact date, use it.
+* If you don't, say what you *do* know.
+* If something is uncertain, mark it as such.
+* If it's approximate, say so explicitly.
+
+That honesty unlocks:
+
+* Better historical modeling
+* Better archival metadata
+* Better timelines
+* Better AI reasoning
+* Better user experiences
 
 ## Why EDTF-TS?
 
@@ -173,6 +281,17 @@ Extended Date/Time Format (EDTF) is a standard developed by the Library of Congr
 - Date ranges: `1940/1945` (from 1940 to 1945)
 - Seasons: `2001-21` (Spring 2001)
 - Sets: `[1667,1668,1670]` (one of these years)
+
+## Who Is This For?
+
+EDTF-TS is for anywhere dates come from **people, memory, or history** — not just sensors and clocks:
+
+* Libraries, archives, and museums
+* Genealogy and biography software
+* Historical research
+* Content management systems
+* Timelines and visualization tools
+* AI systems that reason about time
 
 ## Community
 

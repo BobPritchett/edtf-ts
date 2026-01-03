@@ -1,18 +1,30 @@
 # EDTF TypeScript
 
+**Dates, the Way Humans Mean Them**
+
 Modern TypeScript implementation of [Extended Date/Time Format (EDTF)](https://www.loc.gov/standards/datetime/) with comprehensive temporal reasoning capabilities.
+
+## Why EDTF?
+
+People don't experience time like computers do.
+
+We remember *seasons*, *eras*, and *approximate moments*. We inherit records that are incomplete, contradictory, or deliberately vague. We say "around," "before," "after," "early," "late," and "sometime between."
+
+Yet most software still insists on **rigid ISO 8601 dates**, forcing humans to pretend they know more than they do. When software only accepts exact dates, users are forced to guess, invent, default to January 1st, or leave fields blank—all losing valuable information.
+
+**EDTF exists because real time is messy—and pretending otherwise loses information.**
 
 ## Features
 
-- ✅ **Full EDTF Level 0, 1, 2 support** - Complete spec compliance
-- ✅ **TypeScript-first** - Complete type safety with discriminated unions
-- ✅ **Allen's interval algebra** - 13 temporal relations with four-valued logic
-- ✅ **Natural language parsing** - Convert human-readable dates to EDTF
-- ✅ **Human-readable formatting** - i18n-ready output with customizable options
-- ✅ **Tree-shakeable** - Import only what you need
-- ✅ **Zero runtime dependencies** - Lightweight core package
-- ✅ **BigInt support** - Handle extreme historical dates beyond JavaScript Date limits
-- ✅ **Interactive playground** - Try EDTF parsing and comparison in your browser
+- **Full EDTF Level 0, 1, 2 support** - Complete spec compliance
+- **TypeScript-first** - Complete type safety with discriminated unions
+- **Allen's interval algebra** - 13 temporal relations with four-valued logic
+- **Natural language parsing** - Convert human-readable dates to EDTF
+- **Human-readable formatting** - i18n-ready output with customizable options
+- **Tree-shakeable** - Import only what you need
+- **Zero runtime dependencies** - Lightweight core package
+- **BigInt support** - Handle extreme historical dates beyond JavaScript Date limits
+- **Interactive playground** - Try EDTF parsing and comparison in your browser
 
 ## Quick Start
 
@@ -45,6 +57,11 @@ equals(decade, year); // 'MAYBE' - could be 1985
 // Human-readable formatting
 formatHuman(parse('1985-04-12').value); // "April 12, 1985"
 formatHuman(parse('1984?').value); // "1984 (uncertain)"
+
+// These will fail - parse returns { success: false }
+parse('April 12, 1985');  // ❌ Natural language, not EDTF syntax
+parse('1985/13/01');      // ❌ Invalid month (13)
+parse('85-04-12');        // ❌ Two-digit year not allowed
 ```
 
 ## Packages
@@ -93,12 +110,33 @@ pnpm add @edtf-ts/natural
 ```typescript
 import { parseNatural } from '@edtf-ts/natural';
 
-const results = parseNatural('April 1985');
+// Parse human-readable dates
+parseNatural('April 1985');
 // [{ edtf: '1985-04', confidence: 0.95, interpretation: 'April 1985' }]
 
-const results2 = parseNatural('sometime in the 1980s');
+parseNatural('sometime in the 1980s');
 // [{ edtf: '198X', confidence: 0.85, interpretation: '1980s' }]
+
+parseNatural('circa 1950');           // → '1950~'
+parseNatural('early January 1985');   // → '1985-01-01/1985-01-10'
+parseNatural('late 19th century');    // → '1867/1900'
+
+// These won't parse - returns empty array []
+parseNatural('next Tuesday');     // ❌ Relative dates not supported
+parseNatural('in 3 weeks');       // ❌ Relative durations not supported
+parseNatural('ASAP');             // ❌ Not a date expression
 ```
+
+## Real History Is Full of Uncertainty
+
+Think about how people actually describe dates:
+
+* "Shakespeare was born **in late April 1564**." → `1564-04~` or `1564-04-20/1564-04-26`
+* "The photo was taken **sometime in the 1930s**." → `193X`
+* "**Probably 1918**" → `1918?`
+* "**No earlier than 1870**" → `../1870`
+
+ISO 8601 can't express this without lying or guessing. EDTF can.
 
 ## Documentation
 
@@ -113,26 +151,26 @@ Full documentation is available at **[bobpritchett.github.io/edtf-ts](https://bo
 
 ### Level 0 (ISO 8601 Profile)
 
-- ✅ Calendar dates: `1985-04-12`
-- ✅ Reduced precision: `1985-04`, `1985`
-- ✅ Date/time: `1985-04-12T23:20:30`
-- ✅ Intervals: `1985/1990`, `1985-04-12/1985-04-15`
+- Calendar dates: `1985-04-12`
+- Reduced precision: `1985-04`, `1985`
+- Date/time: `1985-04-12T23:20:30`
+- Intervals: `1985/1990`, `1985-04-12/1985-04-15`
 
 ### Level 1 (Extended)
 
-- ✅ Uncertain/approximate: `1984?`, `1984~`, `1984%`
-- ✅ Unspecified digits: `199X`, `19XX`, `1985-XX-XX`
-- ✅ Extended intervals: `1984?/2004~`, `../1985`, `1985/..`
-- ✅ Years exceeding 4 digits: `Y170000002`
-- ✅ Seasons: `1985-21` (Spring), `1985-22` (Summer)
+- Uncertain/approximate: `1984?`, `1984~`, `1984%`
+- Unspecified digits: `199X`, `19XX`, `1985-XX-XX`
+- Extended intervals: `1984?/2004~`, `../1985`, `1985/..`
+- Years exceeding 4 digits: `Y170000002`
+- Seasons: `1985-21` (Spring), `1985-22` (Summer)
 
 ### Level 2 (Partial Uncertainty)
 
-- ✅ Component-level qualification: `?2004-06`, `2004-~06`, `2004-06-~11`
-- ✅ Partial unspecified: `156X-12-25`, `15XX-12-25`
-- ✅ Multiple dates: `1985-04-12, 1985-05, 1985`
-- ✅ Sets/Lists: `[1985,1990,1995]`, `{1985-04,1985-05}`
-- ✅ Extended seasons: `1985-25` (Winter, Northern), `1985-40` (Winter, Southern)
+- Component-level qualification: `?2004-06`, `2004-~06`, `2004-06-~11`
+- Partial unspecified: `156X-12-25`, `15XX-12-25`
+- Multiple dates: `1985-04-12, 1985-05, 1985`
+- Sets/Lists: `[1985,1990,1995]`, `{1985-04,1985-05}`
+- Extended seasons: `1985-25` (Winter, Northern), `1985-40` (Winter, Southern)
 
 ## Truth Values in Comparison
 
@@ -195,14 +233,16 @@ if (normal.success) {
 
 This enables accurate temporal reasoning for astronomical and geological timescales while maintaining compatibility with standard JavaScript Date APIs for typical use cases.
 
-## Use Cases
+## Who Is This For?
+
+EDTF-TS is for anywhere dates come from **people, memory, or history**—not just sensors and clocks:
 
 - **Cultural heritage** - Museum artifacts, archival materials
 - **Historical research** - Events with uncertain or approximate dates
 - **Genealogy** - Birth/death dates with varying precision
 - **Geology/paleontology** - Deep time with extreme date ranges
 - **Digital libraries** - Bibliographic records with partial dates
-- **Academic research** - Historical document dating
+- **AI systems** - Temporal reasoning about historical events
 
 ## Development
 
