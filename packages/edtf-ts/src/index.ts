@@ -204,3 +204,29 @@ export {
   formatDateISO,
   isLeapYear as dateIsLeapYear,
 } from './utils-date-helpers.js';
+
+// ============================================================
+// FUZZYDATE (Temporal-inspired API)
+// ============================================================
+
+export {
+  FuzzyDate,
+  FuzzyDateBase,
+  FuzzyDateDate,
+  FuzzyDateTime,
+  FuzzyDateInterval,
+  FuzzyDateSeason,
+  FuzzyDateSet,
+  FuzzyDateList,
+  FuzzyDateParseError,
+  type IFuzzyDate,
+  type IFuzzyDateDate,
+  type IFuzzyDateTime,
+  type IFuzzyDateInterval,
+  type IFuzzyDateSeason,
+  type IFuzzyDateSet,
+  type IFuzzyDateList,
+  type FuzzyDateParseResult,
+  type FuzzyDateInput,
+  type FuzzyDateType,
+} from './fuzzy-date/index.js';

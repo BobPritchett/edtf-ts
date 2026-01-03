@@ -16,6 +16,7 @@ Yet most software still insists on **rigid ISO 8601 dates**, forcing humans to p
 
 ## Features
 
+- **FuzzyDate API** - Temporal-inspired, method-based interface with IDE autocomplete
 - **Full EDTF Level 0, 1, 2 support** - Complete spec compliance
 - **TypeScript-first** - Complete type safety with discriminated unions
 - **Allen's interval algebra** - 13 temporal relations with four-valued logic
@@ -33,42 +34,90 @@ pnpm add @edtf-ts
 ```
 
 ```typescript
-import { parse, isBefore, during, overlaps, equals, formatHuman } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts';
 
-// Parse EDTF strings
-const date = parse('1985-04-12');
-const interval = parse('2004-06/2006-08');
-const uncertain = parse('1984?');
-const unspecified = parse('198X'); // Any year 1980-1989
+// Parse EDTF strings into FuzzyDate objects
+const date = FuzzyDate.parse('1985-04-12');
+const interval = FuzzyDate.parse('2004-06/2006-08');
+const uncertain = FuzzyDate.parse('1984?');
+const decade = FuzzyDate.parse('198X'); // Any year 1980-1989
+
+// Method-based API with IDE autocomplete
+date.format();                    // "April 12, 1985"
+date.isBefore(interval);          // 'YES'
+uncertain.isUncertain;            // true
+decade.hasUnspecified;            // true
 
 // Temporal comparison with four-valued logic
-const a = parse('1985').value;
-const b = parse('1990').value;
+const a = FuzzyDate.parse('1985');
+const b = FuzzyDate.parse('1990');
 
-isBefore(a, b); // 'YES' - definitely before
-during(a, b); // 'NO' - not contained within
-overlaps(a, b); // 'NO' - no time overlap
+a.isBefore(b);                    // 'YES' - definitely before
+a.during(b);                      // 'NO' - not contained within
+a.overlaps(b);                    // 'NO' - no time overlap
 
-// Handle uncertainty
-const decade = parse('198X').value; // 1980-1989
-const year = parse('1985').value;
-equals(decade, year); // 'MAYBE' - could be 1985
+// Handle uncertainty honestly
+const year = FuzzyDate.parse('1985');
+decade.equals(year);              // 'MAYBE' - could be 1985
 
-// Human-readable formatting
-formatHuman(parse('1985-04-12').value); // "April 12, 1985"
-formatHuman(parse('1984?').value); // "1984 (uncertain)"
+// Type-specific parsing
+const result = FuzzyDate.Interval.from('1985/1990');
+if (result.success) {
+  for (const year of result.value.by('year')) {
+    console.log(year.edtf);       // '1985', '1986', ... '1990'
+  }
+}
 
-// These will fail - parse returns { success: false }
-parse('April 12, 1985');  // ❌ Natural language, not EDTF syntax
-parse('1985/13/01');      // ❌ Invalid month (13)
-parse('85-04-12');        // ❌ Two-digit year not allowed
+// Boolean convenience methods for when you need true/false
+a.isDefinitelyBefore(b);          // true
+decade.isPossiblyBefore(year);    // true (could be 1980-1984)
+
+// These will throw FuzzyDateParseError
+FuzzyDate.parse('April 12, 1985');  // ❌ Natural language, not EDTF syntax
+FuzzyDate.parse('1985/13/01');      // ❌ Invalid month (13)
+FuzzyDate.parse('85-04-12');        // ❌ Two-digit year not allowed
 ```
 
 ## Packages
 
 ### @edtf-ts (Main Package)
 
-The main package includes everything you need for EDTF parsing, comparison, and formatting:
+The main package includes everything you need for EDTF parsing, comparison, and formatting.
+
+#### FuzzyDate API (Recommended)
+
+The `FuzzyDate` class provides a Temporal-inspired, method-based API that's discoverable via IDE autocomplete:
+
+```typescript
+import { FuzzyDate } from '@edtf-ts';
+
+// Parse and work with dates
+const date = FuzzyDate.parse('1985-04-12');
+date.type;           // 'Date'
+date.precision;      // 'day'
+date.year;           // 1985
+date.month;          // 4
+date.format();       // "April 12, 1985"
+date.toISO();        // "1985-04-12"
+
+// Validate without parsing
+FuzzyDate.isValid('2004-06-~01'); // true (Level 2)
+
+// Result-based parsing (doesn't throw)
+const result = FuzzyDate.from('1985-04-12');
+if (result.success) {
+  console.log(result.value.edtf); // '1985-04-12'
+  console.log(result.level);      // 0
+}
+
+// Type-specific factories
+const interval = FuzzyDate.Interval.from('1985/1990');
+const season = FuzzyDate.Season.from('1985-21');
+```
+
+#### Functional API (Also Available)
+
+If you prefer functional programming or need fine-grained tree-shaking, all functions are available as direct imports:
 
 ```typescript
 import {
@@ -91,12 +140,9 @@ import {
 
 const result = parse('1985-04-12');
 if (result.success) {
-  console.log(result.value.type); // 'Date'
-  console.log(result.value.precision); // 'day'
-  console.log(result.level); // 0
+  console.log(formatHuman(result.value)); // "April 12, 1985"
+  console.log(isBefore(result.value, parse('1990').value)); // 'YES'
 }
-
-isValid('2004-06-~01'); // true (Level 2)
 ```
 
 ### @edtf-ts/natural (Optional)
@@ -111,17 +157,23 @@ pnpm add @edtf-ts/natural
 import { parseNatural } from '@edtf-ts/natural';
 
 // Parse human-readable dates
-parseNatural('April 1985');
-// [{ edtf: '1985-04', confidence: 0.95, interpretation: 'April 1985' }]
+const results = parseNatural('April 1985');
+// [{ edtf: '1985-04', confidence: 0.95, fuzzyDate: FuzzyDate, ... }]
 
+// Each result includes a FuzzyDate for the method-based API
+const best = results[0];
+best.fuzzyDate.format();          // "April 1985"
+best.fuzzyDate.isBefore(someDate); // 'YES' | 'NO' | 'MAYBE'
+
+// More examples
 parseNatural('sometime in the 1980s');
-// [{ edtf: '198X', confidence: 0.85, interpretation: '1980s' }]
+// [{ edtf: '198X', confidence: 0.85, fuzzyDate: FuzzyDate }]
 
-parseNatural('circa 1950');           // → '1950~'
-parseNatural('early January 1985');   // → '1985-01-01/1985-01-10'
-parseNatural('late 19th century');    // → '1867/1900'
+parseNatural('circa 1950');           // → edtf: '1950~'
+parseNatural('early January 1985');   // → edtf: '1985-01-01/1985-01-10'
+parseNatural('late 19th century');    // → edtf: '1867/1900'
 
-// These won't parse - returns empty array []
+// These won't parse - throws ParseError
 parseNatural('next Tuesday');     // ❌ Relative dates not supported
 parseNatural('in 3 weeks');       // ❌ Relative durations not supported
 parseNatural('ASAP');             // ❌ Not a date expression
@@ -174,7 +226,7 @@ Full documentation is available at **[bobpritchett.github.io/edtf-ts](https://bo
 
 ## Truth Values in Comparison
 
-The comparison functions use four-valued logic for precise temporal reasoning:
+The comparison methods use four-valued logic for precise temporal reasoning:
 
 - **YES** - Relationship definitely holds
 - **NO** - Relationship definitely does not hold
@@ -182,19 +234,29 @@ The comparison functions use four-valued logic for precise temporal reasoning:
 - **UNKNOWN** - Cannot determine (missing information)
 
 ```typescript
-import { parse, isBefore, equals, during, overlaps } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts';
+
+const y1980 = FuzzyDate.parse('1980');
+const y1985 = FuzzyDate.parse('1985');
+const y1990 = FuzzyDate.parse('1990');
+const decade = FuzzyDate.parse('198X');
+const openInterval = FuzzyDate.parse('1985/..');
 
 // YES - bounds prove it
-isBefore(parse('1980').value, parse('1990').value); // 'YES'
+y1980.isBefore(y1990);            // 'YES'
 
 // NO - bounds disprove it
-during(parse('1985').value, parse('1985').value); // 'NO' (same bounds)
+y1985.during(y1985);              // 'NO' (same bounds)
 
 // MAYBE - uncertainty from unspecified digits
-equals(parse('198X').value, parse('1985').value); // 'MAYBE'
+decade.equals(y1985);             // 'MAYBE' (could be 1985)
 
 // UNKNOWN - missing endpoint information
-overlaps(parse('1985/').value, parse('1990').value); // 'UNKNOWN'
+openInterval.overlaps(y1990);     // 'UNKNOWN'
+
+// Boolean convenience methods when you need true/false
+y1980.isDefinitelyBefore(y1990);  // true
+decade.isPossiblyBefore(y1985);   // true (could be 1980-1984)
 ```
 
 ## Extended Years and BigInt Support
@@ -206,29 +268,25 @@ JavaScript `Date` objects can only represent dates within approximately ±270,00
 - **`isBoundsClamped`** - Boolean flag indicating if Date values were clamped
 
 ```typescript
-import { parse } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts';
 
 // Extended year (2 billion years in the future)
-const result = parse('Y2000123456');
-if (result.success) {
-  console.log(result.value.year);           // 2000123456
-  console.log(result.value.isBoundsClamped); // true
+const farFuture = FuzzyDate.parse('Y2000123456');
+console.log(farFuture.inner.year);      // 2000123456
+console.log(farFuture.isBoundsClamped); // true
 
-  // Date objects are clamped to valid range
-  console.log(result.value.min);  // +275760-09-13T00:00:00.000Z (max Date)
+// Date objects are clamped to valid range
+console.log(farFuture.min);   // +275760-09-13T00:00:00.000Z (max Date)
 
-  // BigInt values are always accurate
-  console.log(result.value.minMs); // 63117737727846912000n
-  console.log(result.value.maxMs); // 63117737759469311999n
-}
+// BigInt values are always accurate
+console.log(farFuture.minMs); // 63117737727846912000n
+console.log(farFuture.maxMs); // 63117737759469311999n
 
 // Normal dates work as expected
-const normal = parse('2024-06-15');
-if (normal.success) {
-  console.log(normal.value.isBoundsClamped); // undefined (not clamped)
-  console.log(normal.value.min);   // 2024-06-15T00:00:00.000Z
-  console.log(normal.value.minMs); // 1718409600000n
-}
+const normal = FuzzyDate.parse('2024-06-15');
+console.log(normal.isBoundsClamped); // undefined (not clamped)
+console.log(normal.min);   // 2024-06-15T00:00:00.000Z
+console.log(normal.minMs); // 1718409600000n
 ```
 
 This enables accurate temporal reasoning for astronomical and geological timescales while maintaining compatibility with standard JavaScript Date APIs for typical use cases.

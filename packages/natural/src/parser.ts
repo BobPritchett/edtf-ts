@@ -1,6 +1,6 @@
 import nearley from 'nearley';
-import { parse as parseEDTF } from '@edtf-ts';
-import type { EDTFBase } from '@edtf-ts';
+import { parse as parseEDTF, FuzzyDate } from '@edtf-ts';
+import type { EDTFBase, IFuzzyDate } from '@edtf-ts';
 import grammar from './grammar.js';
 
 /**
@@ -17,6 +17,8 @@ export interface ParseResult {
   interpretation: string;
   /** Parsed EDTF object (if valid) */
   parsed?: EDTFBase;
+  /** FuzzyDate wrapper (if valid) - provides method-based API */
+  fuzzyDate?: IFuzzyDate;
   /** Whether this result is ambiguous */
   ambiguous?: boolean;
 }
@@ -127,6 +129,7 @@ export function parseNatural(
       confidence: 1.0,
       interpretation: `Valid EDTF: ${edtfResult.value.edtf}`,
       parsed: edtfResult.value,
+      fuzzyDate: FuzzyDate.wrap(edtfResult.value),
       ambiguous: false,
     }];
   }
@@ -234,12 +237,14 @@ function getNumericDateInterpretations(
   // US interpretation: MM/DD/YYYY
   if (isFirstValidMonth && isSecondValidDay) {
     const usEdtf = `${year}-${first}-${second}`;
+    const usParsed = tryParse(usEdtf);
     interpretations.push({
       edtf: usEdtf,
       type: 'date',
       confidence: usesUSFormat ? 0.6 : 0.4,
       interpretation: `${getMonthName(firstNum)} ${secondNum}, ${year} (US format: MM/DD/YYYY)`,
-      parsed: tryParse(usEdtf),
+      parsed: usParsed,
+      fuzzyDate: usParsed ? FuzzyDate.wrap(usParsed) : undefined,
       ambiguous: true,
     });
   }
@@ -247,12 +252,14 @@ function getNumericDateInterpretations(
   // EU interpretation: DD/MM/YYYY
   if (isSecondValidMonth && isFirstValidDay) {
     const euEdtf = `${year}-${second}-${first}`;
+    const euParsed = tryParse(euEdtf);
     interpretations.push({
       edtf: euEdtf,
       type: 'date',
       confidence: usesUSFormat ? 0.4 : 0.6,
       interpretation: `${firstNum} ${getMonthName(secondNum)} ${year} (EU format: DD/MM/YYYY)`,
-      parsed: tryParse(euEdtf),
+      parsed: euParsed,
+      fuzzyDate: euParsed ? FuzzyDate.wrap(euParsed) : undefined,
       ambiguous: true,
     });
   }
@@ -270,12 +277,14 @@ function getNumericDateInterpretations(
  * Enrich a parse result with interpretation and parsed EDTF object
  */
 function enrichResult(result: any): ParseResult {
+  const parsed = tryParse(result.edtf);
   return {
     edtf: result.edtf,
     type: result.type,
     confidence: result.confidence,
     interpretation: generateInterpretation(result),
-    parsed: tryParse(result.edtf),
+    parsed,
+    fuzzyDate: parsed ? FuzzyDate.wrap(parsed) : undefined,
     ambiguous: result.ambiguous,
   };
 }
