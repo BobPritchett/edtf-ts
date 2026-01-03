@@ -361,10 +361,15 @@ function formatBirthday(
     return monthName;
   }
 
-  // Format day with ordinal
+  // Format day - use ordinal for text month formats, slash separator for numeric
   const dayStr = dayFormat === '2-digit' ? String(day).padStart(2, '0') : String(day);
-  const ordinal = getOrdinalSuffix(day);
+  const isNumericMonth = monthFormat === 'numeric' || monthFormat === '2-digit';
 
+  if (isNumericMonth) {
+    return `${monthName}/${dayStr}`;
+  }
+
+  const ordinal = getOrdinalSuffix(day);
   return `${monthName} ${dayStr}${ordinal}`;
 }
 

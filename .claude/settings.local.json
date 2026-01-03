@@ -46,7 +46,8 @@
       "Bash(wc:*)",
       "Bash(tree:*)",
       "Bash(pnpm --filter @edtf-ts build:*)",
-      "Bash(pnpm --filter @edtf-ts test:*)"
+      "Bash(pnpm --filter @edtf-ts test:*)",
+      "Bash(pnpm --filter @edtf-ts/edtf-ts test -- --run)"
     ]
   }
 }

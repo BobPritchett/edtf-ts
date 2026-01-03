@@ -161,6 +161,24 @@ describe('renderAgeBirthday', () => {
       });
       expect(result.age).toBe('20 y/o');
     });
+
+    it('should use numeric month format with slash separator', () => {
+      const result = renderAgeBirthday('2005-03-15', {
+        currentDate: REF_DATE,
+        month: 'numeric',
+      });
+      expect(result.birthday).toBe('3/15');
+      expect(result.formatted).toBe('20 years old, birthday 3/15');
+    });
+
+    it('should use 2-digit month format with slash separator', () => {
+      const result = renderAgeBirthday('2005-03-15', {
+        currentDate: REF_DATE,
+        month: '2-digit',
+      });
+      expect(result.birthday).toBe('03/15');
+      expect(result.formatted).toBe('20 years old, birthday 03/15');
+    });
   });
 
   describe('decade matching', () => {
