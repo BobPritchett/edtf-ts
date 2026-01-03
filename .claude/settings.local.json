@@ -40,7 +40,9 @@
       "Bash(pnpm --filter @edtf-ts/natural test:*)",
       "Bash(pnpm --filter @edtf-ts/natural build:*)",
       "Bash(pnpm --filter @edtf-ts/utils test:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(pnpm --filter @edtf-ts/utils run build)",
+      "Bash(pnpm --filter @edtf-ts/natural run build:*)"
     ]
   }
 }

@@ -423,6 +423,210 @@
         </div>
       </div>
     </div>
+
+    <!-- Age and Birthdate Section -->
+    <div class="age-birthday-section">
+      <h2>Age and Birthdate</h2>
+      <p>Parse age expressions and birthdates into EDTF intervals, then render them as human-readable strings.</p>
+      <p class="current-date-note">All calculations use today's date: <strong>{{ formattedCurrentDate }}</strong></p>
+
+      <div class="age-examples">
+        <button
+          v-for="example in ageExamples"
+          :key="example.input"
+          @click="selectAgeExample(example.input)"
+          class="example-btn"
+          :class="{ active: ageInput === example.input }"
+        >
+          {{ example.label }}
+        </button>
+      </div>
+
+      <div class="playground-inputs">
+        <div class="input-column">
+          <label for="age-input">Age / Birthday Input</label>
+          <input
+            id="age-input"
+            v-model="ageInput"
+            type="text"
+            placeholder="20 yo, early 30s, March 15th birthday..."
+            @input="onAgeInput"
+            class="edtf-input-field"
+            :class="{ 'input-valid': ageParseResult, 'input-invalid': ageParseError }"
+          />
+          <div class="input-status">
+            <span v-if="ageParseResult" class="status-valid">
+              ✓ {{ ageParseResult.edtf }} ({{ Math.round(ageParseResult.confidence * 100) }}%)
+            </span>
+            <span v-else-if="ageParseError" class="status-invalid">✗ {{ ageParseError }}</span>
+          </div>
+        </div>
+
+        <div class="input-column">
+          <label for="age-edtf-input">EDTF (for rendering)</label>
+          <input
+            id="age-edtf-input"
+            v-model="ageEdtfInput"
+            type="text"
+            placeholder="?2004-?06-?02/?2005-?06-?01"
+            @input="onAgeEdtfInput"
+            class="edtf-input-field"
+            :class="{ 'input-valid': ageRenderResult, 'input-invalid': ageRenderError }"
+          />
+          <div class="input-status">
+            <span v-if="ageRenderResult" class="status-valid">✓ Valid EDTF</span>
+            <span v-else-if="ageRenderError" class="status-invalid">✗ {{ ageRenderError }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Age Format Options -->
+      <div class="format-options-section">
+        <button
+          class="format-options-toggle"
+          @click="ageOptionsExpanded = !ageOptionsExpanded"
+        >
+          <span class="toggle-icon">{{ ageOptionsExpanded ? '▼' : '▶' }}</span>
+          Rendering Options
+        </button>
+
+        <div v-if="ageOptionsExpanded" class="format-options-content">
+          <div class="options-grid">
+            <div class="option-item option-item-inline">
+              <label class="option-label-inline">
+                <span class="option-name">Age Style</span>
+                <select v-model="ageFormatOptions.ageStyle" class="option-select">
+                  <option value="vocabulary">Vocabulary (early 20s, teenager)</option>
+                  <option value="numeric">Numeric (20-23 years old)</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="option-item option-item-inline">
+              <label class="option-label-inline">
+                <span class="option-name">Age Length</span>
+                <select v-model="ageFormatOptions.ageLength" class="option-select">
+                  <option value="long">Long (20 years old)</option>
+                  <option value="medium">Medium (20 y/o)</option>
+                  <option value="short">Short (20yo)</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="option-item option-item-inline">
+              <label class="option-label-inline">
+                <span class="option-name">Format</span>
+                <select v-model="ageFormatOptions.format" class="option-select">
+                  <option value="full">Full (age + birthday)</option>
+                  <option value="age-only">Age Only</option>
+                  <option value="birthday-only">Birthday Only</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="option-item option-item-inline">
+              <label class="option-label-inline">
+                <span class="option-name">Month Format</span>
+                <select v-model="ageFormatOptions.month" class="option-select">
+                  <option value="long">Long (March)</option>
+                  <option value="short">Short (Mar)</option>
+                  <option value="narrow">Narrow (M)</option>
+                  <option value="numeric">Numeric (3)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parse Result -->
+      <div v-if="ageParseResult" class="age-result-section">
+        <h4>Parse Result</h4>
+        <div class="result-row">
+          <span class="row-label">EDTF</span>
+          <code class="row-value">{{ ageParseResult.edtf }}</code>
+          <span class="row-label">Type</span>
+          <code class="row-value">{{ ageParseResult.type }}</code>
+          <span class="row-label">Confidence</span>
+          <code class="row-value">{{ Math.round(ageParseResult.confidence * 100) }}%</code>
+        </div>
+        <div class="result-row">
+          <span class="row-label">Interpretation</span>
+          <span class="row-value interpretation">{{ ageParseResult.interpretation }}</span>
+        </div>
+        <div v-if="ageParseResult.ageRange" class="result-row">
+          <span class="row-label">Age Range</span>
+          <code class="row-value">{{ formatAgeRange(ageParseResult.ageRange) }}</code>
+        </div>
+        <div v-if="ageParseResult.birthdayKnown" class="result-row">
+          <span class="row-label">Birthday Known</span>
+          <code class="row-value" :class="{ 'badge-valid': ageParseResult.birthdayKnown.month }">
+            Month: {{ ageParseResult.birthdayKnown.month ? 'Yes' : 'No' }}
+          </code>
+          <code class="row-value" :class="{ 'badge-valid': ageParseResult.birthdayKnown.day }">
+            Day: {{ ageParseResult.birthdayKnown.day ? 'Yes' : 'No' }}
+          </code>
+        </div>
+      </div>
+
+      <!-- Render Result -->
+      <div v-if="ageRenderResult" class="age-result-section">
+        <h4>Render Result</h4>
+        <div class="render-output">
+          <div class="render-main">{{ ageRenderResult.formatted }}</div>
+        </div>
+        <div class="result-row">
+          <span class="row-label">Age</span>
+          <code class="row-value">{{ ageRenderResult.age }}</code>
+          <span class="row-label">Birthday</span>
+          <code class="row-value">{{ ageRenderResult.birthday || '(unknown)' }}</code>
+        </div>
+        <div class="result-row">
+          <span class="row-label">Age Range</span>
+          <code class="row-value">{{ formatAgeRange(ageRenderResult.ageRange) }}</code>
+          <span class="row-label">Birthday Known</span>
+          <code class="row-value">
+            Month: {{ ageRenderResult.birthdayKnown.month ? 'Yes' : 'No' }},
+            Day: {{ ageRenderResult.birthdayKnown.day ? 'Yes' : 'No' }}
+          </code>
+        </div>
+        <div v-if="ageRenderResult.qualifier" class="result-row">
+          <span class="row-label">Qualifier</span>
+          <code class="row-value badge-uncertain">{{ ageRenderResult.qualifier }}</code>
+        </div>
+
+        <!-- All format variations -->
+        <div class="format-variations">
+          <h5>Format Variations</h5>
+          <div class="variations-grid">
+            <div class="variation-item">
+              <span class="variation-label">Vocabulary + Long</span>
+              <span class="variation-value">{{ ageVariations.vocabLong }}</span>
+            </div>
+            <div class="variation-item">
+              <span class="variation-label">Vocabulary + Medium</span>
+              <span class="variation-value">{{ ageVariations.vocabMedium }}</span>
+            </div>
+            <div class="variation-item">
+              <span class="variation-label">Vocabulary + Short</span>
+              <span class="variation-value">{{ ageVariations.vocabShort }}</span>
+            </div>
+            <div class="variation-item">
+              <span class="variation-label">Numeric + Long</span>
+              <span class="variation-value">{{ ageVariations.numericLong }}</span>
+            </div>
+            <div class="variation-item">
+              <span class="variation-label">Numeric + Medium</span>
+              <span class="variation-value">{{ ageVariations.numericMedium }}</span>
+            </div>
+            <div class="variation-item">
+              <span class="variation-label">Numeric + Short</span>
+              <span class="variation-value">{{ ageVariations.numericShort }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -473,6 +677,74 @@ const examples = [
   { label: 'Set', edtf: '[1667,1668,1670]' },
   { label: 'Partial Qual', edtf: '?2004-06-~11' },
 ];
+
+// Age and Birthday section state
+const ageInput = ref('20 yo');
+const ageEdtfInput = ref('');
+const ageParseResult = ref<any>(null);
+const ageParseError = ref<string | null>(null);
+const ageRenderResult = ref<any>(null);
+const ageRenderError = ref<string | null>(null);
+const ageOptionsExpanded = ref(false);
+const ageFormatOptions = ref({
+  ageStyle: 'vocabulary' as 'vocabulary' | 'numeric',
+  ageLength: 'long' as 'short' | 'medium' | 'long',
+  format: 'full' as 'full' | 'age-only' | 'birthday-only',
+  month: 'long' as 'numeric' | '2-digit' | 'long' | 'short' | 'narrow',
+});
+
+// Current date for age calculations (updated on mount)
+const currentDate = ref(new Date());
+const formattedCurrentDate = computed(() => {
+  return currentDate.value.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+});
+
+const ageExamples = [
+  { label: '20 yo', input: '20 yo' },
+  { label: 'Early 30s', input: 'early 30s' },
+  { label: 'Teenager', input: 'teenager' },
+  { label: 'Senior', input: 'senior' },
+  { label: '20 + March bday', input: '20 yo, March birthday' },
+  { label: '20 + Mar 15', input: '20 yo, birthday 3/15' },
+  { label: 'Mar 15 bday only', input: 'March 15th birthday' },
+  { label: 'Born 1990', input: 'born 1990' },
+  { label: 'Born c. 1950', input: 'born circa 1950' },
+  { label: '6 months', input: '6 months old' },
+];
+
+// Computed variations for all format combinations
+const ageVariations = computed(() => {
+  if (!ageEdtfInput.value) return {};
+  try {
+    return {
+      vocabLong: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'vocabulary', ageLength: 'long', currentDate: currentDate.value }),
+      vocabMedium: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'vocabulary', ageLength: 'medium', currentDate: currentDate.value }),
+      vocabShort: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'vocabulary', ageLength: 'short', currentDate: currentDate.value }),
+      numericLong: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'numeric', ageLength: 'long', currentDate: currentDate.value }),
+      numericMedium: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'numeric', ageLength: 'medium', currentDate: currentDate.value }),
+      numericShort: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'numeric', ageLength: 'short', currentDate: currentDate.value }),
+    };
+  } catch {
+    return {};
+  }
+});
+
+// Synchronous helper for computed
+let renderAgeBirthdayFn: any = null;
+function renderAgeBirthdaySync(edtf: string, options: any): string {
+  if (!renderAgeBirthdayFn) return '';
+  try {
+    const result = renderAgeBirthdayFn(edtf, options);
+    return result.formatted;
+  } catch {
+    return '(error)';
+  }
+}
 
 const isDate = computed(() => result.value?.success && isEDTFDate(result.value.value));
 const isInterval = computed(() => result.value?.success && isEDTFInterval(result.value.value));
@@ -812,9 +1084,78 @@ function selectExample(edtf: string) {
   onEdtfInput();
 }
 
+// Age and Birthday functions
+function selectAgeExample(inputVal: string) {
+  ageInput.value = inputVal;
+  onAgeInput();
+}
+
+async function onAgeInput() {
+  if (!ageInput.value.trim()) {
+    ageParseResult.value = null;
+    ageParseError.value = null;
+    ageEdtfInput.value = '';
+    return;
+  }
+
+  try {
+    const { parseAgeBirthday } = await import('@edtf-ts/natural');
+    ageParseError.value = null;
+    ageParseResult.value = parseAgeBirthday(ageInput.value, { currentDate: currentDate.value });
+
+    // Auto-populate EDTF input and trigger render
+    if (ageParseResult.value) {
+      ageEdtfInput.value = ageParseResult.value.edtf;
+      await onAgeEdtfInput();
+    }
+  } catch (error: any) {
+    ageParseError.value = error.message || 'Failed to parse age input';
+    ageParseResult.value = null;
+  }
+}
+
+async function onAgeEdtfInput() {
+  if (!ageEdtfInput.value.trim()) {
+    ageRenderResult.value = null;
+    ageRenderError.value = null;
+    return;
+  }
+
+  try {
+    const { renderAgeBirthday } = await import('@edtf-ts/utils');
+    // Cache the function for sync use in computed
+    renderAgeBirthdayFn = renderAgeBirthday;
+
+    ageRenderError.value = null;
+    ageRenderResult.value = renderAgeBirthday(ageEdtfInput.value, {
+      ...ageFormatOptions.value,
+      currentDate: currentDate.value,
+    });
+  } catch (error: any) {
+    ageRenderError.value = error.message || 'Failed to render EDTF';
+    ageRenderResult.value = null;
+  }
+}
+
+function formatAgeRange(range: [number, number | null]): string {
+  if (!range) return '';
+  const [min, max] = range;
+  if (max === null) return `${min}+`;
+  if (min === max) return `${min}`;
+  return `${min}–${max}`;
+}
+
+// Watch age format options changes
+watch(ageFormatOptions, () => {
+  if (ageEdtfInput.value) {
+    onAgeEdtfInput();
+  }
+}, { deep: true });
+
 onMounted(() => {
   onEdtfInput();
   onEdtfInput2();
+  onAgeInput();
 });
 </script>
 
@@ -1567,5 +1908,115 @@ onMounted(() => {
     flex-direction: column;
     gap: 0.5rem;
   }
+
+  .variations-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Age and Birthday Section */
+.age-birthday-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--vp-c-divider);
+}
+
+.age-birthday-section h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  color: var(--vp-c-text-1);
+}
+
+.age-birthday-section > p {
+  color: var(--vp-c-text-2);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.age-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.age-result-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--vp-c-bg);
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.age-result-section h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: var(--vp-c-text-1);
+}
+
+.render-output {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--vp-c-bg-soft);
+  border-radius: 4px;
+  border-left: 3px solid var(--vp-c-brand);
+}
+
+.render-main {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+}
+
+.interpretation {
+  font-style: italic;
+  color: var(--vp-c-text-1);
+}
+
+.badge-valid {
+  background: var(--vp-c-green-soft) !important;
+  color: var(--vp-c-green) !important;
+}
+
+.format-variations {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.format-variations h5 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+}
+
+.variations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.variation-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: var(--vp-c-bg-soft);
+  border-radius: 4px;
+}
+
+.variation-label {
+  font-size: 0.75rem;
+  color: var(--vp-c-text-2);
+  font-weight: 500;
+}
+
+.variation-value {
+  font-size: 0.9rem;
+  color: var(--vp-c-text-1);
+  font-family: var(--vp-font-family-mono);
 }
 </style>

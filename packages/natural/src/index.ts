@@ -36,3 +36,7 @@
 
 export { parseNatural, ParseError } from './parser';
 export type { ParseResult, ParseNaturalOptions } from './parser';
+
+// Export age and birthday parser
+export { parseAgeBirthday } from './age-birthday';
+export type { ParseAgeBirthdayOptions, ParseAgeBirthdayResult } from './age-birthday';

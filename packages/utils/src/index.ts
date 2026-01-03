@@ -13,3 +13,12 @@ export * from './formatters.js';
 
 // Export comparators
 export * from './comparators.js';
+
+// Export date helpers
+export * from './date-helpers.js';
+
+// Export age and birthday constants (shared with @edtf-ts/natural)
+export * from './age-constants.js';
+
+// Export age and birthday utilities
+export * from './age-birthday.js';
