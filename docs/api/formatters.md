@@ -1,12 +1,10 @@
 # Formatters
 
-Formatting utilities from `@edtf-ts/utils` for converting EDTF dates to strings.
+Formatting utilities from `@edtf-ts` for converting EDTF dates to strings.
 
-## Installation
-
-```bash
-pnpm add @edtf-ts/utils
-```
+::: tip
+These functions are part of the main `@edtf-ts` package.
+:::
 
 ## Functions
 
@@ -40,8 +38,8 @@ interface FormatOptions {
 #### Examples
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { formatHuman } from '@edtf-ts/utils';
+import { parse } from '@edtf-ts';
+import { formatHuman } from '@edtf-ts';
 
 // Basic formatting
 const date = parse('1985-04-12');

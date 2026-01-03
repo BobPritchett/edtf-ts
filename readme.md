@@ -9,20 +9,19 @@ Modern TypeScript implementation of [Extended Date/Time Format (EDTF)](https://w
 - ✅ **Allen's interval algebra** - 13 temporal relations with four-valued logic
 - ✅ **Natural language parsing** - Convert human-readable dates to EDTF
 - ✅ **Human-readable formatting** - i18n-ready output with customizable options
-- ✅ **Tree-shakeable** - Monorepo architecture, import only what you need
-- ✅ **Zero runtime dependencies** - Lightweight core packages
+- ✅ **Tree-shakeable** - Import only what you need
+- ✅ **Zero runtime dependencies** - Lightweight core package
 - ✅ **BigInt support** - Handle extreme historical dates beyond JavaScript Date limits
 - ✅ **Interactive playground** - Try EDTF parsing and comparison in your browser
 
 ## Quick Start
 
 ```bash
-pnpm add @edtf-ts/core @edtf-ts/compare
+pnpm add @edtf-ts
 ```
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { isBefore, during, overlaps } from '@edtf-ts/compare';
+import { parse, isBefore, during, overlaps, equals, formatHuman } from '@edtf-ts';
 
 // Parse EDTF strings
 const date = parse('1985-04-12');
@@ -42,18 +41,36 @@ overlaps(a, b); // 'NO' - no time overlap
 const decade = parse('198X').value; // 1980-1989
 const year = parse('1985').value;
 equals(decade, year); // 'MAYBE' - could be 1985
+
+// Human-readable formatting
+formatHuman(parse('1985-04-12').value); // "April 12, 1985"
+formatHuman(parse('1984?').value); // "1984 (uncertain)"
 ```
 
 ## Packages
 
-### Core Packages
+### @edtf-ts (Main Package)
 
-#### [@edtf-ts/core](./packages/core)
-
-Core EDTF parsing, validation, and type definitions.
+The main package includes everything you need for EDTF parsing, comparison, and formatting:
 
 ```typescript
-import { parse, isValid } from '@edtf-ts/core';
+import {
+  // Parsing
+  parse, isValid,
+
+  // Type guards
+  isEDTFDate, isEDTFInterval, isEDTFSeason,
+
+  // Comparison (Allen's interval algebra)
+  isBefore, isAfter, meets, overlaps, during, contains, equals,
+  normalize, allen,
+
+  // Formatting
+  formatHuman, formatISO,
+
+  // Utilities
+  compare, sort, isInRange
+} from '@edtf-ts';
 
 const result = parse('1985-04-12');
 if (result.success) {
@@ -65,58 +82,13 @@ if (result.success) {
 isValid('2004-06-~01'); // true (Level 2)
 ```
 
-#### [@edtf-ts/compare](./packages/compare)
+### @edtf-ts/natural (Optional)
 
-Advanced temporal comparison using Allen's interval algebra and four-valued logic.
+Natural language date parsing to EDTF. Install separately to keep your bundle small if you don't need this feature.
 
-```typescript
-import { parse } from '@edtf-ts/core';
-import { normalize, isBefore, during, overlaps } from '@edtf-ts/compare';
-
-// Simple API - EDTF level
-isBefore(parse('1980').value, parse('1990').value); // 'YES'
-
-// Advanced API - Member level (four-bound ranges)
-const norm = normalize(parse('198X').value);
-console.log(norm.members[0]);
-// {
-//   sMin: 315532800000n,  // 1980-01-01
-//   sMax: 599616000000n,  // 1989-01-01
-//   eMin: 347155199999n,  // 1980-12-31
-//   eMax: 631151999999n,  // 1989-12-31
-// }
+```bash
+pnpm add @edtf-ts/natural
 ```
-
-**Features:**
-
-- 13 Allen relations (before, after, meets, overlaps, starts, during, finishes, equals, + symmetrics)
-- Four-valued logic: YES/NO/MAYBE/UNKNOWN
-- Four-bound normalization (sMin, sMax, eMin, eMax)
-- BigInt epoch milliseconds for extreme dates
-- Database preparation utilities (coming soon)
-
-#### [@edtf-ts/utils](./packages/utils)
-
-Utility functions for formatting, validation, and basic comparison.
-
-```typescript
-import { formatHuman, compare, sort, isInRange } from '@edtf-ts/utils';
-
-// Human-readable formatting
-formatHuman(parse('1985-04-12').value);
-// "April 12, 1985"
-
-formatHuman(parse('1984?').value);
-// "1984 (uncertain)"
-
-// Simple comparison and sorting
-const dates = [parse('2000').value, parse('1985').value, parse('1990').value];
-const sorted = sort(dates); // [1985, 1990, 2000]
-```
-
-#### [@edtf-ts/natural](./packages/natural)
-
-Natural language date parsing to EDTF.
 
 ```typescript
 import { parseNatural } from '@edtf-ts/natural';
@@ -164,7 +136,7 @@ Full documentation is available at **[bobpritchett.github.io/edtf-ts](https://bo
 
 ## Truth Values in Comparison
 
-The `@edtf-ts/compare` package uses four-valued logic for precise temporal reasoning:
+The comparison functions use four-valued logic for precise temporal reasoning:
 
 - **YES** - Relationship definitely holds
 - **NO** - Relationship definitely does not hold
@@ -172,7 +144,7 @@ The `@edtf-ts/compare` package uses four-valued logic for precise temporal reaso
 - **UNKNOWN** - Cannot determine (missing information)
 
 ```typescript
-import { isBefore, equals, during } from '@edtf-ts/compare';
+import { parse, isBefore, equals, during, overlaps } from '@edtf-ts';
 
 // YES - bounds prove it
 isBefore(parse('1980').value, parse('1990').value); // 'YES'
@@ -196,7 +168,7 @@ JavaScript `Date` objects can only represent dates within approximately ±270,00
 - **`isBoundsClamped`** - Boolean flag indicating if Date values were clamped
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 // Extended year (2 billion years in the future)
 const result = parse('Y2000123456');
@@ -253,12 +225,41 @@ pnpm docs:dev
 ```
 edtf-ts/
 ├── packages/
-│   ├── core/          # @edtf-ts/core - Parsing and types
-│   ├── compare/       # @edtf-ts/compare - Temporal reasoning
-│   ├── utils/         # @edtf-ts/utils - Utilities
-│   └── natural/       # @edtf-ts/natural - Natural language
+│   ├── edtf-ts/       # @edtf-ts - Main package (parsing, comparison, formatting)
+│   └── natural/       # @edtf-ts/natural - Natural language parsing
 ├── docs/              # Documentation site
 └── tools/             # Research and tooling
+```
+
+## Migrating from v0.1
+
+The library has been consolidated from 4 packages to 2:
+
+| Old Package | New Package |
+|-------------|-------------|
+| @edtf-ts/core | @edtf-ts |
+| @edtf-ts/compare | @edtf-ts |
+| @edtf-ts/utils | @edtf-ts |
+| @edtf-ts/natural | @edtf-ts/natural (unchanged) |
+
+```bash
+# Remove old packages
+pnpm remove @edtf-ts/core @edtf-ts/compare @edtf-ts/utils
+
+# Install new package
+pnpm add @edtf-ts
+```
+
+All exports remain the same - only the import source changes:
+
+```typescript
+// Before
+import { parse } from '@edtf-ts/core';
+import { isBefore, normalize } from '@edtf-ts/compare';
+import { formatHuman } from '@edtf-ts/utils';
+
+// After
+import { parse, isBefore, normalize, formatHuman } from '@edtf-ts';
 ```
 
 ## License

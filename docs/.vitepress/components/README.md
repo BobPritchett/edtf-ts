@@ -30,7 +30,7 @@ The component is globally registered in `.vitepress/theme/index.ts`.
 
 ### Dependencies
 
-- `@edtf-ts/core` - For parsing EDTF strings
+- `@edtf-ts` - For parsing EDTF strings
 - Vue 3 - Component framework (from VitePress)
 
 ### Styling

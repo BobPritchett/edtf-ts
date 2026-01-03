@@ -84,7 +84,7 @@ Y-17E7                    Exponential year
 ### Museum Cataloging
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 // Artifact with uncertain date
 const pottery = parse('156X-12-25');

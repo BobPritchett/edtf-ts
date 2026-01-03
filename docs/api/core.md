@@ -1,11 +1,11 @@
-# @edtf-ts/core
+# @edtf-ts
 
-Core EDTF parsing and type definitions.
+Core EDTF parsing, comparison, and formatting. This is the main package that includes all functionality previously split across @edtf-ts/core, @edtf-ts/compare, and @edtf-ts/utils.
 
 ## Installation
 
 ```bash
-pnpm add @edtf-ts/core
+pnpm add @edtf-ts
 ```
 
 ## parse()
@@ -43,7 +43,7 @@ On failure:
 ### Example
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 const result = parse('1985-04-12');
 
@@ -76,7 +76,7 @@ function isValid(input: string, level?: EDTFLevel): boolean
 ### Example
 
 ```typescript
-import { isValid } from '@edtf-ts/core';
+import { isValid } from '@edtf-ts';
 
 isValid('1985-04-12');  // true
 isValid('1985-13-01');  // false
@@ -180,10 +180,10 @@ See the [Types Reference](./types/date) for detailed type information.
 const VERSION: string
 ```
 
-The current version of @edtf-ts/core.
+The current version of @edtf-ts.
 
 ```typescript
-import { VERSION } from '@edtf-ts/core';
+import { VERSION } from '@edtf-ts';
 console.log(VERSION);  // "0.1.0"
 ```
 
@@ -197,7 +197,7 @@ const DATE_MAX_MS: bigint  //  8640000000000000n
 The minimum and maximum epoch milliseconds that JavaScript `Date` objects can represent (approximately ±270,000 years from epoch).
 
 ```typescript
-import { DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts/core';
+import { DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts';
 
 // Use these to detect if a bigint epoch value exceeds Date limits
 const ms = someEdtfValue.minMs;
@@ -223,7 +223,7 @@ To handle this, all EDTF objects provide:
 ### Example: Extended Year
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 // Parse an extended year (2 billion years in the future)
 const result = parse('Y2000123456');
@@ -264,4 +264,4 @@ if (normal.success) {
 - **Normal use**: Use `min`/`max` Date properties for typical date ranges
 - **Extended years**: Check `isBoundsClamped`, use `minMs`/`maxMs` for accurate values
 - **Database storage**: Use `minMs`/`maxMs` for precise storage of any date
-- **Comparison**: The `@edtf-ts/compare` package uses BigInt internally for accurate temporal reasoning
+- **Comparison**: The comparison functions use BigInt internally for accurate temporal reasoning

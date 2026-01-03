@@ -37,7 +37,7 @@ interface EDTFSet extends EDTFBase {
 Sets are enclosed in square brackets `[]` and represent "one of these":
 
 ```typescript
-import { parse, isEDTFSet } from '@edtf-ts/core';
+import { parse, isEDTFSet } from '@edtf-ts';
 
 const result = parse('[1667,1668,1670..1672]');
 
@@ -153,7 +153,7 @@ if (result.success) {
 ## Type Guard
 
 ```typescript
-import { isEDTFSet } from '@edtf-ts/core';
+import { isEDTFSet } from '@edtf-ts';
 
 const result = parse(input);
 if (result.success && isEDTFSet(result.value)) {

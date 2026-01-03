@@ -60,15 +60,15 @@ Install the package:
 ::: code-group
 
 ```bash [pnpm]
-pnpm add @edtf-ts/core
+pnpm add @edtf-ts
 ```
 
 ```bash [npm]
-npm install @edtf-ts/core
+npm install @edtf-ts
 ```
 
 ```bash [yarn]
-yarn add @edtf-ts/core
+yarn add @edtf-ts
 ```
 
 :::
@@ -76,7 +76,7 @@ yarn add @edtf-ts/core
 Parse your first EDTF date:
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 // Parse a simple date
 const result = parse('1985-04-12');
@@ -135,8 +135,7 @@ const results = parseNatural('02/03/2020', { locale: 'en-US' });
 Convert EDTF dates back to natural language with full i18n support:
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { formatHuman } from '@edtf-ts/utils';
+import { parse, formatHuman } from '@edtf-ts';
 
 formatHuman(parse('1985-04-12').value); // "April 12, 1985"
 formatHuman(parse('1984?').value); // "1984 (uncertain)"
@@ -161,10 +160,8 @@ formatHuman(parse('1985-04-12').value, { locale: 'ja-JP' }); // "1985年4月12�
 
 | Package                           | Description                             | Size         |
 | --------------------------------- | --------------------------------------- | ------------ |
-| [@edtf-ts/core](./api/core)       | Core EDTF parsing and types             | 34.92 KB ESM |
-| [@edtf-ts/compare](./api/compare) | Temporal reasoning with Allen's algebra | 8.5 KB ESM   |
-| [@edtf-ts/utils](./api/utils)     | Validators, formatters, comparators     | 12.69 KB ESM |
-| [@edtf-ts/natural](./api/natural) | Natural language parsing and formatting | 15.2 KB ESM  |
+| [@edtf-ts](./api/core)            | Core EDTF parsing, comparison, formatting | ~56 KB ESM |
+| [@edtf-ts/natural](./api/natural) | Natural language parsing                | ~15 KB ESM   |
 
 ## What is EDTF?
 
@@ -181,7 +178,7 @@ Extended Date/Time Format (EDTF) is a standard developed by the Library of Congr
 
 - [GitHub Discussions](https://github.com/BobPritchett/edtf-ts/discussions) - Ask questions and share ideas
 - [Issue Tracker](https://github.com/BobPritchett/edtf-ts/issues) - Report bugs and request features
-- [NPM Package](https://www.npmjs.com/package/@edtf-ts/core) - View package stats and versions
+- [NPM Package](https://www.npmjs.com/package/@edtf-ts) - View package stats and versions
 
 ## License
 

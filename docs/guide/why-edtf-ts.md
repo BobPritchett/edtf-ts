@@ -27,7 +27,7 @@ import edtf from 'edtf';
 const date = edtf('2016-XX');
 
 // EDTF-TS
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 const result = parse('2016-XX');
 if (result.success && isEDTFDate(result.value)) {
   const date = result.value;
@@ -50,7 +50,7 @@ EDTF-TS brings the power of Python's edtf2 and Ruby's edtf-ruby to the JavaScrip
 EDTF-TS is built with TypeScript from the ground up:
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 const result = parse('1985-04-12');
 
@@ -113,7 +113,7 @@ result.value?.min;
 const year = date.year ?? defaultYear;
 
 // ESM imports
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 ```
 
 ### 4. Comprehensive Utilities
@@ -121,7 +121,7 @@ import { parse } from '@edtf-ts/core';
 Built-in utilities package with formatting, validation, and comparison:
 
 ```typescript
-import { formatHuman, isInRange, sort } from '@edtf-ts/utils';
+import { formatHuman, isInRange, sort } from '@edtf-ts';
 
 // Format dates
 formatHuman(date); // "April 12, 1985"
@@ -171,10 +171,10 @@ Import only what you need:
 
 ```typescript
 // Import specific functions
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 // Tree-shaking removes unused code
-import { formatHuman } from '@edtf-ts/utils';
+import { formatHuman } from '@edtf-ts';
 // formatISO, compare, sort, etc. are not included in bundle
 ```
 
@@ -183,7 +183,7 @@ import { formatHuman } from '@edtf-ts/utils';
 Built-in internationalization:
 
 ```typescript
-import { formatHuman } from '@edtf-ts/utils';
+import { formatHuman } from '@edtf-ts';
 
 formatHuman(date, { locale: 'en-US' }); // "April 12, 1985"
 formatHuman(date, { locale: 'fr-FR' }); // "12 avril 1985"
@@ -303,6 +303,6 @@ Ready to use EDTF-TS?
 ## Community
 
 - [GitHub](https://github.com/BobPritchett/edtf-ts) - Star the project
-- [npm](https://www.npmjs.com/package/@edtf-ts/core) - Package stats
+- [npm](https://www.npmjs.com/package/@edtf-ts) - Package stats
 - [Issues](https://github.com/BobPritchett/edtf-ts/issues) - Report bugs
 - [Discussions](https://github.com/BobPritchett/edtf-ts/discussions) - Ask questions

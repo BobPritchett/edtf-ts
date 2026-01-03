@@ -4,38 +4,38 @@ Get up and running with EDTF-TS in minutes.
 
 ## Installation
 
-Install the core package:
+Install the main package:
 
 ::: code-group
 
 ```bash [pnpm]
-pnpm add @edtf-ts/core
+pnpm add @edtf-ts
 ```
 
 ```bash [npm]
-npm install @edtf-ts/core
+npm install @edtf-ts
 ```
 
 ```bash [yarn]
-yarn add @edtf-ts/core
+yarn add @edtf-ts
 ```
 
 :::
 
-For additional utilities (formatting, validation, comparison):
+This includes parsing, comparison, and formatting. For natural language parsing, also install:
 
 ::: code-group
 
 ```bash [pnpm]
-pnpm add @edtf-ts/utils
+pnpm add @edtf-ts/natural
 ```
 
 ```bash [npm]
-npm install @edtf-ts/utils
+npm install @edtf-ts/natural
 ```
 
 ```bash [yarn]
-yarn add @edtf-ts/utils
+yarn add @edtf-ts/natural
 ```
 
 :::
@@ -45,7 +45,7 @@ yarn add @edtf-ts/utils
 ### Parsing Dates
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 const result = parse('1985-04-12');
 
@@ -86,7 +86,7 @@ if (approx.success && isEDTFDate(approx.value)) {
 ### Parsing Intervals
 
 ```typescript
-import { parse, isEDTFInterval } from '@edtf-ts/core';
+import { parse, isEDTFInterval } from '@edtf-ts';
 
 const interval = parse('1990/2000');
 
@@ -126,7 +126,7 @@ if (decade.success) {
 For dates beyond JavaScript's ~±270,000 year Date limit, use `minMs` and `maxMs` (BigInt values):
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 // Parse an extended year (2 million years in the future)
 const extended = parse('Y2000000');
@@ -148,15 +148,15 @@ if (extended.success) {
 For normal dates within the ~±270,000 year range, `min`/`max` Date properties work perfectly. The `isBoundsClamped` flag tells you when to use BigInt values instead.
 :::
 
-## Using Utilities
+## Formatting and Comparison
 
-The `@edtf-ts/utils` package provides formatting, validation, and comparison utilities:
+The `@edtf-ts` package includes formatting, validation, and comparison utilities:
 
 ### Formatting
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { formatHuman, formatISO } from '@edtf-ts/utils';
+import { parse } from '@edtf-ts';
+import { formatHuman, formatISO } from '@edtf-ts';
 
 const date = parse('1985-04-12');
 
@@ -174,7 +174,7 @@ if (uncertain.success) {
 ### Validation
 
 ```typescript
-import { isValid, isInRange } from '@edtf-ts/utils';
+import { isValid, isInRange } from '@edtf-ts';
 
 // Validate EDTF strings
 isValid('1985-04-12');  // true
@@ -193,8 +193,8 @@ if (date.success && start.success && end.success) {
 ### Comparison
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { compare, sort, earliest, latest } from '@edtf-ts/utils';
+import { parse } from '@edtf-ts';
+import { compare, sort, earliest, latest } from '@edtf-ts';
 
 const dates = [
   parse('2001'),
@@ -215,7 +215,7 @@ latest(dates);    // 2001
 Check if an EDTF string is valid:
 
 ```typescript
-import { isValid } from '@edtf-ts/core';
+import { isValid } from '@edtf-ts';
 
 isValid('1985-04-12');  // true
 isValid('1985-13-01');  // false (invalid month)
@@ -244,7 +244,7 @@ if (!result.success) {
 Use type guards to narrow types:
 
 ```typescript
-import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason } from '@edtf-ts/core';
+import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason } from '@edtf-ts';
 
 const result = parse(input);
 

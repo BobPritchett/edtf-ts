@@ -14,9 +14,7 @@
     "vue": "^3.4.0"
   },
   "dependencies": {
-    "@edtf-ts/core": "workspace:*",
-    "@edtf-ts/utils": "workspace:*",
-    "@edtf-ts/natural": "workspace:*",
-    "@edtf-ts/compare": "workspace:*"
+    "@edtf-ts": "workspace:*",
+    "@edtf-ts/natural": "workspace:*"
   }
 }

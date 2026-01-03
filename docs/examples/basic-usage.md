@@ -5,7 +5,7 @@ Practical examples for getting started with EDTF-TS.
 ## Parsing Simple Dates
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 // Complete date
 const complete = parse('1985-04-12');
@@ -34,7 +34,7 @@ if (yearOnly.success && isEDTFDate(yearOnly.value)) {
 ## Working with Uncertainty
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 // Uncertain date
 const uncertain = parse('1984?');
@@ -59,7 +59,7 @@ if (both.success && isEDTFDate(both.value)) {
 ## Unspecified Digits
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 // Decade (1990s)
 const decade = parse('199X');
@@ -86,7 +86,7 @@ const unspecDay = parse('2004-06-XX');
 ## Date Intervals
 
 ```typescript
-import { parse, isEDTFInterval } from '@edtf-ts/core';
+import { parse, isEDTFInterval } from '@edtf-ts';
 
 // Simple interval
 const interval = parse('1964/2008');
@@ -114,7 +114,7 @@ const unknownStart = parse('/1985-04-12');
 ## Comparison Methods
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 const d1 = parse('2000');
 const d2 = parse('2001');
@@ -137,8 +137,8 @@ if (year.success && month.success && isEDTFDate(year.value) && isEDTFDate(month.
 ## Formatting Dates
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { formatHuman, formatISO } from '@edtf-ts/utils';
+import { parse } from '@edtf-ts';
+import { formatHuman, formatISO } from '@edtf-ts';
 
 // Format as human-readable
 const date = parse('1985-04-12');
@@ -165,8 +165,8 @@ if (iso.success) {
 ## Validation
 
 ```typescript
-import { isValid } from '@edtf-ts/core';
-import { isValidDate, isLeapYear } from '@edtf-ts/utils';
+import { isValid } from '@edtf-ts';
+import { isValidDate, isLeapYear } from '@edtf-ts';
 
 // Validate EDTF strings
 isValid('1985-04-12');  // true
@@ -186,8 +186,8 @@ isLeapYear(1900);  // false (century rule)
 ## Sorting Dates
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { sort, earliest, latest } from '@edtf-ts/utils';
+import { parse } from '@edtf-ts';
+import { sort, earliest, latest } from '@edtf-ts';
 
 const dates = [
   parse('2001'),
@@ -209,7 +209,7 @@ latest(dates);    // 2001
 ## Error Handling
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 const result = parse('1985-13-01');
 
@@ -223,7 +223,7 @@ if (!result.success) {
 ## Working with JavaScript Dates
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 const result = parse('1985-04-12');
 

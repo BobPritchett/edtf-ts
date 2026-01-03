@@ -62,9 +62,7 @@ export default defineConfig({
         {
           text: 'API Reference',
           items: [
-            { text: '@edtf-ts/core', link: '/api/core' },
-            { text: '@edtf-ts/utils', link: '/api/utils' },
-            { text: '@edtf-ts/compare', link: '/api/compare' },
+            { text: '@edtf-ts', link: '/api/core' },
             { text: '@edtf-ts/natural', link: '/api/natural' },
           ],
         },
@@ -99,7 +97,7 @@ export default defineConfig({
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/BobPritchett/edtf-ts' },
-      { icon: 'npm', link: 'https://www.npmjs.com/package/@edtf-ts/core' },
+      { icon: 'npm', link: 'https://www.npmjs.com/package/@edtf-ts' },
     ],
 
     editLink: {

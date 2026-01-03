@@ -43,7 +43,7 @@ interface EDTFInterval extends EDTFBase {
 ## Usage
 
 ```typescript
-import { parse, isEDTFInterval } from '@edtf-ts/core';
+import { parse, isEDTFInterval } from '@edtf-ts';
 
 const result = parse('1964/2008');
 
@@ -159,7 +159,7 @@ if (result.success && isEDTFInterval(result.value)) {
 ## Type Guard
 
 ```typescript
-import { isEDTFInterval } from '@edtf-ts/core';
+import { isEDTFInterval } from '@edtf-ts';
 
 const result = parse(input);
 if (result.success && isEDTFInterval(result.value)) {

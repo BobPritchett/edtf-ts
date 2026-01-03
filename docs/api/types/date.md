@@ -62,7 +62,7 @@ readonly type: 'Date'
 Always `'Date'` for EDTFDate objects. Use for type discrimination.
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 const result = parse('1985-04-12');
 if (result.success && result.value.type === 'Date') {
@@ -348,7 +348,7 @@ if (date.success) {
 ### Level 0: Basic Dates
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 // Year
 const year = parse('1985').value;
@@ -458,7 +458,7 @@ const anyDayAnyMonth = parse('1985-XX-XX').value;
 Use type guards to check if a value is an EDTFDate:
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
+import { parse, isEDTFDate } from '@edtf-ts';
 
 const result = parse('1985-04-12');
 
@@ -474,8 +474,7 @@ if (result.success && isEDTFDate(result.value)) {
 The `min` and `max` properties provide JavaScript Date objects representing the full range:
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { isInRange } from '@edtf-ts/utils';
+import { parse, isInRange } from '@edtf-ts';
 
 const date = parse('1985-04').value;
 
@@ -536,12 +535,12 @@ if (result.success) {
 | Normal dates (within ~±270,000 years) | Use `min`/`max` Date properties |
 | Extended years | Check `isBoundsClamped`, use `minMs`/`maxMs` |
 | Database storage | Use `minMs`/`maxMs` for precise storage |
-| Temporal comparison | The `@edtf-ts/compare` package handles this automatically |
+| Temporal comparison | The comparison functions handle this automatically |
 
 ### Example: Safe Bounds Access
 
 ```typescript
-import { parse, DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts/core';
+import { parse, DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts';
 
 function getAccurateBounds(edtfString: string) {
   const result = parse(edtfString);
@@ -574,5 +573,5 @@ function getAccurateBounds(edtfString: string) {
 
 - [EDTFDateTime](/api/types/datetime) - Dates with time components
 - [EDTFInterval](/api/types/interval) - Date ranges and intervals
-- [@edtf-ts/compare](/api/compare) - Advanced temporal comparison
+- [Temporal Comparison](/api/compare) - Advanced temporal comparison
 - [Uncertainty & Approximation](/guide/uncertainty)

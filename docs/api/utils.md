@@ -1,15 +1,9 @@
-# @edtf-ts/utils
+# Formatting & Utilities
 
-Utility functions for working with EDTF dates.
-
-## Installation
-
-```bash
-pnpm add @edtf-ts/utils
-```
+Utility functions for formatting, validating, and working with EDTF dates. These functions are included in the main `@edtf-ts` package.
 
 ::: tip
-@edtf-ts/utils depends on @edtf-ts/core. Both packages will be installed.
+This functionality was previously in a separate `@edtf-ts/utils` package. It's now part of the main `@edtf-ts` package.
 :::
 
 ## Validators
@@ -29,8 +23,8 @@ function isInRange(
 Check if a date falls within a given range (with overlap detection).
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts/core';
-import { isInRange } from '@edtf-ts/utils';
+import { parse, isEDTFDate } from '@edtf-ts';
+import { isInRange } from '@edtf-ts';
 
 const date = parse('2000-06-15');
 const start = parse('2000-01-01');
@@ -63,7 +57,7 @@ function isLeapYear(year: number): boolean
 Check if a year is a leap year.
 
 ```typescript
-import { isLeapYear } from '@edtf-ts/utils';
+import { isLeapYear } from '@edtf-ts';
 
 isLeapYear(2000);  // true
 isLeapYear(2001);  // false
@@ -117,8 +111,8 @@ function formatHuman(value: EDTFBase, options?: FormatOptions): string
 Format an EDTF date as a human-readable string.
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { formatHuman } from '@edtf-ts/utils';
+import { parse } from '@edtf-ts';
+import { formatHuman } from '@edtf-ts';
 
 const date = parse('1985-04-12');
 if (date.success) {
@@ -146,7 +140,7 @@ function formatISO(value: EDTFBase): string
 Format an EDTF date as an ISO 8601 string (when possible).
 
 ```typescript
-import { formatISO } from '@edtf-ts/utils';
+import { formatISO } from '@edtf-ts';
 
 const date = parse('1985-04-12');
 if (date.success) {
@@ -186,7 +180,7 @@ function compare(
 Compare two EDTF dates. Returns a negative number if a < b, positive if a > b, zero if equal.
 
 ```typescript
-import { compare } from '@edtf-ts/utils';
+import { compare } from '@edtf-ts';
 
 const d1 = parse('2000');
 const d2 = parse('2001');
@@ -209,7 +203,7 @@ function sort(
 Sort an array of EDTF dates.
 
 ```typescript
-import { sort } from '@edtf-ts/utils';
+import { sort } from '@edtf-ts';
 
 const dates = [parse('2001'), parse('2000'), parse('1999')]
   .filter(d => d.success)

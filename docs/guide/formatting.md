@@ -14,7 +14,7 @@ EDTF dates can be formatted in several ways:
 Every parsed EDTF object has an `.edtf` property containing the canonical EDTF string:
 
 ```typescript
-import { parse } from '@edtf-ts/core';
+import { parse } from '@edtf-ts';
 
 const result = parse('1985-04-12');
 if (result.success) {
@@ -29,11 +29,11 @@ if (qualified.success) {
 
 ## Human-Readable Formatting
 
-Use the `formatHuman()` function from `@edtf-ts/utils` to create natural language strings:
+Use the `formatHuman()` function from `@edtf-ts` to create natural language strings:
 
 ```typescript
-import { parse } from '@edtf-ts/core';
-import { formatHuman } from '@edtf-ts/utils';
+import { parse } from '@edtf-ts';
+import { formatHuman } from '@edtf-ts';
 
 const date = parse('1985-04-12');
 if (date.success) {
@@ -118,7 +118,7 @@ if (season.success) {
 Use `formatISO()` to get ISO 8601 format when possible:
 
 ```typescript
-import { formatISO } from '@edtf-ts/utils';
+import { formatISO } from '@edtf-ts';
 
 const date = parse('1985-04-12');
 if (date.success) {
@@ -137,7 +137,7 @@ if (uncertain.success) {
 Use `formatRange()` to format the min/max bounds of a date:
 
 ```typescript
-import { formatRange } from '@edtf-ts/utils';
+import { formatRange } from '@edtf-ts';
 
 const decade = parse('198X');
 if (decade.success) {

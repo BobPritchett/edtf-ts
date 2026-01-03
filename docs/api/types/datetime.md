@@ -43,7 +43,7 @@ interface EDTFDateTime extends EDTFBase {
 ## Usage
 
 ```typescript
-import { parse, isEDTFDateTime } from '@edtf-ts/core';
+import { parse, isEDTFDateTime } from '@edtf-ts';
 
 const result = parse('1985-04-12T23:20:30Z');
 
@@ -105,7 +105,7 @@ if (result.success) {
 ## Type Guard
 
 ```typescript
-import { isEDTFDateTime } from '@edtf-ts/core';
+import { isEDTFDateTime } from '@edtf-ts';
 
 const result = parse(input);
 if (result.success && isEDTFDateTime(result.value)) {
