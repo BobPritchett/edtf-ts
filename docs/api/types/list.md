@@ -37,7 +37,7 @@ interface EDTFList extends EDTFBase {
 Lists are enclosed in curly braces `{}` and represent "all of these":
 
 ```typescript
-import { parse, isEDTFList } from '@edtf-ts';
+import { parse, isEDTFList } from '@edtf-ts/core';
 
 const result = parse('{1667,1668,1670..1672}');
 
@@ -161,7 +161,7 @@ if (result.success) {
 ## Type Guard
 
 ```typescript
-import { isEDTFList } from '@edtf-ts';
+import { isEDTFList } from '@edtf-ts/core';
 
 const result = parse(input);
 if (result.success && isEDTFList(result.value)) {

@@ -7,7 +7,7 @@ This guide covers parsing EDTF strings into structured objects.
 Use the `parse()` function to convert an EDTF string into a typed object:
 
 ```typescript
-import { parse } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 
@@ -48,7 +48,7 @@ if (result.success) {
 EDTF has three conformance levels. You can parse at a specific level:
 
 ```typescript
-import { parse, parseLevel0, parseLevel1, parseLevel2 } from '@edtf-ts';
+import { parse, parseLevel0, parseLevel1, parseLevel2 } from '@edtf-ts/core';
 
 // Auto-detect level (tries all levels)
 parse('1984?');  // Works - Level 1
@@ -73,7 +73,7 @@ import {
   isEDTFDate,
   isEDTFInterval,
   isEDTFSeason
-} from '@edtf-ts';
+} from '@edtf-ts/core';
 
 const result = parse(input);
 
@@ -169,7 +169,7 @@ if (!result.success) {
 Use `isValid()` for simple validation:
 
 ```typescript
-import { isValid } from '@edtf-ts';
+import { isValid } from '@edtf-ts/core';
 
 isValid('1985-04-12');  // true
 isValid('1985-13-01');  // false (invalid month)

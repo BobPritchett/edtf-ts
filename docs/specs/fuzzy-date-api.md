@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document proposes introducing a `FuzzyDate` immutable value object to @edtf-ts, modeled structurally on TC39's Temporal proposal. The goal is to provide a cleaner, more discoverable API while preserving full backward compatibility with existing functional exports.
+This document proposes introducing a `FuzzyDate` immutable value object to @edtf-ts/core, modeled structurally on TC39's Temporal proposal. The goal is to provide a cleaner, more discoverable API while preserving full backward compatibility with existing functional exports.
 
 **Key Principle:** FuzzyDate is an *additional* API surface, not a replacement. All existing `parse()`, `isBefore()`, `formatHuman()`, etc. functions remain available.
 
@@ -219,7 +219,7 @@ The natural language parser remains a separate package for bundle size reasons. 
 
 ```typescript
 // In @edtf-ts/natural
-import { FuzzyDate } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts/core';
 
 interface NaturalParseResult {
   fuzzyDate: FuzzyDate            // The parsed FuzzyDate object
@@ -338,7 +338,7 @@ class FuzzyDateInterval extends FuzzyDateBase {
 ### Phase 3: Namespace Export
 
 ```typescript
-// In @edtf-ts main export
+// In @edtf-ts/core main export
 export const FuzzyDate = {
   from: FuzzyDateBase.from,
   parse: FuzzyDateBase.parse,
@@ -381,7 +381,7 @@ import {
   formatHuman,
   isEDTFDate,
   // ... all existing exports
-} from '@edtf-ts';
+} from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 if (result.success) {

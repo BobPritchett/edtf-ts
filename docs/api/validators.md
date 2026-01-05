@@ -1,9 +1,9 @@
 # Validators
 
-Validation utilities from `@edtf-ts` for checking EDTF date properties.
+Validation utilities from `@edtf-ts/core` for checking EDTF date properties.
 
 ::: tip
-These functions are part of the main `@edtf-ts` package.
+These functions are part of the main `@edtf-ts/core` package.
 :::
 
 ## Functions
@@ -23,8 +23,8 @@ function isInRange(
 A date is "in range" if its possible values overlap with the given range.
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts';
-import { isInRange } from '@edtf-ts';
+import { parse, isEDTFDate } from '@edtf-ts/core';
+import { isInRange } from '@edtf-ts/core';
 
 const date = parse('2000-06');  // June 2000
 const start = new Date('2000-01-01');
@@ -68,7 +68,7 @@ function isLeapYear(year: number): boolean
 ```
 
 ```typescript
-import { isLeapYear } from '@edtf-ts';
+import { isLeapYear } from '@edtf-ts/core';
 
 isLeapYear(2000);  // true (divisible by 400)
 isLeapYear(2001);  // false
@@ -85,7 +85,7 @@ function getDaysInMonth(year: number, month: number): number
 ```
 
 ```typescript
-import { getDaysInMonth } from '@edtf-ts';
+import { getDaysInMonth } from '@edtf-ts/core';
 
 getDaysInMonth(2000, 2);  // 29 (leap year)
 getDaysInMonth(2001, 2);  // 28
@@ -102,7 +102,7 @@ function isValidDate(year: number, month: number, day: number): boolean
 ```
 
 ```typescript
-import { isValidDate } from '@edtf-ts';
+import { isValidDate } from '@edtf-ts/core';
 
 isValidDate(2000, 2, 29);  // true (leap year)
 isValidDate(2001, 2, 29);  // false
@@ -119,8 +119,8 @@ function isValidInterval(interval: EDTFInterval): boolean
 ```
 
 ```typescript
-import { parse, isEDTFInterval } from '@edtf-ts';
-import { isValidInterval } from '@edtf-ts';
+import { parse, isEDTFInterval } from '@edtf-ts/core';
+import { isValidInterval } from '@edtf-ts/core';
 
 const valid = parse('2000/2010');
 const invalid = parse('2010/2000');
@@ -139,8 +139,8 @@ function isUncertain(date: EDTFDate): boolean
 ```
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts';
-import { isUncertain } from '@edtf-ts';
+import { parse, isEDTFDate } from '@edtf-ts/core';
+import { isUncertain } from '@edtf-ts/core';
 
 const uncertain = parse('1984?');
 const certain = parse('1984');

@@ -1,6 +1,6 @@
 # Member (Four-Bound Range)
 
-The fundamental temporal representation used by `@edtf-ts` for precise temporal reasoning.
+The fundamental temporal representation used by `@edtf-ts/core` for precise temporal reasoning.
 
 ## Overview
 
@@ -215,7 +215,7 @@ normalize(parse('-100000').value).members[0].sMin;
 For display or when you know the year is safe:
 
 ```typescript
-import { bigIntToNumber, isSafeBigInt } from '@edtf-ts';
+import { bigIntToNumber, isSafeBigInt } from '@edtf-ts/core';
 
 const member = normalize(parse('1985').value).members[0];
 
@@ -338,7 +338,7 @@ normalize(parse('[1985,1990,1995]').value).members.length;  // 3
 ### Direct Comparison
 
 ```typescript
-import { normalize, allen } from '@edtf-ts';
+import { normalize, allen } from '@edtf-ts/core';
 
 const a = normalize(parse('1985').value).members[0];
 const b = normalize(parse('1990').value).members[0];
@@ -351,7 +351,7 @@ allen.overlaps(a, b); // 'NO'
 ### Building Custom Relations
 
 ```typescript
-import { normalize } from '@edtf-ts';
+import { normalize } from '@edtf-ts/core';
 
 function startsInSameYear(a: EDTFBase, b: EDTFBase): boolean {
   const normA = normalize(a).members[0];
@@ -371,7 +371,7 @@ function startsInSameYear(a: EDTFBase, b: EDTFBase): boolean {
 ### Visualizing Bounds
 
 ```typescript
-import { normalize, dateToEpochMs } from '@edtf-ts';
+import { normalize, dateToEpochMs } from '@edtf-ts/core';
 
 function visualizeBounds(edtf: string) {
   const parsed = parse(edtf);
@@ -413,6 +413,6 @@ visualizeBounds('198X');
 ## See Also
 
 - [Comparison Guide](/guide/comparison) - Understanding four-valued logic
-- [@edtf-ts API](/api/compare) - Full comparison API
+- [@edtf-ts/core API](/api/compare) - Full comparison API
 - [EDTFDate](/api/types/date) - Source date type
 - [EDTFInterval](/api/types/interval) - Interval representation

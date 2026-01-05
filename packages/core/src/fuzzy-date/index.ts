@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * import { FuzzyDate } from '@edtf-ts';
+ * import { FuzzyDate } from '@edtf-ts/core';
  *
  * // Parse with result type
  * const result = FuzzyDate.from('1985-04-12');
@@ -115,7 +115,7 @@ export const FuzzyDate = {
    *
    * @example
    * ```typescript
-   * import { parse, FuzzyDate } from '@edtf-ts';
+   * import { parse, FuzzyDate } from '@edtf-ts/core';
    *
    * const result = parse('1985-04-12');
    * if (result.success) {
@@ -215,7 +215,7 @@ export { FuzzyDateList } from './list.js';
  *
  * @example
  * ```typescript
- * import { FuzzyDate, type FuzzyDateType } from '@edtf-ts';
+ * import { FuzzyDate, type FuzzyDateType } from '@edtf-ts/core';
  *
  * function processDate(date: FuzzyDateType) {
  *   console.log(date.format());

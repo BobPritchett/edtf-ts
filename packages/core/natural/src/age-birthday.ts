@@ -6,8 +6,8 @@
  * EDTF Level 2 intervals with component-level qualification.
  */
 
-import { parse as parseEDTF } from '@edtf-ts';
-import type { EDTFBase } from '@edtf-ts';
+import { parse as parseEDTF } from '@edtf-ts/core';
+import type { EDTFBase } from '@edtf-ts/core';
 import {
   MONTH_NAMES,
   MONTH_FULL_NAMES,
@@ -15,7 +15,7 @@ import {
   CONFIDENCE_SCORES,
   createLifeStageMap,
   createAgeIndicatorPattern,
-} from '@edtf-ts';
+} from '@edtf-ts/core';
 import { parseNatural } from './parser.js';
 
 /**
@@ -29,7 +29,7 @@ const CONFIDENCE = {
 
 /**
  * Life stage vocabulary lookup map.
- * Created from the shared LIFE_STAGES definition in @edtf-ts.
+ * Created from the shared LIFE_STAGES definition in @edtf-ts/core.
  */
 const LIFE_STAGE_AGES = createLifeStageMap();
 

@@ -24,7 +24,7 @@ import { normalizeList } from './list.js';
  *
  * @example
  * ```typescript
- * import { parse, normalize } from '@edtf-ts';
+ * import { parse, normalize } from '@edtf-ts/core';
  *
  * const date = parse('1985-04-12');
  * if (date.success) {

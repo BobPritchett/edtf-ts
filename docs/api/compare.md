@@ -1,9 +1,9 @@
 # Temporal Comparison
 
-Advanced temporal comparison using Allen's interval algebra and four-valued logic for EDTF dates. These functions are included in the main `@edtf-ts` package.
+Advanced temporal comparison using Allen's interval algebra and four-valued logic for EDTF dates. These functions are included in the main `@edtf-ts/core` package.
 
 ::: tip
-This functionality was previously in a separate `@edtf-ts/compare` package. It's now part of the main `@edtf-ts` package.
+This functionality was previously in a separate `@edtf-ts/compare` package. It's now part of the main `@edtf-ts/core` package.
 :::
 
 ## Overview
@@ -19,8 +19,8 @@ The compare package provides:
 ## Quick Start
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { isBefore, during, overlaps } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { isBefore, during, overlaps } from '@edtf-ts/core';
 
 const a = parse('1985');
 const b = parse('1990');
@@ -281,8 +281,8 @@ function normalize(edtf: EDTFBase): Shape
 Convert an EDTF value to normalized Member(s).
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { normalize } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { normalize } from '@edtf-ts/core';
 
 const year = parse('1985');
 if (year.success) {
@@ -376,7 +376,7 @@ For power users who need direct access to the Member-level functions.
 ### Allen Relations (Member-level)
 
 ```typescript
-import { allen } from '@edtf-ts';
+import { allen } from '@edtf-ts/core';
 
 const a: Member = { sMin: 0n, sMax: 10n, eMin: 20n, eMax: 30n, ... };
 const b: Member = { sMin: 25n, sMax: 35n, eMin: 45n, eMax: 55n, ... };
@@ -400,13 +400,13 @@ Available as `allen.*`:
 Member-level functions are also available as named exports with `allen` prefix:
 
 ```typescript
-import { allenBefore, allenDuring, allenEquals } from '@edtf-ts';
+import { allenBefore, allenDuring, allenEquals } from '@edtf-ts/core';
 ```
 
 ### Derived Relations (Member-level)
 
 ```typescript
-import { derived } from '@edtf-ts';
+import { derived } from '@edtf-ts/core';
 
 derived.intersects(a, b);
 derived.disjoint(a, b);
@@ -417,7 +417,7 @@ derived.containsOrEqual(a, b);
 
 Also available with `derived` prefix:
 ```typescript
-import { derivedIntersects, derivedDisjoint } from '@edtf-ts';
+import { derivedIntersects, derivedDisjoint } from '@edtf-ts/core';
 ```
 
 ## Sets and Lists
@@ -429,8 +429,8 @@ EDTF Sets and Lists have special comparison semantics that check individual memb
 Sets use **"one of"** semantics with the `ANY` quantifier. A Set like `[1667,1668,1671]` means "one of these years".
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { equals, normalize } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { equals, normalize } from '@edtf-ts/core';
 
 // Set: one of these years
 const set = parse('[1667,1668,1670..1672]').value;
@@ -471,7 +471,7 @@ equals(list, parse('1985').value);  // 'NO' - list is not just 1985
 You can explicitly override the default quantifier:
 
 ```typescript
-import { during } from '@edtf-ts';
+import { during } from '@edtf-ts/core';
 
 const set = parse('[1970, 1985, 2010]').value;
 const period = parse('1980/2000').value;
@@ -515,7 +515,7 @@ function combineWithAny(truths: Truth[]): Truth
 Returns YES if **any** value is YES, otherwise propagates UNKNOWN/MAYBE/NO. Used for Sets.
 
 ```typescript
-import { combineWithAny } from '@edtf-ts';
+import { combineWithAny } from '@edtf-ts/core';
 
 combineWithAny(['YES', 'NO', 'MAYBE']);     // 'YES'
 combineWithAny(['NO', 'MAYBE', 'UNKNOWN']); // 'UNKNOWN'
@@ -532,7 +532,7 @@ function combineWithAll(truths: Truth[]): Truth
 Returns NO if **any** value is NO, otherwise propagates UNKNOWN/MAYBE/YES.
 
 ```typescript
-import { combineWithAll } from '@edtf-ts';
+import { combineWithAll } from '@edtf-ts/core';
 
 combineWithAll(['YES', 'YES', 'YES']);      // 'YES'
 combineWithAll(['YES', 'MAYBE']);           // 'MAYBE'
@@ -548,7 +548,7 @@ function negate(truth: Truth): Truth
 Logical negation of a truth value.
 
 ```typescript
-import { negate } from '@edtf-ts';
+import { negate } from '@edtf-ts/core';
 
 negate('YES');     // 'NO'
 negate('NO');      // 'YES'
@@ -576,7 +576,7 @@ function dateToEpochMs(date: DateComponents): bigint
 ```
 
 ```typescript
-import { dateToEpochMs } from '@edtf-ts';
+import { dateToEpochMs } from '@edtf-ts/core';
 
 dateToEpochMs({ year: 1985, month: 4, day: 12 });
 // 482198400000n
@@ -627,7 +627,7 @@ Configure how seasons map to months.
 ### DEFAULT_SEASON_MAPPINGS
 
 ```typescript
-import { DEFAULT_SEASON_MAPPINGS } from '@edtf-ts';
+import { DEFAULT_SEASON_MAPPINGS } from '@edtf-ts/core';
 
 console.log(DEFAULT_SEASON_MAPPINGS[21]);
 // { start: { month: 3 }, end: { month: 5 } }  // Spring: March-May
@@ -647,8 +647,8 @@ interface SeasonMapping {
 ### Museum Collection Dating
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { during, isBefore } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { during, isBefore } from '@edtf-ts/core';
 
 // Artifact dated to "sometime in the 1800s"
 const artifact = parse('18XX').value;

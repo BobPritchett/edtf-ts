@@ -9,7 +9,7 @@ pnpm add @edtf-ts/natural
 ```
 
 ::: tip
-@edtf-ts/natural depends on @edtf-ts. Both packages will be installed.
+@edtf-ts/natural depends on @edtf-ts/core. Both packages will be installed.
 :::
 
 ## Overview
@@ -166,7 +166,7 @@ parsed?: EDTFBase
 The parsed and validated EDTF object. Only present if the generated EDTF string is valid.
 
 ```typescript
-import { isEDTFDate } from '@edtf-ts';
+import { isEDTFDate } from '@edtf-ts/core';
 
 const result = parseNatural('January 12, 1940')[0];
 if (result.parsed && isEDTFDate(result.parsed)) {
@@ -509,7 +509,7 @@ try {
 
 ```typescript
 import { parseNatural } from '@edtf-ts/natural';
-import { isValid } from '@edtf-ts';
+import { isValid } from '@edtf-ts/core';
 
 const results = parseNatural('January 12, 1940');
 const edtf = results[0].edtf;
@@ -523,7 +523,7 @@ if (isValid(edtf)) {
 
 ```typescript
 import { parseNatural } from '@edtf-ts/natural';
-import { formatHuman } from '@edtf-ts';
+import { formatHuman } from '@edtf-ts/core';
 
 const results = parseNatural('circa 1950');
 const parsed = results[0].parsed;
@@ -538,7 +538,7 @@ if (parsed) {
 
 ```typescript
 import { parseNatural } from '@edtf-ts/natural';
-import { isBefore } from '@edtf-ts';
+import { isBefore } from '@edtf-ts/core';
 
 const date1 = parseNatural('January 1940')[0].parsed!;
 const date2 = parseNatural('December 1945')[0].parsed!;
@@ -671,7 +671,7 @@ pnpm run build:grammar
 
 ## See Also
 
-- [@edtf-ts](/api/core) - Parse and validate EDTF strings
+- [@edtf-ts/core](/api/core) - Parse and validate EDTF strings
 - [Formatting & Utilities](/api/utils) - Format EDTF for human reading
 - [Natural Language Guide](/guide/natural-language) - Conceptual overview
 - [Nearley Grammar](https://nearley.js.org/) - Grammar syntax documentation

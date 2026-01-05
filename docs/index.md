@@ -88,7 +88,7 @@ yarn add @edtf-ts
 Parse your first EDTF date:
 
 ```typescript
-import { parse, isEDTFDate, isEDTFInterval } from '@edtf-ts';
+import { parse, isEDTFDate, isEDTFInterval } from '@edtf-ts/core';
 
 // Parse a simple date
 const result = parse('1985-04-12');
@@ -181,7 +181,7 @@ So historians infer: *Born circa late April 1564*
 With EDTF, that uncertainty is preserved:
 
 ```typescript
-import { parse, formatHuman } from '@edtf-ts';
+import { parse, formatHuman } from '@edtf-ts/core';
 
 // Approximate month
 parse('1564-04~');
@@ -211,7 +211,7 @@ Forcing these into `YYYY-MM-DD` destroys information. EDTF preserves it.
 Convert EDTF dates back to natural language with full i18n support:
 
 ```typescript
-import { parse, formatHuman } from '@edtf-ts';
+import { parse, formatHuman } from '@edtf-ts/core';
 
 formatHuman(parse('1985-04-12').value); // "April 12, 1985"
 formatHuman(parse('1984?').value);      // "1984 (uncertain)"
@@ -268,7 +268,7 @@ That honesty unlocks:
 
 | Package                           | Description                             | Size         |
 | --------------------------------- | --------------------------------------- | ------------ |
-| [@edtf-ts](./api/core)            | Core EDTF parsing, comparison, formatting | ~56 KB ESM |
+| [@edtf-ts/core](./api/core)            | Core EDTF parsing, comparison, formatting | ~56 KB ESM |
 | [@edtf-ts/natural](./api/natural) | Natural language parsing                | ~15 KB ESM   |
 
 ## What is EDTF?
@@ -297,7 +297,7 @@ EDTF-TS is for anywhere dates come from **people, memory, or history** — not j
 
 - [GitHub Discussions](https://github.com/BobPritchett/edtf-ts/discussions) - Ask questions and share ideas
 - [Issue Tracker](https://github.com/BobPritchett/edtf-ts/issues) - Report bugs and request features
-- [NPM Package](https://www.npmjs.com/package/@edtf-ts) - View package stats and versions
+- [NPM Package](https://www.npmjs.com/package/@edtf-ts/core) - View package stats and versions
 
 ## License
 

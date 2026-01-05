@@ -30,11 +30,11 @@ Yet most software still insists on **rigid ISO 8601 dates**, forcing humans to p
 ## Quick Start
 
 ```bash
-pnpm add @edtf-ts
+pnpm add @edtf-ts/core
 ```
 
 ```typescript
-import { FuzzyDate } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts/core';
 
 // Parse EDTF strings into FuzzyDate objects
 const date = FuzzyDate.parse('1985-04-12');
@@ -80,7 +80,7 @@ FuzzyDate.parse('85-04-12');        // ❌ Two-digit year not allowed
 
 ## Packages
 
-### @edtf-ts (Main Package)
+### @edtf-ts/core (Main Package)
 
 The main package includes everything you need for EDTF parsing, comparison, and formatting.
 
@@ -89,7 +89,7 @@ The main package includes everything you need for EDTF parsing, comparison, and 
 The `FuzzyDate` class provides a Temporal-inspired, method-based API that's discoverable via IDE autocomplete:
 
 ```typescript
-import { FuzzyDate } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts/core';
 
 // Parse and work with dates
 const date = FuzzyDate.parse('1985-04-12');
@@ -136,7 +136,7 @@ import {
 
   // Utilities
   compare, sort, isInRange
-} from '@edtf-ts';
+} from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 if (result.success) {
@@ -234,7 +234,7 @@ The comparison methods use four-valued logic for precise temporal reasoning:
 - **UNKNOWN** - Cannot determine (missing information)
 
 ```typescript
-import { FuzzyDate } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts/core';
 
 const y1980 = FuzzyDate.parse('1980');
 const y1985 = FuzzyDate.parse('1985');
@@ -268,7 +268,7 @@ JavaScript `Date` objects can only represent dates within approximately ±270,00
 - **`isBoundsClamped`** - Boolean flag indicating if Date values were clamped
 
 ```typescript
-import { FuzzyDate } from '@edtf-ts';
+import { FuzzyDate } from '@edtf-ts/core';
 
 // Extended year (2 billion years in the future)
 const farFuture = FuzzyDate.parse('Y2000123456');
@@ -323,7 +323,7 @@ pnpm docs:dev
 ```
 edtf-ts/
 ├── packages/
-│   ├── edtf-ts/       # @edtf-ts - Main package (parsing, comparison, formatting)
+│   ├── core/          # @edtf-ts/core - Main package (parsing, comparison, formatting)
 │   └── natural/       # @edtf-ts/natural - Natural language parsing
 ├── docs/              # Documentation site
 └── tools/             # Research and tooling
@@ -335,9 +335,9 @@ The library has been consolidated from 4 packages to 2:
 
 | Old Package | New Package |
 |-------------|-------------|
-| @edtf-ts/core | @edtf-ts |
-| @edtf-ts/compare | @edtf-ts |
-| @edtf-ts/utils | @edtf-ts |
+| @edtf-ts/core | @edtf-ts/core (consolidated) |
+| @edtf-ts/compare | @edtf-ts/core |
+| @edtf-ts/utils | @edtf-ts/core |
 | @edtf-ts/natural | @edtf-ts/natural (unchanged) |
 
 ```bash
@@ -345,7 +345,7 @@ The library has been consolidated from 4 packages to 2:
 pnpm remove @edtf-ts/core @edtf-ts/compare @edtf-ts/utils
 
 # Install new package
-pnpm add @edtf-ts
+pnpm add @edtf-ts/core
 ```
 
 All exports remain the same - only the import source changes:
@@ -357,7 +357,7 @@ import { isBefore, normalize } from '@edtf-ts/compare';
 import { formatHuman } from '@edtf-ts/utils';
 
 // After
-import { parse, isBefore, normalize, formatHuman } from '@edtf-ts';
+import { parse, isBefore, normalize, formatHuman } from '@edtf-ts/core';
 ```
 
 ## License

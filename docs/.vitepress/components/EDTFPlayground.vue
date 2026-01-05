@@ -632,9 +632,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList } from '@edtf-ts';
-import { formatHuman } from '@edtf-ts';
-import type { FormatOptions } from '@edtf-ts';
+import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList } from '@edtf-ts/core';
+import { formatHuman } from '@edtf-ts/core';
+import type { FormatOptions } from '@edtf-ts/core';
 
 const input = ref('1985-04-12');
 const result = ref<any>(null);
@@ -989,7 +989,7 @@ async function performComparison() {
 
   try {
     // Dynamic import for comparison functions
-    const compareModule = await import('@edtf-ts');
+    const compareModule = await import('@edtf-ts/core');
 
     // Get normalized bounds for display
     const normA = compareModule.normalize(result.value.value);
@@ -1122,7 +1122,7 @@ async function onAgeEdtfInput() {
   }
 
   try {
-    const { renderAgeBirthday } = await import('@edtf-ts');
+    const { renderAgeBirthday } = await import('@edtf-ts/core');
     // Cache the function for sync use in computed
     renderAgeBirthdayFn = renderAgeBirthday;
 

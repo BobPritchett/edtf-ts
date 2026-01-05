@@ -1,7 +1,7 @@
 {
-  "name": "@edtf-ts",
+  "name": "@edtf-ts/natural",
   "version": "0.2.0",
-  "description": "Modern TypeScript implementation of Extended Date/Time Format (EDTF) with temporal reasoning",
+  "description": "Natural language to EDTF parser with locale support",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -17,29 +17,30 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "npm run build:grammar && tsup",
+    "build:grammar": "nearleyc src/grammar.ne -o src/grammar.ts && node scripts/fix-grammar-esm.js",
+    "dev": "npm run build:grammar && tsup --watch",
+    "pretest": "npm run build:grammar",
     "test": "vitest run",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit"
   },
   "keywords": [
     "edtf",
-    "extended-date-time-format",
-    "date",
-    "time",
-    "temporal",
-    "interval",
-    "allen-relations",
-    "comparison",
-    "formatting",
-    "parsing",
-    "iso-8601",
-    "library-of-congress"
+    "natural-language",
+    "date-parser",
+    "nlp",
+    "i18n",
+    "locale"
   ],
-  "author": "Bob Pritchett",
+  "author": "",
   "license": "MIT",
+  "dependencies": {
+    "@edtf-ts/core": "workspace:*",
+    "nearley": "^2.20.1"
+  },
   "devDependencies": {
+    "@types/nearley": "^2.11.5",
     "@types/node": "^20.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",

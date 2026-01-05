@@ -1,6 +1,6 @@
 import nearley from 'nearley';
-import { parse as parseEDTF, FuzzyDate } from '@edtf-ts';
-import type { EDTFBase, IFuzzyDate } from '@edtf-ts';
+import { parse as parseEDTF, FuzzyDate } from '@edtf-ts/core';
+import type { EDTFBase, IFuzzyDate } from '@edtf-ts/core';
 import grammar from './grammar.js';
 
 /**

@@ -1,9 +1,9 @@
 # Comparators
 
-Comparison and sorting utilities from `@edtf-ts` for EDTF dates.
+Comparison and sorting utilities from `@edtf-ts/core` for EDTF dates.
 
 ::: tip
-These functions are part of the main `@edtf-ts` package.
+These functions are part of the main `@edtf-ts/core` package.
 :::
 
 ## Comparison Mode
@@ -37,8 +37,8 @@ function compare(
 Returns a negative number if a < b, positive if a > b, zero if equal.
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { compare } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { compare } from '@edtf-ts/core';
 
 const d1 = parse('2000');
 const d2 = parse('2001');

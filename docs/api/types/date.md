@@ -62,7 +62,7 @@ readonly type: 'Date'
 Always `'Date'` for EDTFDate objects. Use for type discrimination.
 
 ```typescript
-import { parse } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 if (result.success && result.value.type === 'Date') {
@@ -348,7 +348,7 @@ if (date.success) {
 ### Level 0: Basic Dates
 
 ```typescript
-import { parse } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
 
 // Year
 const year = parse('1985').value;
@@ -458,7 +458,7 @@ const anyDayAnyMonth = parse('1985-XX-XX').value;
 Use type guards to check if a value is an EDTFDate:
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts';
+import { parse, isEDTFDate } from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 
@@ -474,7 +474,7 @@ if (result.success && isEDTFDate(result.value)) {
 The `min` and `max` properties provide JavaScript Date objects representing the full range:
 
 ```typescript
-import { parse, isInRange } from '@edtf-ts';
+import { parse, isInRange } from '@edtf-ts/core';
 
 const date = parse('1985-04').value;
 
@@ -540,7 +540,7 @@ if (result.success) {
 ### Example: Safe Bounds Access
 
 ```typescript
-import { parse, DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts';
+import { parse, DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts/core';
 
 function getAccurateBounds(edtfString: string) {
   const result = parse(edtfString);

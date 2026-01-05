@@ -45,7 +45,7 @@ yarn add @edtf-ts/natural
 ### Parsing Dates
 
 ```typescript
-import { parse, isEDTFDate } from '@edtf-ts';
+import { parse, isEDTFDate } from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 
@@ -86,7 +86,7 @@ if (approx.success && isEDTFDate(approx.value)) {
 ### Parsing Intervals
 
 ```typescript
-import { parse, isEDTFInterval } from '@edtf-ts';
+import { parse, isEDTFInterval } from '@edtf-ts/core';
 
 const interval = parse('1990/2000');
 
@@ -126,7 +126,7 @@ if (decade.success) {
 For dates beyond JavaScript's ~±270,000 year Date limit, use `minMs` and `maxMs` (BigInt values):
 
 ```typescript
-import { parse } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
 
 // Parse an extended year (2 million years in the future)
 const extended = parse('Y2000000');
@@ -150,13 +150,13 @@ For normal dates within the ~±270,000 year range, `min`/`max` Date properties w
 
 ## Formatting and Comparison
 
-The `@edtf-ts` package includes formatting, validation, and comparison utilities:
+The `@edtf-ts/core` package includes formatting, validation, and comparison utilities:
 
 ### Formatting
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { formatHuman, formatISO } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { formatHuman, formatISO } from '@edtf-ts/core';
 
 const date = parse('1985-04-12');
 
@@ -174,7 +174,7 @@ if (uncertain.success) {
 ### Validation
 
 ```typescript
-import { isValid, isInRange } from '@edtf-ts';
+import { isValid, isInRange } from '@edtf-ts/core';
 
 // Validate EDTF strings
 isValid('1985-04-12');  // true
@@ -193,8 +193,8 @@ if (date.success && start.success && end.success) {
 ### Comparison
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { compare, sort, earliest, latest } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { compare, sort, earliest, latest } from '@edtf-ts/core';
 
 const dates = [
   parse('2001'),
@@ -215,7 +215,7 @@ latest(dates);    // 2001
 Check if an EDTF string is valid:
 
 ```typescript
-import { isValid } from '@edtf-ts';
+import { isValid } from '@edtf-ts/core';
 
 isValid('1985-04-12');  // true
 isValid('1985-13-01');  // false (invalid month)
@@ -244,7 +244,7 @@ if (!result.success) {
 Use type guards to narrow types:
 
 ```typescript
-import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason } from '@edtf-ts';
+import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason } from '@edtf-ts/core';
 
 const result = parse(input);
 

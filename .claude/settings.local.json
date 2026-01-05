@@ -47,7 +47,11 @@
       "Bash(tree:*)",
       "Bash(pnpm --filter @edtf-ts build:*)",
       "Bash(pnpm --filter @edtf-ts test:*)",
-      "Bash(pnpm --filter @edtf-ts/edtf-ts test -- --run)"
+      "Bash(pnpm --filter @edtf-ts/edtf-ts test -- --run)",
+      "Bash(comm:*)",
+      "Bash(readlink:*)",
+      "Bash(pnpm run test:*)",
+      "Bash(timeout 5 pnpm run:*)"
     ]
   }
 }

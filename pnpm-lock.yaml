@@ -29,9 +29,9 @@ importers:
 
   docs:
     dependencies:
-      '@edtf-ts':
+      '@edtf-ts/core':
         specifier: workspace:*
-        version: link:../packages/edtf-ts
+        version: link:../packages/core
       '@edtf-ts/natural':
         specifier: workspace:*
         version: link:../packages/natural
@@ -43,7 +43,7 @@ importers:
         specifier: ^3.4.0
         version: 3.5.26(typescript@5.9.3)
 
-  packages/edtf-ts:
+  packages/core:
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -60,9 +60,9 @@ importers:
 
   packages/natural:
     dependencies:
-      '@edtf-ts':
+      '@edtf-ts/core':
         specifier: workspace:*
-        version: link:../edtf-ts
+        version: link:../core
       nearley:
         specifier: ^2.20.1
         version: 2.20.1

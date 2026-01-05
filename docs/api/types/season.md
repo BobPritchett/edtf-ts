@@ -88,7 +88,7 @@ interface EDTFSeason extends EDTFBase {
 ## Usage
 
 ```typescript
-import { parse, isEDTFSeason } from '@edtf-ts';
+import { parse, isEDTFSeason } from '@edtf-ts/core';
 
 const result = parse('2001-21');
 
@@ -159,7 +159,7 @@ if (result.success && isEDTFSeason(result.value)) {
 ## Type Guard
 
 ```typescript
-import { isEDTFSeason } from '@edtf-ts';
+import { isEDTFSeason } from '@edtf-ts/core';
 
 const result = parse(input);
 if (result.success && isEDTFSeason(result.value)) {
@@ -171,7 +171,7 @@ if (result.success && isEDTFSeason(result.value)) {
 ## Formatting
 
 ```typescript
-import { parse, formatHuman } from '@edtf-ts';
+import { parse, formatHuman } from '@edtf-ts/core';
 
 const result = parse('2001-21');
 if (result.success) {

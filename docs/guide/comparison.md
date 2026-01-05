@@ -4,11 +4,11 @@ EDTF-TS provides two approaches to comparing dates, each suited for different us
 
 ## Quick Comparison
 
-For simple comparisons using min/max/midpoint logic (all from `@edtf-ts`):
+For simple comparisons using min/max/midpoint logic (all from `@edtf-ts/core`):
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { compare, sort, earliest, latest } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { compare, sort, earliest, latest } from '@edtf-ts/core';
 
 const dates = [
   parse('2000').value,
@@ -35,11 +35,11 @@ latest(dates);    // 2000
 
 ## Advanced Comparison
 
-For precise temporal reasoning with four-valued logic (also from `@edtf-ts`):
+For precise temporal reasoning with four-valued logic (also from `@edtf-ts/core`):
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { isBefore, during, overlaps, equals } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { isBefore, during, overlaps, equals } from '@edtf-ts/core';
 
 const a = parse('1985').value;
 const b = parse('1990').value;
@@ -66,7 +66,7 @@ The compare package returns one of four truth values:
 The relationship **definitely holds** based on the bounds.
 
 ```typescript
-import { isBefore, during } from '@edtf-ts';
+import { isBefore, during } from '@edtf-ts/core';
 
 // Completely separate years
 isBefore(parse('1980').value, parse('1990').value);  // 'YES'
@@ -148,8 +148,8 @@ Plus 6 symmetric relations: `after`, `metBy`, `overlappedBy`, `startedBy`, `cont
 #### Museum Artifacts
 
 ```typescript
-import { parse } from '@edtf-ts';
-import { during, isBefore, equals } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
+import { during, isBefore, equals } from '@edtf-ts/core';
 
 // Artifact with uncertain dating
 const artifact = parse('18XX').value;  // Sometime in 1800s
@@ -204,7 +204,7 @@ during(dday, normandy);  // 'YES' - D-Day was definitely in June 1944
 All EDTF values are normalized to four-bound ranges:
 
 ```typescript
-import { normalize } from '@edtf-ts';
+import { normalize } from '@edtf-ts/core';
 
 const year = parse('1985');
 if (year.success) {
@@ -249,7 +249,7 @@ EDTF values have inherent uncertainty:
 ### Normalization Examples
 
 ```typescript
-import { normalize } from '@edtf-ts';
+import { normalize } from '@edtf-ts/core';
 
 // Simple date: all bounds are endpoints of the day
 normalize(parse('1985-04-12').value);
@@ -335,7 +335,7 @@ during(parse('2024').value, incomplete);  // 'UNKNOWN' - no information about en
 ### 1. Temporal Search
 
 ```typescript
-import { during, overlaps, intersects } from '@edtf-ts';
+import { during, overlaps, intersects } from '@edtf-ts/core';
 
 // Find artifacts from a specific period
 function findArtifacts(artifacts: Artifact[], period: EDTFBase) {
@@ -356,7 +356,7 @@ function findOverlapping(events: Event[], target: EDTFBase) {
 ### 2. Timeline Visualization
 
 ```typescript
-import { isBefore, isAfter, overlaps } from '@edtf-ts';
+import { isBefore, isAfter, overlaps } from '@edtf-ts/core';
 
 // Sort events chronologically
 function sortTimeline(events: Event[]): Event[] {
@@ -378,7 +378,7 @@ function hasConflict(event: Event, others: Event[]): boolean {
 ### 3. Genealogy Research
 
 ```typescript
-import { during, isBefore } from '@edtf-ts';
+import { during, isBefore } from '@edtf-ts/core';
 
 // Check if person could have been alive during event
 function couldWitness(person: Person, event: Event): boolean {
@@ -403,7 +403,7 @@ function plausibleParent(parent: Person, child: Person): boolean {
 ### 4. Archives & Collections
 
 ```typescript
-import { intersects, during } from '@edtf-ts';
+import { intersects, during } from '@edtf-ts/core';
 
 // Find documents relevant to a period
 function findRelevantDocuments(
@@ -470,7 +470,7 @@ Sets and Lists have special semantics that can produce surprising results:
 A Set like `[1667,1668,1670..1672]` means **"one of these years"**. When comparing Sets, the library checks each member individually and combines results using the `ANY` quantifier.
 
 ```typescript
-import { equals, normalize } from '@edtf-ts';
+import { equals, normalize } from '@edtf-ts/core';
 
 // Set: "one of these years"
 const set = parse('[1667,1668,1670..1672]').value;  // Years: 1667, 1668, 1670, 1671, 1672
@@ -514,7 +514,7 @@ equals(list, parse('1985').value);  // 'NO' - the list is not just 1985
 You can override the default quantifier:
 
 ```typescript
-import { during } from '@edtf-ts';
+import { during } from '@edtf-ts/core';
 
 const dates = parse('[1985, 1990, 1995]').value;  // Set (defaults to ANY)
 const period = parse('1980/2000').value;
@@ -534,7 +534,7 @@ during(widerSet, period, 'ALL');  // 'NO' - 1970 and 2010 are not
 ### 3. Display Bounds for Debugging
 
 ```typescript
-import { normalize } from '@edtf-ts';
+import { normalize } from '@edtf-ts/core';
 
 function debugBounds(edtf: EDTFBase) {
   const norm = normalize(edtf);
@@ -556,7 +556,7 @@ function debugBounds(edtf: EDTFBase) {
 ### 4. Combine Relations
 
 ```typescript
-import { isBefore, isAfter, or } from '@edtf-ts';
+import { isBefore, isAfter, or } from '@edtf-ts/core';
 
 // Is A completely separate from B?
 function isDisjoint(a: EDTFBase, b: EDTFBase): boolean {

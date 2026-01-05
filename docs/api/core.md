@@ -43,7 +43,7 @@ On failure:
 ### Example
 
 ```typescript
-import { parse } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
 
 const result = parse('1985-04-12');
 
@@ -76,7 +76,7 @@ function isValid(input: string, level?: EDTFLevel): boolean
 ### Example
 
 ```typescript
-import { isValid } from '@edtf-ts';
+import { isValid } from '@edtf-ts/core';
 
 isValid('1985-04-12');  // true
 isValid('1985-13-01');  // false
@@ -180,10 +180,10 @@ See the [Types Reference](./types/date) for detailed type information.
 const VERSION: string
 ```
 
-The current version of @edtf-ts.
+The current version of @edtf-ts/core.
 
 ```typescript
-import { VERSION } from '@edtf-ts';
+import { VERSION } from '@edtf-ts/core';
 console.log(VERSION);  // "0.1.0"
 ```
 
@@ -197,7 +197,7 @@ const DATE_MAX_MS: bigint  //  8640000000000000n
 The minimum and maximum epoch milliseconds that JavaScript `Date` objects can represent (approximately ±270,000 years from epoch).
 
 ```typescript
-import { DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts';
+import { DATE_MIN_MS, DATE_MAX_MS } from '@edtf-ts/core';
 
 // Use these to detect if a bigint epoch value exceeds Date limits
 const ms = someEdtfValue.minMs;
@@ -223,7 +223,7 @@ To handle this, all EDTF objects provide:
 ### Example: Extended Year
 
 ```typescript
-import { parse } from '@edtf-ts';
+import { parse } from '@edtf-ts/core';
 
 // Parse an extended year (2 billion years in the future)
 const result = parse('Y2000123456');
