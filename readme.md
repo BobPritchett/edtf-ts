@@ -12,7 +12,7 @@ People don't experience time like computers do.
 
 We remember _seasons_, _eras_, and _approximate moments_. We inherit records that are incomplete, contradictory, or deliberately vague. We say "around," "before," "after," "early," "late," and "sometime between."
 
-We share our age and/or our birthday, not our date of birth, and we use phrases like 'teenager' and 'late 30s'.
+We share our age and/or our birthday, not our date of birth, and we use phrases like 'teenager' and 'late 40s'.
 
 Yet most software still insists on **rigid ISO 8601 dates**, forcing humans to pretend they know more than they do. When software only accepts exact dates, users are forced to guess, invent, default to January 1st, or leave fields blank—all losing valuable information.
 
