@@ -1,6 +1,11 @@
 # @edtf-ts/natural
 
+[![npm version](https://img.shields.io/npm/v/@edtf-ts/natural.svg)](https://www.npmjs.com/package/@edtf-ts/natural)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Natural language to EDTF parser with locale support and ambiguity handling.
+
+**[GitHub Repository](https://github.com/BobPritchett/edtf-ts)** | **[Documentation](https://bobpritchett.github.io/edtf-ts/)** | **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playground)**
 
 ## Installation
 
@@ -28,28 +33,28 @@ import { parseNatural } from '@edtf-ts/natural';
 
 // Parse a simple date
 const results = parseNatural('January 12, 1940');
-console.log(results[0].edtf);  // '1940-01-12'
+console.log(results[0].edtf); // '1940-01-12'
 
 // Parse uncertain dates
 const uncertain = parseNatural('possibly 1984');
-console.log(uncertain[0].edtf);  // '1984?'
+console.log(uncertain[0].edtf); // '1984?'
 
 // Parse approximate dates
 const circa = parseNatural('circa 1950');
-console.log(circa[0].edtf);  // '1950~'
+console.log(circa[0].edtf); // '1950~'
 
 // Parse intervals
 const interval = parseNatural('from 1964 to 2008');
-console.log(interval[0].edtf);  // '1964/2008'
-console.log(interval[0].type);  // 'interval'
+console.log(interval[0].edtf); // '1964/2008'
+console.log(interval[0].type); // 'interval'
 
 // Parse seasons
 const season = parseNatural('Spring 2001');
-console.log(season[0].edtf);  // '2001-21'
+console.log(season[0].edtf); // '2001-21'
 
 // Parse decades
 const decade = parseNatural('the 1960s');
-console.log(decade[0].edtf);  // '196X'
+console.log(decade[0].edtf); // '196X'
 ```
 
 ## Handling Ambiguity
@@ -80,7 +85,7 @@ console.log(ambiguous);
 
 // Get only the best result
 const bestOnly = parseNatural('02/03/2020', { returnAllResults: false });
-console.log(bestOnly.length);  // 1
+console.log(bestOnly.length); // 1
 ```
 
 ## Supported Formats
@@ -88,17 +93,17 @@ console.log(bestOnly.length);  // 1
 ### Complete Dates
 
 ```typescript
-parseNatural('January 12, 1940');   // US long format
-parseNatural('12 January 1940');    // EU long format
-parseNatural('Jan 12, 1940');       // US abbreviated
-parseNatural('12 Jan 1940');        // EU abbreviated
+parseNatural('January 12, 1940'); // US long format
+parseNatural('12 January 1940'); // EU long format
+parseNatural('Jan 12, 1940'); // US abbreviated
+parseNatural('12 Jan 1940'); // EU abbreviated
 ```
 
 ### Partial Dates
 
 ```typescript
-parseNatural('January 2020');       // Month and year
-parseNatural('2020');                // Year only
+parseNatural('January 2020'); // Month and year
+parseNatural('2020'); // Year only
 ```
 
 ### Uncertain Dates (?)
@@ -128,35 +133,35 @@ parseNatural('~1950');
 parseNatural('from 1964 to 2008');
 parseNatural('1964 to 2008');
 parseNatural('between 1964 and 2008');
-parseNatural('before 1930');         // ../1930
-parseNatural('after 1930');          // 1930/..
-parseNatural('since 1930');          // 1930/..
+parseNatural('before 1930'); // ../1930
+parseNatural('after 1930'); // 1930/..
+parseNatural('since 1930'); // 1930/..
 ```
 
 ### Seasons
 
 ```typescript
-parseNatural('Spring 2001');         // 2001-21
-parseNatural('Summer 2001');         // 2001-22
-parseNatural('Fall 2001');           // 2001-23
-parseNatural('Winter 2001');         // 2001-24
+parseNatural('Spring 2001'); // 2001-21
+parseNatural('Summer 2001'); // 2001-22
+parseNatural('Fall 2001'); // 2001-23
+parseNatural('Winter 2001'); // 2001-24
 ```
 
 ### Decades and Centuries
 
 ```typescript
-parseNatural('the 1960s');           // 196X
-parseNatural('1960s');               // 196X
-parseNatural('the 1800s');           // 18XX
-parseNatural('19th century');        // 18XX
+parseNatural('the 1960s'); // 196X
+parseNatural('1960s'); // 196X
+parseNatural('the 1800s'); // 18XX
+parseNatural('19th century'); // 18XX
 ```
 
 ### Sets and Lists
 
 ```typescript
-parseNatural('1667 or 1668');                    // [1667,1668] (one of)
-parseNatural('1667 and 1668');                   // {1667,1668} (all of)
-parseNatural('1984 or earlier');                 // [..1984]
+parseNatural('1667 or 1668'); // [1667,1668] (one of)
+parseNatural('1667 and 1668'); // {1667,1668} (all of)
+parseNatural('1984 or earlier'); // [..1984]
 ```
 
 ## API
@@ -166,6 +171,7 @@ parseNatural('1984 or earlier');                 // [..1984]
 Parse natural language date input into EDTF format.
 
 **Parameters:**
+
 - `input` (string): Natural language date string
 - `options` (object, optional):
   - `locale` (string): Locale for date interpretation (default: 'en-US')
@@ -175,14 +181,15 @@ Parse natural language date input into EDTF format.
 **Returns:** Array of `ParseResult` objects, sorted by confidence (highest first)
 
 **ParseResult:**
+
 ```typescript
 interface ParseResult {
-  edtf: string;                    // The EDTF string representation
+  edtf: string; // The EDTF string representation
   type: 'date' | 'interval' | 'season' | 'set' | 'list';
-  confidence: number;              // Confidence score (0-1)
-  interpretation: string;          // Human-readable interpretation
-  parsed?: EDTFBase;               // Parsed EDTF object (from @edtf-ts/core)
-  ambiguous?: boolean;             // Whether this result is ambiguous
+  confidence: number; // Confidence score (0-1)
+  interpretation: string; // Human-readable interpretation
+  parsed?: EDTFBase; // Parsed EDTF object (from @edtf-ts/core)
+  ambiguous?: boolean; // Whether this result is ambiguous
 }
 ```
 
@@ -224,7 +231,7 @@ Filter results by minimum confidence:
 
 ```typescript
 const results = parseNatural('ambiguous date', {
-  minConfidence: 0.7
+  minConfidence: 0.7,
 });
 // Only returns interpretations with confidence >= 0.7
 ```
@@ -242,6 +249,7 @@ The parser uses [Nearley](https://nearley.js.org/), an Earley parser generator, 
 ### Confidence Scoring
 
 The parser assigns confidence scores based on:
+
 - Format specificity (ISO format = 1.0, numeric MM/DD = 0.6)
 - Locale preferences (US locale prefers MM/DD over DD/MM)
 - Ambiguity (unambiguous results get higher scores)
@@ -262,42 +270,45 @@ const result = parse(edtf);
 
 if (result.success) {
   const formatted = formatHuman(result.value);
-  console.log(formatted);  // "1985 to open end"
+  console.log(formatted); // "1985 to open end"
 
   // Parse the formatted text back to EDTF
   const roundTrip = parseNatural(formatted);
-  console.log(roundTrip[0].edtf);  // "1985/.."
+  console.log(roundTrip[0].edtf); // "1985/.."
 }
 ```
 
 ### Supported Round-Trip Patterns
 
 **Open and Unknown Endpoints:**
+
 ```typescript
 // Open end
-parseNatural('1985 to open end');     // '1985/..'
-parseNatural('1985 onward');          // '1985/..'
-parseNatural('1985 onwards');         // '1985/..'
+parseNatural('1985 to open end'); // '1985/..'
+parseNatural('1985 onward'); // '1985/..'
+parseNatural('1985 onwards'); // '1985/..'
 
 // Open start
-parseNatural('open start to 1985');   // '../1985'
+parseNatural('open start to 1985'); // '../1985'
 
 // Unknown endpoints
-parseNatural('1985 to unknown');      // '1985/'
-parseNatural('unknown to 1985');      // '/1985'
+parseNatural('1985 to unknown'); // '1985/'
+parseNatural('unknown to 1985'); // '/1985'
 ```
 
 **Qualified Dates:**
+
 ```typescript
-parseNatural('1984 (uncertain)');                          // '1984?'
-parseNatural('June 2004 (approximate)');                   // '2004-06~'
-parseNatural('June 11, 2004 (uncertain/approximate)');     // '2004-06-11%'
+parseNatural('1984 (uncertain)'); // '1984?'
+parseNatural('June 2004 (approximate)'); // '2004-06~'
+parseNatural('June 11, 2004 (uncertain/approximate)'); // '2004-06-11%'
 ```
 
 **Intervals:**
+
 ```typescript
-parseNatural('February 1, 2004 to February 2005');         // '2004-02-01/2005-02'
-parseNatural('1964 to 2008');                              // '1964/2008'
+parseNatural('February 1, 2004 to February 2005'); // '2004-02-01/2005-02'
+parseNatural('1964 to 2008'); // '1964/2008'
 ```
 
 This round-trip capability makes @edtf-ts/natural ideal for building user interfaces where users need to view and edit EDTF dates in natural language.
@@ -305,6 +316,7 @@ This round-trip capability makes @edtf-ts/natural ideal for building user interf
 ## Development Status
 
 This package is in active development. The grammar currently supports:
+
 - ✅ Complete dates (various formats)
 - ✅ Partial dates (month/year, year only)
 - ✅ Uncertain and approximate qualifiers
@@ -328,12 +340,11 @@ Contributions to expand grammar coverage are welcome!
 
 ## License
 
-MIT
+MIT Copyright 2025 Bob Pritchett
 
 ## Related Packages
 
-- [@edtf-ts/core](../core) - Core EDTF parser and types
-- [@edtf-ts/utils](../utils) - Utilities for working with EDTF dates
+- **[@edtf-ts/core](https://www.npmjs.com/package/@edtf-ts/core)** - Core EDTF parser, comparison, and types
 
 ## Resources
 

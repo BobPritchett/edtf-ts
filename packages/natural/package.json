@@ -33,8 +33,17 @@
     "i18n",
     "locale"
   ],
-  "author": "",
+  "author": "Bob Pritchett",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BobPritchett/edtf-ts.git",
+    "directory": "packages/natural"
+  },
+  "homepage": "https://github.com/BobPritchett/edtf-ts#readme",
+  "bugs": {
+    "url": "https://github.com/BobPritchett/edtf-ts/issues"
+  },
   "dependencies": {
     "@edtf-ts/core": "workspace:*",
     "nearley": "^2.20.1"

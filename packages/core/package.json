@@ -39,6 +39,15 @@
   ],
   "author": "Bob Pritchett",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BobPritchett/edtf-ts.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/BobPritchett/edtf-ts#readme",
+  "bugs": {
+    "url": "https://github.com/BobPritchett/edtf-ts/issues"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsup": "^8.0.0",
