@@ -57,6 +57,12 @@ export default defineConfig({
             { text: 'Comparison', link: '/guide/comparison' },
           ],
         },
+        {
+          text: 'Advanced',
+          items: [
+            { text: 'Search & Discovery', link: '/guide/search-and-discovery' },
+          ],
+        },
       ],
       '/api/': [
         {

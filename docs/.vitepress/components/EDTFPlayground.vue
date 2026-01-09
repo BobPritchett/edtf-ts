@@ -195,6 +195,51 @@
           </span>
         </div>
 
+        <!-- Search Bounds Section -->
+        <div v-if="fuzzyDate" class="result-section search-bounds-section">
+          <h4>Search Bounds (Discovery)</h4>
+          <p class="section-description">
+            Heuristic bounds expanded based on uncertainty/approximation qualifiers for search relevance.
+          </p>
+          <div class="bounds-comparison">
+            <div class="bounds-column">
+              <span class="bounds-type">Strict (EDTF)</span>
+              <div class="bounds-values-list">
+                <span class="bound-item">
+                  <span class="bound-label">Min:</span>
+                  <code>{{ formatDate(fuzzyDate.min) }}</code>
+                </span>
+                <span class="bound-item">
+                  <span class="bound-label">Max:</span>
+                  <code>{{ formatDate(fuzzyDate.max) }}</code>
+                </span>
+              </div>
+            </div>
+            <div class="bounds-arrow">→</div>
+            <div class="bounds-column">
+              <span class="bounds-type" :class="{ 'bounds-expanded': hasSearchPadding }">
+                Search {{ hasSearchPadding ? '(Expanded)' : '(Same)' }}
+              </span>
+              <div class="bounds-values-list">
+                <span class="bound-item" :class="{ 'bound-expanded': fuzzyDate.searchMinMs < fuzzyDate.minMs }">
+                  <span class="bound-label">Min:</span>
+                  <code>{{ formatDate(fuzzyDate.searchMin) }}</code>
+                </span>
+                <span class="bound-item" :class="{ 'bound-expanded': fuzzyDate.searchMaxMs > fuzzyDate.maxMs }">
+                  <span class="bound-label">Max:</span>
+                  <code>{{ formatDate(fuzzyDate.searchMax) }}</code>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div v-if="hasSearchPadding" class="padding-info">
+            <span class="padding-label">Padding applied:</span>
+            <code v-if="fuzzyDate.isApproximate && fuzzyDate.isUncertain" class="badge-both">±3 units (% = both)</code>
+            <code v-else-if="fuzzyDate.isApproximate" class="badge-approx">±2 units (~)</code>
+            <code v-else-if="fuzzyDate.isUncertain" class="badge-uncertain">±1 unit (?)</code>
+          </div>
+        </div>
+
         <div v-if="isInterval" class="result-section">
           <h4>Interval</h4>
           <div class="result-grid">
@@ -283,35 +328,84 @@
 
         <!-- Comparison Results -->
         <div v-if="result2?.success && comparisonResult" class="comparison-results">
-          <h4>Allen Relation Results</h4>
-          <p class="comparison-note">
-            Comparing <code class="inline-code">{{ result.value.edtf }}</code> to <code class="inline-code">{{ result2.value.edtf }}</code>
-          </p>
-          <div v-if="comparisonBounds" class="bounds-display">
-            <div class="bounds-line">
-              <span class="bounds-label">{{ result.value.edtf }}:</span>
-              <span class="bounds-values">
-                sMin={{ formatBound(comparisonBounds.a.display.sMin) }}
-                sMax={{ formatBound(comparisonBounds.a.display.sMax) }}
-                eMin={{ formatBound(comparisonBounds.a.display.eMin) }}
-                eMax={{ formatBound(comparisonBounds.a.display.eMax) }}
-                <span v-if="comparisonBounds.a.display.isConvexHull" class="convex-hull-note">
-                  (convex hull of {{ comparisonBounds.a.display.memberCount }} members)
-                </span>
-              </span>
+          <!-- Header Row: Allen Relation Results | Search Relevance Score -->
+          <div class="comparison-header-row">
+            <div class="comparison-header-left">
+              <h4>Allen Relation Results</h4>
+              <p class="comparison-note">
+                Comparing <code class="inline-code">{{ result.value.edtf }}</code> to <code class="inline-code">{{ result2.value.edtf }}</code>
+              </p>
             </div>
-            <div class="bounds-line">
-              <span class="bounds-label">{{ result2.value.edtf }}:</span>
-              <span class="bounds-values">
-                sMin={{ formatBound(comparisonBounds.b.display.sMin) }}
-                sMax={{ formatBound(comparisonBounds.b.display.sMax) }}
-                eMin={{ formatBound(comparisonBounds.b.display.eMin) }}
-                eMax={{ formatBound(comparisonBounds.b.display.eMax) }}
-                <span v-if="comparisonBounds.b.display.isConvexHull" class="convex-hull-note">
-                  (convex hull of {{ comparisonBounds.b.display.memberCount }} members)
-                </span>
-              </span>
+            <div class="comparison-header-right">
+              <h4>Search Relevance Score</h4>
+              <div class="score-value-inline" :class="getScoreClass(overlapScore)">
+                {{ formatScore(overlapScore) }}
+              </div>
+              <div class="score-sublabel">Overlap Score<br>(Jaccard Index)</div>
             </div>
+          </div>
+
+          <!-- Bounds Table -->
+          <div v-if="comparisonBounds" class="bounds-table-container">
+            <table class="bounds-table">
+              <thead>
+                <tr>
+                  <th class="col-label"></th>
+                  <th class="col-start">sMin / sMax</th>
+                  <th class="col-end">eMin / eMax</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="col-label">
+                    <code class="edtf-label">{{ result.value.edtf }}:</code>
+                  </td>
+                  <td class="col-start">
+                    <div class="bound-pair">
+                      <span class="bound-name">sMin=</span><code>{{ formatBound(comparisonBounds.a.display.sMin) }}</code>
+                    </div>
+                    <div class="bound-pair">
+                      <span class="bound-name">sMax=</span><code>{{ formatBound(comparisonBounds.a.display.sMax) }}</code>
+                    </div>
+                  </td>
+                  <td class="col-end">
+                    <div class="bound-pair">
+                      <span class="bound-name">eMin=</span><code>{{ formatBound(comparisonBounds.a.display.eMin) }}</code>
+                    </div>
+                    <div class="bound-pair">
+                      <span class="bound-name">eMax=</span><code>{{ formatBound(comparisonBounds.a.display.eMax) }}</code>
+                    </div>
+                    <span v-if="comparisonBounds.a.display.isConvexHull" class="convex-hull-note">
+                      (convex hull of {{ comparisonBounds.a.display.memberCount }} members)
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="col-label">
+                    <code class="edtf-label">{{ result2.value.edtf }}:</code>
+                  </td>
+                  <td class="col-start">
+                    <div class="bound-pair">
+                      <span class="bound-name">sMin=</span><code>{{ formatBound(comparisonBounds.b.display.sMin) }}</code>
+                    </div>
+                    <div class="bound-pair">
+                      <span class="bound-name">sMax=</span><code>{{ formatBound(comparisonBounds.b.display.sMax) }}</code>
+                    </div>
+                  </td>
+                  <td class="col-end">
+                    <div class="bound-pair">
+                      <span class="bound-name">eMin=</span><code>{{ formatBound(comparisonBounds.b.display.eMin) }}</code>
+                    </div>
+                    <div class="bound-pair">
+                      <span class="bound-name">eMax=</span><code>{{ formatBound(comparisonBounds.b.display.eMax) }}</code>
+                    </div>
+                    <span v-if="comparisonBounds.b.display.isConvexHull" class="convex-hull-note">
+                      (convex hull of {{ comparisonBounds.b.display.memberCount }} members)
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <div class="relations-grid">
@@ -632,9 +726,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList } from '@edtf-ts/core';
+import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList, FuzzyDate } from '@edtf-ts/core';
 import { formatHuman } from '@edtf-ts/core';
-import type { FormatOptions } from '@edtf-ts/core';
+import type { FormatOptions, IFuzzyDate } from '@edtf-ts/core';
 
 const input = ref('1985-04-12');
 const result = ref<any>(null);
@@ -750,6 +844,39 @@ const isDate = computed(() => result.value?.success && isEDTFDate(result.value.v
 const isInterval = computed(() => result.value?.success && isEDTFInterval(result.value.value));
 const isSeason = computed(() => result.value?.success && isEDTFSeason(result.value.value));
 const isSetOrList = computed(() => result.value?.success && (isEDTFSet(result.value.value) || isEDTFList(result.value.value)));
+
+// FuzzyDate wrapper for search bounds and overlap scoring
+const fuzzyDate = computed<IFuzzyDate | null>(() => {
+  if (!result.value?.success) return null;
+  try {
+    return FuzzyDate.wrap(result.value.value);
+  } catch {
+    return null;
+  }
+});
+
+const fuzzyDate2 = computed<IFuzzyDate | null>(() => {
+  if (!result2.value?.success) return null;
+  try {
+    return FuzzyDate.wrap(result2.value.value);
+  } catch {
+    return null;
+  }
+});
+
+const hasSearchPadding = computed(() => {
+  if (!fuzzyDate.value) return false;
+  return fuzzyDate.value.isApproximate || fuzzyDate.value.isUncertain;
+});
+
+const overlapScore = computed(() => {
+  if (!fuzzyDate.value || !fuzzyDate2.value) return 0;
+  try {
+    return fuzzyDate.value.overlapScore(fuzzyDate2.value);
+  } catch {
+    return 0;
+  }
+});
 
 const hasQualification = computed(() => {
   if (!isDate.value) return false;
@@ -1077,6 +1204,20 @@ function formatBound(value: bigint | null): string {
 
 function getRelationClass(truthValue: string): string {
   return `truth-${truthValue?.toLowerCase() || 'unknown'}`;
+}
+
+function formatScore(score: number): string {
+  if (score === 1) return '1.000';
+  if (score === 0) return '0.000';
+  return score.toFixed(3);
+}
+
+function getScoreClass(score: number): string {
+  if (score === 1) return 'score-perfect';
+  if (score === 0) return 'score-none';
+  if (score >= 0.5) return 'score-high';
+  if (score >= 0.1) return 'score-moderate';
+  return 'score-low';
 }
 
 function selectExample(edtf: string) {
@@ -1683,10 +1824,131 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
+.comparison-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.comparison-header-left {
+  flex: 1;
+}
+
+.comparison-header-right {
+  text-align: center;
+  min-width: 180px;
+}
+
+.comparison-header-right h4 {
+  margin-bottom: 0.5rem;
+}
+
+.score-value-inline {
+  font-family: var(--vp-font-family-mono);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.score-value-inline.score-perfect {
+  color: var(--vp-c-green);
+}
+
+.score-value-inline.score-none {
+  color: var(--vp-c-red);
+}
+
+.score-value-inline.score-high {
+  color: var(--vp-c-green);
+}
+
+.score-value-inline.score-moderate {
+  color: var(--vp-c-yellow-dark);
+}
+
+.score-value-inline.score-low {
+  color: var(--vp-c-text-2);
+}
+
+.score-sublabel {
+  font-size: 0.75rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.3;
+}
+
 .comparison-note {
   color: var(--vp-c-text-2);
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   font-size: 0.85rem;
+}
+
+/* Bounds Table */
+.bounds-table-container {
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.bounds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.bounds-table th,
+.bounds-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.bounds-table th {
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.bounds-table .col-label {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.bounds-table .edtf-label {
+  font-family: var(--vp-font-family-mono);
+  font-weight: 600;
+  color: var(--vp-c-brand);
+  background: none;
+  padding: 0;
+}
+
+.bound-pair {
+  margin-bottom: 0.25rem;
+}
+
+.bound-pair:last-child {
+  margin-bottom: 0;
+}
+
+.bound-name {
+  color: var(--vp-c-text-2);
+  font-family: var(--vp-font-family-mono);
+}
+
+.bound-pair code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.75rem;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-soft);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
 }
 
 .inline-code {
@@ -1776,40 +2038,6 @@ onMounted(() => {
 .truth-unknown .relation-value {
   background: var(--vp-c-bg-soft);
   color: var(--vp-c-text-2);
-}
-
-/* Bounds display */
-.bounds-display {
-  margin-bottom: 0.75rem;
-  padding: 0.5rem;
-  background: var(--vp-c-bg);
-  border-radius: 4px;
-  font-size: 0.75rem;
-  line-height: 1.4;
-}
-
-.bounds-line {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.bounds-line:last-child {
-  margin-bottom: 0;
-}
-
-.bounds-label {
-  font-family: var(--vp-font-family-mono);
-  font-weight: 600;
-  color: var(--vp-c-brand);
-  min-width: 120px;
-  flex-shrink: 0;
-}
-
-.bounds-values {
-  font-family: var(--vp-font-family-mono);
-  color: var(--vp-c-text-2);
-  word-break: break-all;
 }
 
 .convex-hull-note {
@@ -1911,6 +2139,30 @@ onMounted(() => {
 
   .variations-grid {
     grid-template-columns: 1fr;
+  }
+
+  .comparison-header-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .comparison-header-right {
+    width: 100%;
+    padding-top: 1rem;
+    border-top: 1px solid var(--vp-c-divider);
+  }
+
+  .bounds-table {
+    font-size: 0.7rem;
+  }
+
+  .bounds-table th,
+  .bounds-table td {
+    padding: 0.35rem 0.5rem;
+  }
+
+  .score-value-inline {
+    font-size: 2rem;
   }
 }
 
@@ -2018,5 +2270,178 @@ onMounted(() => {
   font-size: 0.9rem;
   color: var(--vp-c-text-1);
   font-family: var(--vp-font-family-mono);
+}
+
+/* Search Bounds Section */
+.search-bounds-section {
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+}
+
+.search-bounds-section h4 {
+  color: var(--vp-c-brand);
+}
+
+.section-description {
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+  margin-bottom: 0.75rem;
+}
+
+.bounds-comparison {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--vp-c-bg);
+  border-radius: 4px;
+}
+
+.bounds-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bounds-type {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+}
+
+.bounds-type.bounds-expanded {
+  color: var(--vp-c-brand);
+}
+
+.bounds-arrow {
+  font-size: 1.25rem;
+  color: var(--vp-c-text-3);
+  flex-shrink: 0;
+}
+
+.bounds-values-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bound-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.bound-item.bound-expanded code {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand);
+}
+
+.bound-label {
+  font-weight: 500;
+  color: var(--vp-c-text-2);
+  min-width: 35px;
+}
+
+.padding-info {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--vp-c-divider);
+  font-size: 0.8rem;
+}
+
+.padding-label {
+  color: var(--vp-c-text-2);
+  margin-right: 0.5rem;
+}
+
+/* Overlap Score Display */
+.overlap-score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--vp-c-bg-soft);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.score-value {
+  font-family: var(--vp-font-family-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+}
+
+.score-value.score-perfect {
+  color: var(--vp-c-green);
+  background: var(--vp-c-green-soft);
+}
+
+.score-value.score-none {
+  color: var(--vp-c-red);
+  background: var(--vp-c-red-soft);
+}
+
+.score-value.score-high {
+  color: var(--vp-c-green);
+}
+
+.score-value.score-moderate {
+  color: var(--vp-c-yellow-dark);
+}
+
+.score-value.score-low {
+  color: var(--vp-c-text-2);
+}
+
+.score-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+}
+
+.score-description {
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+  font-style: italic;
+}
+
+.score-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--vp-c-bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--vp-c-red), var(--vp-c-yellow), var(--vp-c-green));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.current-date-note {
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .bounds-comparison {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bounds-arrow {
+    transform: rotate(90deg);
+    text-align: center;
+  }
 }
 </style>

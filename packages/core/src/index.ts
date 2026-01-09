@@ -229,4 +229,13 @@ export {
   type FuzzyDateParseResult,
   type FuzzyDateInput,
   type FuzzyDateType,
+  // Search constants for discovery features
+  ONE_DAY_MS,
+  ONE_MONTH_MS,
+  ONE_YEAR_MS,
+  UNCERTAIN_MULTIPLIER,
+  APPROXIMATE_MULTIPLIER,
+  UNCERTAIN_APPROXIMATE_MULTIPLIER,
+  getSearchPadding,
+  getUnitForPrecision,
 } from './fuzzy-date/index.js';

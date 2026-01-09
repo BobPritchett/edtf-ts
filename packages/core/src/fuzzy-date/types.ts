@@ -42,7 +42,7 @@ export interface IFuzzyDate {
   readonly precision: Precision;
 
   // ============================================================
-  // Temporal Bounds
+  // Temporal Bounds (Strict EDTF)
   // ============================================================
 
   /** Earliest possible date (clamped to JS Date range) */
@@ -55,6 +55,36 @@ export interface IFuzzyDate {
   readonly maxMs: bigint;
   /** True if min/max were clamped due to JS Date limitations */
   readonly isBoundsClamped: boolean | undefined;
+
+  // ============================================================
+  // Search Bounds (Heuristically Expanded for Discovery)
+  // ============================================================
+
+  /**
+   * Heuristic "earliest" bound for search purposes.
+   * Expands the strict min based on uncertainty/approximation qualifiers.
+   * Clamped to JS Date range.
+   */
+  readonly searchMin: Date;
+
+  /**
+   * Heuristic "latest" bound for search purposes.
+   * Expands the strict max based on uncertainty/approximation qualifiers.
+   * Clamped to JS Date range.
+   */
+  readonly searchMax: Date;
+
+  /**
+   * Heuristic "earliest" bound as epoch milliseconds (bigint, always accurate).
+   * Expands the strict minMs based on uncertainty/approximation qualifiers.
+   */
+  readonly searchMinMs: bigint;
+
+  /**
+   * Heuristic "latest" bound as epoch milliseconds (bigint, always accurate).
+   * Expands the strict maxMs based on uncertainty/approximation qualifiers.
+   */
+  readonly searchMaxMs: bigint;
 
   // ============================================================
   // Uncertainty Properties
@@ -141,6 +171,29 @@ export interface IFuzzyDate {
 
   /** Get normalized shape for comparison operations */
   normalize(): Shape;
+
+  // ============================================================
+  // Overlap Scoring (for Search Relevance)
+  // ============================================================
+
+  /**
+   * Calculate the Jaccard Index (Intersection over Union) with another FuzzyDate.
+   * Uses search bounds for both dates to maximize discovery potential.
+   *
+   * @param other - Another FuzzyDate, EDTFBase, or JS Date to compare against
+   * @returns Number between 0.0 (no overlap) and 1.0 (perfect match)
+   *
+   * @example
+   * const query = FuzzyDate.parse('1919');
+   * const exact1919 = FuzzyDate.parse('1919');
+   * const circa1919 = FuzzyDate.parse('1919~');
+   * const circa1920s = FuzzyDate.parse('192X~');
+   *
+   * query.overlapScore(exact1919);  // 1.0 (perfect match)
+   * query.overlapScore(circa1919);  // ~0.8 (high overlap)
+   * query.overlapScore(circa1920s); // ~0.05 (low but non-zero)
+   */
+  overlapScore(other: FuzzyDateInput): number;
 }
 
 /**

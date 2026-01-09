@@ -19,10 +19,12 @@ export class FuzzyDateSet extends FuzzyDateBase implements IFuzzyDateSet {
   }
 
   /** Cached wrapped values */
-  private _values: IFuzzyDate[] | undefined;
+  private _values: IFuzzyDate[];
 
   constructor(inner: EDTFSet) {
     super(inner);
+    // Pre-compute wrapped values before freezing
+    this._values = inner.values.map(v => FuzzyDateBase.wrap(v));
     Object.freeze(this);
   }
 
@@ -31,9 +33,6 @@ export class FuzzyDateSet extends FuzzyDateBase implements IFuzzyDateSet {
   // ============================================================
 
   get values(): IFuzzyDate[] {
-    if (this._values === undefined) {
-      this._values = this._inner.values.map(v => FuzzyDateBase.wrap(v));
-    }
     return this._values;
   }
 

@@ -5,6 +5,8 @@
 import type { EDTFInterval, EDTFDate } from '../types/index.js';
 import type { IFuzzyDateInterval, IFuzzyDate, IFuzzyDateDate } from './types.js';
 import { FuzzyDateBase } from './base.js';
+import { getSearchPadding } from './search-constants.js';
+import { dateFromMs } from '../core-utils/date-helpers.js';
 
 /**
  * FuzzyDate wrapper for EDTFInterval objects.
@@ -80,6 +82,52 @@ export class FuzzyDateInterval extends FuzzyDateBase implements IFuzzyDateInterv
     const startHasUnspecified = this.start?.hasUnspecified ?? false;
     const endHasUnspecified = this.end?.hasUnspecified ?? false;
     return startHasUnspecified || endHasUnspecified;
+  }
+
+  // ============================================================
+  // Search Bounds (Interval-specific: separate start/end padding)
+  // ============================================================
+
+  /**
+   * Override search min to use start's qualifiers.
+   * For intervals, the start date's uncertainty/approximation affects the search min.
+   */
+  override get searchMinMs(): bigint {
+    // For open start, don't add extra padding beyond strict bounds
+    if (!this.start || this.isOpenStart) {
+      return this.minMs;
+    }
+    const startPadding = getSearchPadding(
+      this.start.precision,
+      this.start.isApproximate,
+      this.start.isUncertain
+    );
+    return this.minMs - startPadding;
+  }
+
+  /**
+   * Override search max to use end's qualifiers.
+   * For intervals, the end date's uncertainty/approximation affects the search max.
+   */
+  override get searchMaxMs(): bigint {
+    // For open end, don't add extra padding beyond strict bounds
+    if (!this.end || this.isOpenEnd) {
+      return this.maxMs;
+    }
+    const endPadding = getSearchPadding(
+      this.end.precision,
+      this.end.isApproximate,
+      this.end.isUncertain
+    );
+    return this.maxMs + endPadding;
+  }
+
+  override get searchMin(): Date {
+    return dateFromMs(this.searchMinMs);
+  }
+
+  override get searchMax(): Date {
+    return dateFromMs(this.searchMaxMs);
   }
 
   // ============================================================

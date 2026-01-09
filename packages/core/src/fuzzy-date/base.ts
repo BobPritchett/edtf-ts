@@ -22,8 +22,10 @@ import type { ComparisonMode } from '../comparators.js';
 import type { FormatOptions } from '../formatters.js';
 import type { IFuzzyDate, FuzzyDateInput, FuzzyDateParseResult } from './types.js';
 import { FuzzyDateParseError } from './types.js';
+import { getSearchPadding } from './search-constants.js';
 
 import { parse } from '../parser.js';
+import { dateFromMs } from '../core-utils/date-helpers.js';
 import { normalize } from '../normalization/index.js';
 import { compare } from '../comparators.js';
 import { formatHuman, formatISO, formatRange } from '../formatters.js';
@@ -124,6 +126,42 @@ export abstract class FuzzyDateBase implements IFuzzyDate {
 
   get isBoundsClamped(): boolean | undefined {
     return this._inner.isBoundsClamped;
+  }
+
+  // ============================================================
+  // Search Bounds (Heuristically Expanded for Discovery)
+  // ============================================================
+
+  /**
+   * Heuristic "earliest" bound for search purposes.
+   * Expands the strict min based on uncertainty/approximation qualifiers.
+   */
+  get searchMinMs(): bigint {
+    const padding = getSearchPadding(this.precision, this.isApproximate, this.isUncertain);
+    return this.minMs - padding;
+  }
+
+  /**
+   * Heuristic "latest" bound for search purposes.
+   * Expands the strict max based on uncertainty/approximation qualifiers.
+   */
+  get searchMaxMs(): bigint {
+    const padding = getSearchPadding(this.precision, this.isApproximate, this.isUncertain);
+    return this.maxMs + padding;
+  }
+
+  /**
+   * Heuristic "earliest" bound as Date (clamped to JS Date range).
+   */
+  get searchMin(): Date {
+    return dateFromMs(this.searchMinMs);
+  }
+
+  /**
+   * Heuristic "latest" bound as Date (clamped to JS Date range).
+   */
+  get searchMax(): Date {
+    return dateFromMs(this.searchMaxMs);
   }
 
   // ============================================================
@@ -292,6 +330,51 @@ export abstract class FuzzyDateBase implements IFuzzyDate {
 
   normalize(): Shape {
     return normalize(this._inner);
+  }
+
+  // ============================================================
+  // Overlap Scoring (for Search Relevance)
+  // ============================================================
+
+  /**
+   * Calculate the Jaccard Index (Intersection over Union) with another FuzzyDate.
+   * Uses search bounds for both dates to maximize discovery potential.
+   *
+   * @param other - Another FuzzyDate, EDTFBase, or JS Date to compare against
+   * @returns Number between 0.0 (no overlap) and 1.0 (perfect match)
+   */
+  overlapScore(other: FuzzyDateInput): number {
+    // Get search bounds for the other input
+    const otherFuzzy = other instanceof FuzzyDateBase
+      ? other
+      : FuzzyDateBase.wrap(this._unwrap(other));
+
+    const startA = this.searchMinMs;
+    const endA = this.searchMaxMs;
+    const startB = otherFuzzy.searchMinMs;
+    const endB = otherFuzzy.searchMaxMs;
+
+    // Calculate intersection: max of starts to min of ends
+    const interStart = startA > startB ? startA : startB;
+    const interEnd = endA < endB ? endA : endB;
+
+    const intersection = interEnd - interStart;
+
+    // If intersection is negative or zero, they don't overlap
+    if (intersection <= 0n) return 0.0;
+
+    // Calculate union: min of starts to max of ends
+    const unionStart = startA < startB ? startA : startB;
+    const unionEnd = endA > endB ? endA : endB;
+
+    const union = unionEnd - unionStart;
+
+    // Edge case: point comparison (both are same instant)
+    if (union === 0n) return 1.0;
+
+    // Calculate Jaccard Index (IoU)
+    // Convert to Number for division (BigInt doesn't support decimals)
+    return Number(intersection) / Number(union);
   }
 
   // ============================================================

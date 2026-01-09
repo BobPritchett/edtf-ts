@@ -30,6 +30,7 @@ Yet most software still insists on **rigid ISO 8601 dates**, forcing humans to p
 - **Tree-shakeable** - Import only what you need
 - **Zero runtime dependencies** - Lightweight core package
 - **BigInt support** - Handle extreme historical dates beyond JavaScript Date limits
+- **Search & Discovery** - Heuristic search bounds and overlap scoring for relevance ranking
 - **Interactive playground** - Try EDTF parsing and comparison in your browser
 
 ## Quick Start
@@ -274,6 +275,7 @@ Full documentation is available at **[bobpritchett.github.io/edtf-ts](https://bo
 - **[Getting Started Guide](https://bobpritchett.github.io/edtf-ts/guide/getting-started)** - Learn the basics
 - **[API Reference](https://bobpritchett.github.io/edtf-ts/api/core)** - Complete API documentation
 - **[Comparison Guide](https://bobpritchett.github.io/edtf-ts/guide/comparison)** - Understanding temporal reasoning
+- **[Search & Discovery](https://bobpritchett.github.io/edtf-ts/guide/search-and-discovery)** - Heuristic bounds and overlap scoring
 - **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playground)** - Try it in your browser
 
 ## EDTF Specification Support
@@ -367,6 +369,78 @@ console.log(normal.minMs); // 1718409600000n
 ```
 
 This enables accurate temporal reasoning for astronomical and geological timescales while maintaining compatibility with standard JavaScript Date APIs for typical use cases.
+
+## Search Bounds and Overlap Scoring
+
+When searching for dates, strict EDTF bounds may be too precise. A user searching for "1920" might want results that are "circa 1920" or "around 1920". The library provides **heuristic search bounds** that expand based on uncertainty qualifiers, plus an **overlap score** for ranking results by relevance.
+
+### Search Bounds
+
+Every FuzzyDate has both strict bounds (`min`/`max`) and expanded search bounds (`searchMin`/`searchMax`):
+
+```typescript
+import { FuzzyDate } from '@edtf-ts/core';
+
+const circa1920 = FuzzyDate.parse('1920~'); // Approximate year
+
+// Strict EDTF bounds: exactly 1920
+console.log(circa1920.min.getFullYear()); // 1920
+console.log(circa1920.max.getFullYear()); // 1920
+
+// Heuristic search bounds: expanded by ±2 years for approximate
+console.log(circa1920.searchMin.getFullYear()); // ~1918
+console.log(circa1920.searchMax.getFullYear()); // ~1922
+```
+
+### Padding Rules
+
+| Qualifier | Symbol | Padding | Meaning |
+|-----------|--------|---------|---------|
+| Uncertain | `?` | ±1 unit | "I think it was..." |
+| Approximate | `~` | ±2 units | "Around..." / "Circa" |
+| Both | `%` | ±3 units | "Roughly around..." |
+
+The unit depends on precision: year (~365.25 days), month (~30.44 days), or day (24 hours).
+
+### Overlap Scoring (Jaccard Index)
+
+The `overlapScore()` method calculates how well two date ranges overlap, returning 0.0 (no overlap) to 1.0 (perfect match):
+
+```typescript
+import { FuzzyDate } from '@edtf-ts/core';
+
+const query = FuzzyDate.parse('1919');
+const exact1919 = FuzzyDate.parse('1919');
+const circa1920 = FuzzyDate.parse('1920~');
+const farAway = FuzzyDate.parse('1950');
+
+query.overlapScore(exact1919);  // 1.0 - perfect match
+query.overlapScore(circa1920);  // ~0.2 - partial overlap (1920~ expands to include 1918-1922)
+query.overlapScore(farAway);    // 0.0 - no overlap
+```
+
+### Ranking Search Results
+
+Use overlap scoring to rank results by relevance:
+
+```typescript
+import { FuzzyDate } from '@edtf-ts/core';
+
+const query = FuzzyDate.parse('1919');
+
+const results = [
+  { id: 1, date: FuzzyDate.parse('1919') },
+  { id: 2, date: FuzzyDate.parse('1920~') },
+  { id: 3, date: FuzzyDate.parse('192X') },
+];
+
+// Sort by overlap score (highest first)
+const ranked = results
+  .map(r => ({ ...r, score: query.overlapScore(r.date) }))
+  .sort((a, b) => b.score - a.score);
+
+// Results ranked by relevance to "1919"
+```
 
 ## Who Is This For?
 

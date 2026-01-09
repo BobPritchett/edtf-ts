@@ -209,6 +209,18 @@ export { FuzzyDateSeason } from './season.js';
 export { FuzzyDateSet } from './set.js';
 export { FuzzyDateList } from './list.js';
 
+// Re-export search constants for discovery features
+export {
+  ONE_DAY_MS,
+  ONE_MONTH_MS,
+  ONE_YEAR_MS,
+  UNCERTAIN_MULTIPLIER,
+  APPROXIMATE_MULTIPLIER,
+  UNCERTAIN_APPROXIMATE_MULTIPLIER,
+  getSearchPadding,
+  getUnitForPrecision,
+} from './search-constants.js';
+
 /**
  * Type alias for FuzzyDate instances.
  * Use this when you need to type a variable that holds any FuzzyDate.
