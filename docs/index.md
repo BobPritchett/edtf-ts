@@ -72,54 +72,63 @@ Install the package:
 ::: code-group
 
 ```bash [pnpm]
-pnpm add @edtf-ts
+pnpm add @edtf-ts/core
 ```
 
 ```bash [npm]
-npm install @edtf-ts
+npm install @edtf-ts/core
 ```
 
 ```bash [yarn]
-yarn add @edtf-ts
+yarn add @edtf-ts/core
 ```
 
 :::
 
-Parse your first EDTF date:
+Parse your first EDTF date with the **FuzzyDate API**:
 
 ```typescript
-import { parse, isEDTFDate, isEDTFInterval } from '@edtf-ts/core';
+import { FuzzyDate } from '@edtf-ts/core';
 
-// Parse a simple date
-const result = parse('1985-04-12');
+// Parse EDTF strings into FuzzyDate objects
+const date = FuzzyDate.parse('1985-04-12');
+console.log(date.year);           // 1985
+console.log(date.month);          // 4
+console.log(date.day);            // 12
+console.log(date.format());       // "April 12, 1985"
 
-if (result.success && isEDTFDate(result.value)) {
-  console.log(result.value.year); // 1985
-  console.log(result.value.month); // 4
-  console.log(result.value.day); // 12
-  console.log(result.value.min); // Date object
-  console.log(result.value.max); // Date object
+// Work with uncertainty naturally
+const uncertain = FuzzyDate.parse('1984?');
+console.log(uncertain.isUncertain);   // true
+console.log(uncertain.format());      // "1984 (uncertain)"
+
+// Approximate dates
+const circa = FuzzyDate.parse('1950~');
+console.log(circa.isApproximate);     // true
+console.log(circa.format());          // "circa 1950"
+
+// Unspecified digits
+const decade = FuzzyDate.parse('198X');
+console.log(decade.hasUnspecified);   // true
+console.log(decade.min.getFullYear()); // 1980
+console.log(decade.max.getFullYear()); // 1989
+
+// Parse intervals and iterate
+const interval = FuzzyDate.parse('1990/2000');
+for (const year of interval.by('year')) {
+  console.log(year.edtf);  // '1990', '1991', ..., '2000'
 }
 
-// Parse uncertain dates
-const uncertain = parse('1984?');
-if (uncertain.success && isEDTFDate(uncertain.value)) {
-  console.log(uncertain.value.qualification?.uncertain); // true
-}
+// Temporal comparison with four-valued logic
+const y1980 = FuzzyDate.parse('1980');
+const y1990 = FuzzyDate.parse('1990');
+y1980.isBefore(y1990);      // 'YES' - definitely before
+decade.equals(y1980);       // 'MAYBE' - could be 1980
 
-// Parse intervals
-const interval = parse('1990/2000');
-if (interval.success && isEDTFInterval(interval.value)) {
-  for (const year of interval.value.by('year')) {
-    console.log(year.edtf);
-  }
-}
-
-// These will fail - parse returns { success: false }
-parse('April 12, 1985');  // ❌ Natural language, not EDTF syntax
-parse('1985/13/01');      // ❌ Invalid month (13)
-parse('85-04-12');        // ❌ Two-digit year not allowed
-parse('1985-04-12/1980'); // ❌ Interval end before start
+// These will throw FuzzyDateParseError
+FuzzyDate.parse('April 12, 1985'); // ❌ Natural language, not EDTF syntax
+FuzzyDate.parse('1985-13-01');     // ❌ Invalid month (13)
+FuzzyDate.parse('85-04-12');       // ❌ Two-digit year not allowed
 ```
 
 ## Humans Speak in Time Ranges, Not Timestamps
@@ -181,16 +190,15 @@ So historians infer: *Born circa late April 1564*
 With EDTF, that uncertainty is preserved:
 
 ```typescript
-import { parse, formatHuman } from '@edtf-ts/core';
+import { FuzzyDate } from '@edtf-ts/core';
 
 // Approximate month
-parse('1564-04~');
-formatHuman(parse('1564-04~').value); // "circa April 1564"
+const birth = FuzzyDate.parse('1564-04~');
+console.log(birth.format());  // "circa April 1564"
 
 // Or as an interval
-parse('1564-04-20/1564-04-26');
-formatHuman(parse('1564-04-20/1564-04-26').value);
-// "April 20, 1564 to April 26, 1564"
+const interval = FuzzyDate.parse('1564-04-20/1564-04-26');
+console.log(interval.format());  // "April 20, 1564 to April 26, 1564"
 ```
 
 No false precision. No invented birthday. Just honest data.
@@ -211,16 +219,16 @@ Forcing these into `YYYY-MM-DD` destroys information. EDTF preserves it.
 Convert EDTF dates back to natural language with full i18n support:
 
 ```typescript
-import { parse, formatHuman } from '@edtf-ts/core';
+import { FuzzyDate } from '@edtf-ts/core';
 
-formatHuman(parse('1985-04-12').value); // "April 12, 1985"
-formatHuman(parse('1984?').value);      // "1984 (uncertain)"
-formatHuman(parse('1950~').value);      // "circa 1950"
-formatHuman(parse('2001-21').value);    // "Spring 2001"
+FuzzyDate.parse('1985-04-12').format();  // "April 12, 1985"
+FuzzyDate.parse('1984?').format();       // "1984 (uncertain)"
+FuzzyDate.parse('1950~').format();       // "circa 1950"
+FuzzyDate.parse('2001-21').format();     // "Spring 2001"
 
 // Localization support
-formatHuman(parse('1985-04-12').value, { locale: 'de-DE' }); // "12. April 1985"
-formatHuman(parse('1985-04-12').value, { locale: 'ja-JP' }); // "1985年4月12日"
+FuzzyDate.parse('1985-04-12').format({ locale: 'de-DE' });  // "12. April 1985"
+FuzzyDate.parse('1985-04-12').format({ locale: 'ja-JP' });  // "1985年4月12日"
 ```
 
 ## Stop Making People Lie to Databases

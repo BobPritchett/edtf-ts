@@ -73,7 +73,13 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Core Types',
+          text: 'FuzzyDate API',
+          items: [
+            { text: 'FuzzyDate (Recommended)', link: '/specs/fuzzy-date-api' },
+          ],
+        },
+        {
+          text: 'Core Types (Functional)',
           items: [
             { text: 'EDTFDate', link: '/api/types/date' },
             { text: 'EDTFDateTime', link: '/api/types/datetime' },
@@ -90,6 +96,14 @@ export default defineConfig({
             { text: 'Validators', link: '/api/validators' },
             { text: 'Formatters', link: '/api/formatters' },
             { text: 'Comparators', link: '/api/comparators' },
+          ],
+        },
+      ],
+      '/specs/': [
+        {
+          text: 'Specifications',
+          items: [
+            { text: 'FuzzyDate API', link: '/specs/fuzzy-date-api' },
           ],
         },
       ],

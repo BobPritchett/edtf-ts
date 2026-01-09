@@ -90,12 +90,18 @@ interface FuzzyDate {
   readonly level: 0 | 1 | 2
   readonly edtf: string           // Original EDTF string
 
-  // Temporal bounds
+  // Temporal bounds (strict EDTF semantics)
   readonly min: Date              // Earliest possible instant
   readonly max: Date              // Latest possible instant
   readonly minMs: bigint          // Precise epoch ms (for extreme dates)
   readonly maxMs: bigint          // Precise epoch ms
   readonly isBoundsClamped?: boolean  // True if min/max hit JS Date limits
+
+  // Search bounds (heuristically expanded for discovery)
+  readonly searchMin: Date        // Expanded earliest bound
+  readonly searchMax: Date        // Expanded latest bound
+  readonly searchMinMs: bigint    // Expanded earliest (bigint)
+  readonly searchMaxMs: bigint    // Expanded latest (bigint)
 
   // Precision
   readonly precision: 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second'
@@ -134,6 +140,48 @@ interface FuzzyDate.Season {
 }
 ```
 
+### Search Bounds (Discovery Layer)
+
+The `searchMin`/`searchMax` properties provide heuristically expanded bounds for improved search relevance. While `min`/`max` represent strict EDTF semantics, search bounds account for human uncertainty when expressing dates.
+
+**Padding by qualifier:**
+
+| Qualifier | Symbol | Multiplier | Meaning |
+|-----------|--------|------------|---------|
+| None | - | ±0 units | Exact date |
+| Uncertain | `?` | ±1 unit | "I think it was..." |
+| Approximate | `~` | ±2 units | "Around..." / "Circa" |
+| Both | `%` | ±3 units | "Roughly around..." |
+
+**Unit by precision:**
+
+| Precision | Unit Duration |
+|-----------|--------------|
+| Year | ~365.25 days |
+| Month | ~30.44 days |
+| Day | 24 hours |
+
+**Example:**
+
+```typescript
+const circa1920 = FuzzyDate.parse('1920~');
+
+// Strict bounds: Jan 1, 1920 to Dec 31, 1920
+console.log(circa1920.min.getFullYear());  // 1920
+console.log(circa1920.max.getFullYear());  // 1920
+
+// Search bounds: ~1918 to ~1922 (±2 years for approximate)
+console.log(circa1920.searchMin.getFullYear());  // ~1918
+console.log(circa1920.searchMax.getFullYear());  // ~1922
+```
+
+**Special cases:**
+- Intervals: Start and end qualifiers are applied separately
+- Seasons: Use month-level precision for padding
+- Sets/Lists: Padding applied to the convex hull (overall min/max)
+
+---
+
 ### Instance Methods: Comparison
 
 Return four-valued `Truth` type for honest uncertainty handling:
@@ -159,6 +207,9 @@ interface FuzzyDate {
 
   // Numeric comparison (for sorting)
   compareTo(other: FuzzyDate | EDTFBase, mode?: CompareMode): number
+
+  // Search relevance scoring (Jaccard Index using search bounds)
+  overlapScore(other: FuzzyDate | EDTFBase | Date): number  // 0.0 to 1.0
 }
 ```
 
