@@ -306,11 +306,22 @@ parseNatural('01/12/1940');              // '1940-01-12' (US) or '1940-12-01' (E
 parseNatural('12.01.1940');              // '1940-01-12' (EU format)
 ```
 
-#### Two-Digit Years
+#### Two-Digit Years (Sliding Window)
+
+Two-digit years are resolved using the **Sliding Window** convention with a -80/+20 year rolling century window based on the current year.
+
 ```typescript
-parseNatural('01/12/85');                // '1985-01-12' (>=30 → 1900s)
-parseNatural('01/12/20');                // '2020-01-12' (<30 → 2000s)
+// Assuming current year is 2026, window spans 1946-2046
+
+parseNatural('01/12/25');                // '2025-01-12' (within +20 window)
+parseNatural('01/12/38');                // '2038-01-12' (within +20 window)
+parseNatural('01/12/46');                // '2046-01-12' (within +20 window)
+parseNatural('01/12/47');                // '1947-01-12' (beyond +20, previous century)
+parseNatural('01/12/50');                // '1950-01-12' (beyond +20, previous century)
+parseNatural('01/12/99');                // '1999-01-12' (beyond +20, previous century)
 ```
+
+This approach is preferred over fixed pivot years (like Excel's 2029 or SQL Server's 2049) because it remains accurate as time progresses. The -80/+20 split reflects that most two-digit year references are historical, while still accommodating near-future dates.
 
 ### Uncertainty & Approximation
 
@@ -448,6 +459,19 @@ The parser recognizes ambiguous input and returns multiple interpretations with 
 
 ### Numeric Date Formats
 
+Slash-separated numeric dates like `01/12/1940` are inherently ambiguous - they could be interpreted as either MM/DD/YYYY (US format) or DD/MM/YYYY (EU format).
+
+#### Disambiguation Rules
+
+1. **Unambiguous cases**: If either number is greater than 12, there's only one valid interpretation:
+
+```typescript
+parseNatural('13/01/2020');  // Only: '2020-01-13' (13 can't be a month)
+parseNatural('01/25/2020');  // Only: '2020-01-25' (25 can't be a month)
+```
+
+2. **Ambiguous cases**: When both numbers could be month or day (1-12), both interpretations are returned:
+
 ```typescript
 const results = parseNatural('02/03/2020');
 
@@ -459,6 +483,51 @@ results[0].interpretation;  // 'February 3, 2020 (US format)'
 results[1].edtf;            // '2020-03-02' (DD/MM/YYYY)
 results[1].confidence;      // 0.4
 results[1].interpretation;  // 'March 2, 2020 (EU format)'
+```
+
+#### Locale-Based Ordering
+
+The `locale` option determines which interpretation is preferred. The following country codes use MM/DD/YYYY (US format) as the default:
+
+| Code | Country/Territory |
+|------|-------------------|
+| US   | United States |
+| PH   | Philippines |
+| BZ   | Belize |
+| FM   | Federated States of Micronesia |
+| PW   | Palau |
+| DO   | Dominican Republic |
+| HN   | Honduras |
+| NI   | Nicaragua |
+| PA   | Panama |
+| PR   | Puerto Rico |
+| GU   | Guam |
+| AS   | American Samoa |
+| VI   | US Virgin Islands |
+
+All other locales default to DD/MM/YYYY (EU format), as this is used by the vast majority of countries worldwide (~150-178 countries).
+
+```typescript
+// US locale - MM/DD/YYYY preferred
+parseNatural('01/12/1940', { locale: 'en-US' });
+// [
+//   { edtf: '1940-01-12', confidence: 0.6 },  // January 12 (US)
+//   { edtf: '1940-12-01', confidence: 0.4 }   // December 1 (EU)
+// ]
+
+// UK locale - DD/MM/YYYY preferred
+parseNatural('01/12/1940', { locale: 'en-GB' });
+// [
+//   { edtf: '1940-12-01', confidence: 0.6 },  // December 1 (EU)
+//   { edtf: '1940-01-12', confidence: 0.4 }   // January 12 (US)
+// ]
+
+// Philippines locale - MM/DD/YYYY preferred (US influence)
+parseNatural('01/12/1940', { locale: 'en-PH' });
+// [
+//   { edtf: '1940-01-12', confidence: 0.6 },  // January 12 (US)
+//   { edtf: '1940-12-01', confidence: 0.4 }   // December 1 (EU)
+// ]
 ```
 
 ### Resolving Ambiguity

@@ -51,7 +51,8 @@
       "Bash(comm:*)",
       "Bash(readlink:*)",
       "Bash(pnpm run test:*)",
-      "Bash(timeout 5 pnpm run:*)"
+      "Bash(timeout 5 pnpm run:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

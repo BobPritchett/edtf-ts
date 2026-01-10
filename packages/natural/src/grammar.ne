@@ -45,8 +45,39 @@ function pad2(n) { return String(n).padStart(2, '0'); }
 function pad4(n) { return String(n).padStart(4, '0'); }
 
 function twoDigitYear(yy) {
+  // Resolve 2-digit year to 4-digit year using the "Sliding Window" convention.
+  // This uses a -80/+20 rolling century window based on the current year.
+  //
+  // For example, if the current year is 2026:
+  //   - Window spans 1946 to 2046
+  //   - "25" -> 2025 (within +20 future window)
+  //   - "38" -> 2038 (within +20 future window)
+  //   - "50" -> 1950 (beyond +20, falls into -80 past window)
+  //   - "99" -> 1999 (beyond +20, falls into -80 past window)
+  //
+  // This approach is preferred over fixed pivot years (like Excel's 2029 or SQL Server's 2049)
+  // because it remains accurate as time progresses. The -80/+20 split reflects that most
+  // two-digit year references are historical, while still accommodating near-future dates.
+  //
+  // See: https://www.youtube.com/watch?v=-5wpm-gesOY (Computerphile: Time & Date glitches)
   const year = parseInt(yy, 10);
-  return year >= 30 ? 1900 + year : 2000 + year;
+  const currentYear = new Date().getFullYear();
+
+  // Calculate the sliding window boundaries
+  const futureWindow = 20;  // Years into the future
+  const maxFutureYear = currentYear + futureWindow;
+
+  // Determine which century the 2-digit year falls into
+  const currentCentury = Math.floor(currentYear / 100) * 100;
+  const thisOption = currentCentury + year;
+  const prevOption = thisOption - 100;
+
+  // If this century's interpretation is within the +20 future window, use it
+  // Otherwise, use the previous century
+  if (thisOption <= maxFutureYear) {
+    return thisOption;
+  }
+  return prevOption;
 }
 
 // Check if a year is a leap year
@@ -155,6 +186,54 @@ function buildBCECenturyModifierInterval(centuryNum, modifier) {
 
 function bceToBCE(year) {
   return -(parseInt(year, 10) - 1);
+}
+
+// Build slash-delimited date result
+// Returns both possible interpretations when ambiguous, or just one when unambiguous
+function buildSlashDate(first, second, yearStr) {
+  const firstNum = parseInt(first, 10);
+  const secondNum = parseInt(second, 10);
+  const year = yearStr.length === 2 ? twoDigitYear(yearStr) : parseInt(yearStr, 10);
+
+  const isFirstValidMonth = firstNum >= 1 && firstNum <= 12;
+  const isSecondValidMonth = secondNum >= 1 && secondNum <= 12;
+  const isFirstValidDay = firstNum >= 1 && firstNum <= 31;
+  const isSecondValidDay = secondNum >= 1 && secondNum <= 31;
+
+  // If first number > 12, it must be a day (EU format: DD/MM/YYYY)
+  if (firstNum > 12 && isFirstValidDay && isSecondValidMonth) {
+    return {
+      type: 'date',
+      edtf: `${pad4(year)}-${pad2(secondNum)}-${pad2(firstNum)}`,
+      confidence: 0.9,
+      ambiguous: false
+    };
+  }
+
+  // If second number > 12, it must be a day (US format: MM/DD/YYYY)
+  if (secondNum > 12 && isSecondValidDay && isFirstValidMonth) {
+    return {
+      type: 'date',
+      edtf: `${pad4(year)}-${pad2(firstNum)}-${pad2(secondNum)}`,
+      confidence: 0.9,
+      ambiguous: false
+    };
+  }
+
+  // Both could be valid - ambiguous case
+  // Return with US interpretation (MM/DD/YYYY) as the primary EDTF
+  // The parser will generate both interpretations in post-processing
+  if (isFirstValidMonth && isSecondValidDay) {
+    return {
+      type: 'date',
+      edtf: `${pad4(year)}-${pad2(firstNum)}-${pad2(secondNum)}`,
+      confidence: 0.5,
+      ambiguous: true
+    };
+  }
+
+  // Invalid date
+  return null;
 }
 
 // Build EDTF with partial qualifications
@@ -779,6 +858,32 @@ datevalue_base ->
         const fullYear = year >= 30 ? 1900 + year : 2000 + year;
         return { type: 'date', edtf: `${String(fullYear).substring(0, 3)}X`, confidence: 0.9 };
       } %}
+  # Slash-delimited partial date: MM/YYYY (month and 4-digit year only)
+  | slash_date_num "/" digit digit digit digit
+      {% d => {
+        const month = parseInt(d[0], 10);
+        const year = d[2] + d[3] + d[4] + d[5];
+        if (month >= 1 && month <= 12) {
+          return { type: 'date', edtf: `${year}-${pad2(month)}`, confidence: 0.9 };
+        }
+        return null;
+      } %}
+  # Slash-delimited dates: MM/DD/YYYY or DD/MM/YYYY (4-digit year)
+  | slash_date_num "/" slash_date_num "/" digit digit digit digit
+      {% d => {
+        const first = d[0];
+        const second = d[2];
+        const year = d[4] + d[5] + d[6] + d[7];
+        return buildSlashDate(first, second, year);
+      } %}
+  # Slash-delimited dates with 2-digit year: MM/DD/YY or DD/MM/YY
+  | slash_date_num "/" slash_date_num "/" digit digit
+      {% d => {
+        const first = d[0];
+        const second = d[2];
+        const year = d[4] + d[5];
+        return buildSlashDate(first, second, year);
+      } %}
   | year_num _ "-ish"
       {% d => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 }) %}
   | year_num "ish"
@@ -937,5 +1042,10 @@ spelled_decade ->
   | "seventies"i {% () => '7' %}
   | "eighties"i {% () => '8' %}
   | "nineties"i {% () => '9' %}
+
+# Slash-delimited date number (1 or 2 digits for month/day)
+slash_date_num ->
+    digit digit {% d => d[0] + d[1] %}
+  | digit {% d => d[0] %}
 
 digit -> [0-9] {% id %}

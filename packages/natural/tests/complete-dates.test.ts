@@ -74,28 +74,49 @@ describe('Complete Dates', () => {
     });
   });
 
-  describe('Two-Digit Years', () => {
-    it('should interpret 40 as 1940 (century window)', () => {
-      const results = parseNatural('01/12/40');
-      expect(results.length).toBeGreaterThanOrEqual(1);
+  describe('Two-Digit Years (Sliding Window: -80/+20)', () => {
+    // The sliding window convention uses current year +20 as the pivot.
+    // Years within the +20 future window use the current century.
+    // Years beyond +20 fall back to the previous century.
+    //
+    // Example with current year 2026:
+    //   Window: 1946 - 2046
+    //   25 → 2025 (within +20)
+    //   40 → 2040 (within +20)
+    //   50 → 1950 (beyond +20)
+    //   99 → 1999 (beyond +20)
 
-      const result = results.find((r) => r.edtf.startsWith('1940'));
-      expect(result).toBeDefined();
-    });
-
-    it('should interpret 99 as 1999', () => {
-      const results = parseNatural('01/12/99');
-      expect(results.length).toBeGreaterThanOrEqual(1);
-
-      const result = results.find((r) => r.edtf.startsWith('1999'));
-      expect(result).toBeDefined();
-    });
-
-    it('should interpret 25 as 2025', () => {
+    it('should interpret 25 as 2025 (within +20 future window)', () => {
       const results = parseNatural('01/12/25');
       expect(results.length).toBeGreaterThanOrEqual(1);
 
       const result = results.find((r) => r.edtf.startsWith('2025'));
+      expect(result).toBeDefined();
+    });
+
+    it('should interpret 40 as 2040 (within +20 future window)', () => {
+      const results = parseNatural('01/12/40');
+      expect(results.length).toBeGreaterThanOrEqual(1);
+
+      // With sliding window (current year + 20), 40 is within the future window
+      const result = results.find((r) => r.edtf.startsWith('2040'));
+      expect(result).toBeDefined();
+    });
+
+    it('should interpret 50 as 1950 (beyond +20, previous century)', () => {
+      const results = parseNatural('01/12/50');
+      expect(results.length).toBeGreaterThanOrEqual(1);
+
+      // 50 is beyond the +20 window, falls to previous century
+      const result = results.find((r) => r.edtf.startsWith('1950'));
+      expect(result).toBeDefined();
+    });
+
+    it('should interpret 99 as 1999 (beyond +20, previous century)', () => {
+      const results = parseNatural('01/12/99');
+      expect(results.length).toBeGreaterThanOrEqual(1);
+
+      const result = results.find((r) => r.edtf.startsWith('1999'));
       expect(result).toBeDefined();
     });
   });

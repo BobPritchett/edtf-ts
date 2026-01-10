@@ -77,6 +77,90 @@ export class ParseError extends Error {
  * parseNatural('circa 1950');
  * // [{ edtf: '1950~', type: 'date', confidence: 0.95, ... }]
  * ```
+ *
+ * ## Slash-Delimited Dates (MM/DD/YYYY vs DD/MM/YYYY)
+ *
+ * Slash-separated numeric dates like "01/12/1940" are ambiguous - they could be
+ * interpreted as either MM/DD/YYYY (US format) or DD/MM/YYYY (EU format).
+ *
+ * ### Disambiguation Rules
+ *
+ * 1. **Unambiguous cases**: If either the first or second number is greater than 12,
+ *    there's only one valid interpretation:
+ *    - `13/01/2020` → January 13, 2020 (first number > 12, must be day)
+ *    - `01/25/2020` → January 25, 2020 (second number > 12, must be day)
+ *
+ * 2. **Ambiguous cases**: When both numbers could be month or day (1-12), both
+ *    interpretations are returned, ordered by the `locale` option:
+ *    - US locales: MM/DD/YYYY interpretation listed first (confidence: 0.6)
+ *    - Other locales: DD/MM/YYYY interpretation listed first (confidence: 0.6)
+ *
+ * ### Locale-Based Ordering
+ *
+ * The following country codes are treated as MM/DD/YYYY (US format) locales:
+ *
+ * | Code | Country/Territory |
+ * |------|-------------------|
+ * | US   | United States |
+ * | PH   | Philippines |
+ * | BZ   | Belize |
+ * | FM   | Federated States of Micronesia |
+ * | PW   | Palau |
+ * | DO   | Dominican Republic |
+ * | HN   | Honduras |
+ * | NI   | Nicaragua |
+ * | PA   | Panama |
+ * | PR   | Puerto Rico |
+ * | GU   | Guam |
+ * | AS   | American Samoa |
+ * | VI   | US Virgin Islands |
+ *
+ * All other locales default to DD/MM/YYYY (EU format) ordering, as this is used
+ * by the vast majority of countries worldwide (~150-178 countries).
+ *
+ * @example
+ * ```typescript
+ * // US locale - MM/DD/YYYY preferred
+ * parseNatural('01/12/1940', { locale: 'en-US' });
+ * // [
+ * //   { edtf: '1940-01-12', confidence: 0.6 },  // January 12 (US)
+ * //   { edtf: '1940-12-01', confidence: 0.4 }   // December 1 (EU)
+ * // ]
+ *
+ * // UK locale - DD/MM/YYYY preferred
+ * parseNatural('01/12/1940', { locale: 'en-GB' });
+ * // [
+ * //   { edtf: '1940-12-01', confidence: 0.6 },  // December 1 (EU)
+ * //   { edtf: '1940-01-12', confidence: 0.4 }   // January 12 (US)
+ * // ]
+ * ```
+ *
+ * ## Two-Digit Year Handling (Sliding Window)
+ *
+ * Two-digit years in slash-delimited dates (e.g., "01/12/40") are resolved using
+ * the **Sliding Window** convention with a -80/+20 year rolling century window.
+ *
+ * This means the parser assumes two-digit years fall within a 100-year window:
+ * - 80 years in the past
+ * - 20 years in the future
+ *
+ * For example, if the current year is 2026, the window spans 1946-2046:
+ * - `25` → 2025 (within +20 future window)
+ * - `38` → 2038 (within +20 future window)
+ * - `50` → 1950 (beyond +20, falls to previous century)
+ * - `99` → 1999 (beyond +20, falls to previous century)
+ *
+ * This approach is preferred over fixed pivot years (like Excel's 2029 or SQL
+ * Server's 2049) because it remains accurate as time progresses.
+ *
+ * @example
+ * ```typescript
+ * // Assuming current year is 2026
+ * parseNatural('01/12/25');  // → 2025-01-12 (within +20 window)
+ * parseNatural('01/12/40');  // → 2040-01-12 (within +20 window)
+ * parseNatural('01/12/50');  // → 1950-01-12 (beyond +20, previous century)
+ * parseNatural('01/12/99');  // → 1999-01-12 (beyond +20, previous century)
+ * ```
  */
 /**
  * Normalize input text for parsing
@@ -209,6 +293,49 @@ function deduplicateResults(results: ParseResult[]): ParseResult[] {
 }
 
 /**
+ * Countries that primarily use MM/DD/YYYY format.
+ * This is a short list - most of the world uses DD/MM/YYYY.
+ */
+const MDY_COUNTRY_CODES = new Set([
+  'US', // United States
+  'PH', // Philippines
+  'BZ', // Belize
+  'FM', // Federated States of Micronesia
+  'PW', // Palau
+  'DO', // Dominican Republic (mixed, but often MDY)
+  'HN', // Honduras
+  'NI', // Nicaragua
+  'PA', // Panama
+  'PR', // Puerto Rico (US territory)
+  'GU', // Guam (US territory)
+  'AS', // American Samoa (US territory)
+  'VI', // US Virgin Islands
+]);
+
+/**
+ * Check if a locale uses MM/DD/YYYY format based on country code.
+ * Falls back to checking for common US-related locale patterns.
+ */
+function usesMDYFormat(locale: string): boolean {
+  // Extract country code from locale (e.g., 'en-US' -> 'US', 'es-MX' -> 'MX')
+  const parts = locale.split(/[-_]/);
+  if (parts.length >= 2) {
+    const lastPart = parts[parts.length - 1];
+    if (lastPart && MDY_COUNTRY_CODES.has(lastPart.toUpperCase())) {
+      return true;
+    }
+  }
+
+  // Check for direct US patterns without country code separator
+  if (locale.toUpperCase() === 'US' || locale.toLowerCase() === 'en-us') {
+    return true;
+  }
+
+  // Default: assume DD/MM/YYYY (most of the world)
+  return false;
+}
+
+/**
  * Handle ambiguous numeric dates (MM/DD vs DD/MM)
  */
 function getNumericDateInterpretations(
@@ -232,9 +359,9 @@ function getNumericDateInterpretations(
   const isFirstValidDay = firstNum >= 1 && firstNum <= 31;
   const isSecondValidDay = secondNum >= 1 && secondNum <= 31;
 
-  const usesUSFormat = locale === 'en-US' || locale.startsWith('en-US');
+  const usesUSFormat = usesMDYFormat(locale);
 
-  // US interpretation: MM/DD/YYYY
+  // US interpretation: MM/DD/YYYY (first=month, second=day)
   if (isFirstValidMonth && isSecondValidDay) {
     const usEdtf = `${year}-${first}-${second}`;
     const usParsed = tryParse(usEdtf);
@@ -249,7 +376,7 @@ function getNumericDateInterpretations(
     });
   }
 
-  // EU interpretation: DD/MM/YYYY
+  // EU interpretation: DD/MM/YYYY (first=day, second=month)
   if (isSecondValidMonth && isFirstValidDay) {
     const euEdtf = `${year}-${second}-${first}`;
     const euParsed = tryParse(euEdtf);
