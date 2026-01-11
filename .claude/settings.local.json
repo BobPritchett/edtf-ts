@@ -53,7 +53,8 @@
       "Bash(pnpm run test:*)",
       "Bash(timeout 5 pnpm run:*)",
       "Bash(git checkout:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(pnpm --filter @edtf-ts/natural exec node:*)"
     ]
   }
 }

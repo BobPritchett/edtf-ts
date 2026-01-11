@@ -345,6 +345,25 @@ function buildPartialQual(baseEdtf, quals) {
     return `${yearQual}${year}`;
   }
 }
+
+function getIntervalStart(edtf) {
+  var parts = edtf.split('/');
+  return parts[0] || edtf;
+}
+
+function getIntervalEnd(edtf) {
+  var parts = edtf.split('/');
+  return parts[1] || parts[0] || edtf;
+}
+
+function applyQualifierToInterval(edtf, qualifier) {
+  if (!qualifier) return edtf;
+  var parts = edtf.split('/');
+  if (parts.length === 2) {
+    return parts[0] + qualifier + '/' + parts[1] + qualifier;
+  }
+  return edtf + qualifier;
+}
 %}
 
 # Main entry point
@@ -353,6 +372,7 @@ main -> _ value _ {% d => d[1] %}
 # Top-level value types
 value ->
     interval {% id %}
+  | qualified_temporal_modifier {% id %}
   | temporal_modifier {% id %}
   | set {% id %}
   | list {% id %}
@@ -622,11 +642,210 @@ temporal_modifier ->
       } %}
 
 # ==========================================
+# QUALIFIED TEMPORAL MODIFIERS
+# ==========================================
+
+qualified_temporal_modifier ->
+    qualifier __ temporal_modifier_word modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+        const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+        return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+      } %}
+  | qualifier __ combination_modifier modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const qual = d[0];
+        const combo = d[2];
+        const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+        const baseEdtf = buildDecadeCombinationInterval(decadeStart, combo);
+        return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep year_num
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const year = d[4];
+        const baseEdtf = buildYearModifierInterval(year, modifier);
+        return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep month_name __ year_num
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const month = months[d[4].toLowerCase()];
+        const year = d[6];
+        const baseEdtf = buildMonthModifierInterval(year, month, modifier);
+        return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const centuryNum = d[4];
+        const baseEdtf = buildCenturyModifierInterval(centuryNum, modifier);
+        return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep spelled_decade
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const decadeDigit = d[4];
+        const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+        const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+        return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.85 };
+      } %}
+
+# ==========================================
+# QUALIFIED TEMPORAL MODIFIER INTERVAL VALUES
+# These produce qualified interval EDTF strings for use as endpoints in larger intervals
+# ==========================================
+
+qualified_temporal_modifier_interval_value ->
+    qualifier __ temporal_modifier_word modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+        const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+        return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+      } %}
+  | qualifier __ combination_modifier modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const qual = d[0];
+        const combo = d[2];
+        const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+        const baseEdtf = buildDecadeCombinationInterval(decadeStart, combo);
+        return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep year_num
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const year = d[4];
+        const baseEdtf = buildYearModifierInterval(year, modifier);
+        return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep month_name __ year_num
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const month = months[d[4].toLowerCase()];
+        const year = d[6];
+        const baseEdtf = buildMonthModifierInterval(year, month, modifier);
+        return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const centuryNum = d[4];
+        const baseEdtf = buildCenturyModifierInterval(centuryNum, modifier);
+        return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+      } %}
+  | qualifier __ temporal_modifier_word modifier_sep spelled_decade
+      {% d => {
+        const qual = d[0];
+        const modifier = d[2];
+        const decadeDigit = d[4];
+        const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+        const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+        return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+      } %}
+
+# ==========================================
+# TEMPORAL MODIFIER INTERVAL VALUES
+# ==========================================
+
+temporal_modifier_interval_value ->
+    temporal_modifier_word modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => ({ edtf: buildDecadeModifierInterval(parseInt(d[2] + d[3] + d[4] + '0', 10), d[0]) }) %}
+  | "the"i __ temporal_modifier_word __ digit digit digit "0" ("'" | null) "s"i
+      {% d => ({ edtf: buildDecadeModifierInterval(parseInt(d[4] + d[5] + d[6] + '0', 10), d[2]) }) %}
+  | combination_modifier modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => ({ edtf: buildDecadeCombinationInterval(parseInt(d[2] + d[3] + d[4] + '0', 10), d[0]) }) %}
+  | "the"i __ combination_modifier __ digit digit digit "0" ("'" | null) "s"i
+      {% d => ({ edtf: buildDecadeCombinationInterval(parseInt(d[4] + d[5] + d[6] + '0', 10), d[2]) }) %}
+  | temporal_modifier_word modifier_sep year_num
+      {% d => ({ edtf: buildYearModifierInterval(d[2], d[0]) }) %}
+  | combination_modifier modifier_sep year_num
+      {% d => ({ edtf: buildYearCombinationInterval(d[2], d[0]) }) %}
+  | temporal_modifier_word modifier_sep month_name __ year_num
+      {% d => ({ edtf: buildMonthModifierInterval(d[4], months[d[2].toLowerCase()], d[0]) }) %}
+  | temporal_modifier_word modifier_sep ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) }) %}
+  | "the"i __ temporal_modifier_word __ ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) }) %}
+  | combination_modifier modifier_sep ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) }) %}
+  | "the"i __ combination_modifier __ ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) }) %}
+  | temporal_modifier_word modifier_sep spelled_decade
+      {% d => ({ edtf: buildDecadeModifierInterval(1900 + parseInt(d[2], 10) * 10, d[0]) }) %}
+  | "the"i __ temporal_modifier_word __ spelled_decade
+      {% d => ({ edtf: buildDecadeModifierInterval(1900 + parseInt(d[4], 10) * 10, d[2]) }) %}
+  | combination_modifier modifier_sep spelled_decade
+      {% d => ({ edtf: buildDecadeCombinationInterval(1900 + parseInt(d[2], 10) * 10, d[0]) }) %}
+  | "the"i __ combination_modifier __ spelled_decade
+      {% d => ({ edtf: buildDecadeCombinationInterval(1900 + parseInt(d[4], 10) * 10, d[2]) }) %}
+  | temporal_modifier_word modifier_sep spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) }) %}
+  | "the"i __ temporal_modifier_word __ spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) }) %}
+  | combination_modifier modifier_sep spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) }) %}
+  | "the"i __ combination_modifier __ spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) }) %}
+
+# ==========================================
 # INTERVALS
 # ==========================================
 
 interval ->
-    numeric_year _ "-" _ numeric_year __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+    temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+  | "from"i __ temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | temporal_modifier_interval_value _ "-" _ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+  | temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ datevalue
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 }) %}
+  | "from"i __ temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ datevalue
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 }) %}
+  | datevalue __ ("to"i | "through"i | "thru"i) __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+  | "from"i __ datevalue __ ("to"i | "through"i | "thru"i) __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | "between"i __ temporal_modifier_interval_value __ "and"i __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | qualified_temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+  | qualified_temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+  | qualified_temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ datevalue
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 }) %}
+  | temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+  | datevalue __ ("to"i | "through"i | "thru"i) __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+  | "from"i __ qualified_temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | "from"i __ qualified_temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | "from"i __ qualified_temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ datevalue
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 }) %}
+  | "from"i __ temporal_modifier_interval_value __ ("to"i | "through"i | "thru"i) __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | "from"i __ datevalue __ ("to"i | "through"i | "thru"i) __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | "between"i __ qualified_temporal_modifier_interval_value __ "and"i __ temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | "between"i __ qualified_temporal_modifier_interval_value __ "and"i __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | "between"i __ temporal_modifier_interval_value __ "and"i __ qualified_temporal_modifier_interval_value
+      {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+  | numeric_year _ "-" _ numeric_year __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
       {% d => {
         const startYear = parseInt(d[0], 10) - 1;
         const endYear = parseInt(d[4], 10) - 1;

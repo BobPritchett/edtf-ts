@@ -346,11 +346,31 @@ function buildPartialQual(baseEdtf, quals) {
     return `${yearQual}${year}`;
   }
 }
+
+function getIntervalStart(edtf) {
+  var parts = edtf.split('/');
+  return parts[0] || edtf;
+}
+
+function getIntervalEnd(edtf) {
+  var parts = edtf.split('/');
+  return parts[1] || parts[0] || edtf;
+}
+
+function applyQualifierToInterval(edtf, qualifier) {
+  if (!qualifier) return edtf;
+  var parts = edtf.split('/');
+  if (parts.length === 2) {
+    return parts[0] + qualifier + '/' + parts[1] + qualifier;
+  }
+  return edtf + qualifier;
+}
 var grammar = {
     Lexer: undefined,
     ParserRules: [
     {"name": "main", "symbols": ["_", "value", "_"], "postprocess": d => d[1]},
     {"name": "value", "symbols": ["interval"], "postprocess": id},
+    {"name": "value", "symbols": ["qualified_temporal_modifier"], "postprocess": id},
     {"name": "value", "symbols": ["temporal_modifier"], "postprocess": id},
     {"name": "value", "symbols": ["set"], "postprocess": id},
     {"name": "value", "symbols": ["list"], "postprocess": id},
@@ -741,75 +761,387 @@ var grammar = {
           const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
           return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.9 };
         } },
-    {"name": "interval$subexpression$1$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$1", {"literal":"."}, "_", "interval$subexpression$1$subexpression$2", {"literal":"."}, "_", "interval$subexpression$1$subexpression$3", {"literal":"."}]},
-    {"name": "interval$subexpression$1$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$4", {"literal":"."}, "_", "interval$subexpression$1$subexpression$5", {"literal":"."}]},
-    {"name": "interval$subexpression$1$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$6"]},
-    {"name": "interval$subexpression$1$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$7"]},
-    {"name": "interval", "symbols": ["numeric_year", "_", {"literal":"-"}, "_", "numeric_year", "__", "interval$subexpression$1"], "postprocess":  d => {
+    {"name": "qualified_temporal_modifier$subexpression$1", "symbols": [{"literal":"'"}]},
+    {"name": "qualified_temporal_modifier$subexpression$1", "symbols": []},
+    {"name": "qualified_temporal_modifier$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier$subexpression$1", "qualified_temporal_modifier$subexpression$2"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+        } },
+    {"name": "qualified_temporal_modifier$subexpression$3", "symbols": [{"literal":"'"}]},
+    {"name": "qualified_temporal_modifier$subexpression$3", "symbols": []},
+    {"name": "qualified_temporal_modifier$subexpression$4", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier$subexpression$3", "qualified_temporal_modifier$subexpression$4"], "postprocess":  d => {
+          const qual = d[0];
+          const combo = d[2];
+          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+          const baseEdtf = buildDecadeCombinationInterval(decadeStart, combo);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+        } },
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "year_num"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const year = d[4];
+          const baseEdtf = buildYearModifierInterval(year, modifier);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+        } },
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const month = months[d[4].toLowerCase()];
+          const year = d[6];
+          const baseEdtf = buildMonthModifierInterval(year, month, modifier);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+        } },
+    {"name": "qualified_temporal_modifier$subexpression$5$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier$subexpression$5", "symbols": ["qualified_temporal_modifier$subexpression$5$subexpression$1"]},
+    {"name": "qualified_temporal_modifier$subexpression$5$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier$subexpression$5", "symbols": ["qualified_temporal_modifier$subexpression$5$subexpression$2", {"literal":"."}]},
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "qualified_temporal_modifier$subexpression$5"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const centuryNum = d[4];
+          const baseEdtf = buildCenturyModifierInterval(centuryNum, modifier);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+        } },
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const decadeDigit = d[4];
+          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.85 };
+        } },
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$1", "symbols": [{"literal":"'"}]},
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$1", "symbols": []},
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier_interval_value$subexpression$1", "qualified_temporal_modifier_interval_value$subexpression$2"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+        } },
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$3", "symbols": [{"literal":"'"}]},
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$3", "symbols": []},
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$4", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier_interval_value$subexpression$3", "qualified_temporal_modifier_interval_value$subexpression$4"], "postprocess":  d => {
+          const qual = d[0];
+          const combo = d[2];
+          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+          const baseEdtf = buildDecadeCombinationInterval(decadeStart, combo);
+          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+        } },
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "year_num"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const year = d[4];
+          const baseEdtf = buildYearModifierInterval(year, modifier);
+          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+        } },
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const month = months[d[4].toLowerCase()];
+          const year = d[6];
+          const baseEdtf = buildMonthModifierInterval(year, month, modifier);
+          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+        } },
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$5$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$5", "symbols": ["qualified_temporal_modifier_interval_value$subexpression$5$subexpression$1"]},
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$5$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "qualified_temporal_modifier_interval_value$subexpression$5", "symbols": ["qualified_temporal_modifier_interval_value$subexpression$5$subexpression$2", {"literal":"."}]},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "qualified_temporal_modifier_interval_value$subexpression$5"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const centuryNum = d[4];
+          const baseEdtf = buildCenturyModifierInterval(centuryNum, modifier);
+          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+        } },
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess":  d => {
+          const qual = d[0];
+          const modifier = d[2];
+          const decadeDigit = d[4];
+          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
+          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
+        } },
+    {"name": "temporal_modifier_interval_value$subexpression$1", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier_interval_value$subexpression$1", "symbols": []},
+    {"name": "temporal_modifier_interval_value$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$1", "temporal_modifier_interval_value$subexpression$2"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(parseInt(d[2] + d[3] + d[4] + '0', 10), d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$4", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier_interval_value$subexpression$4", "symbols": []},
+    {"name": "temporal_modifier_interval_value$subexpression$5", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$3", "__", "temporal_modifier_word", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$4", "temporal_modifier_interval_value$subexpression$5"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(parseInt(d[4] + d[5] + d[6] + '0', 10), d[2]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$6", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier_interval_value$subexpression$6", "symbols": []},
+    {"name": "temporal_modifier_interval_value$subexpression$7", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$6", "temporal_modifier_interval_value$subexpression$7"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(parseInt(d[2] + d[3] + d[4] + '0', 10), d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$8", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$9", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier_interval_value$subexpression$9", "symbols": []},
+    {"name": "temporal_modifier_interval_value$subexpression$10", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$8", "__", "combination_modifier", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$9", "temporal_modifier_interval_value$subexpression$10"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(parseInt(d[4] + d[5] + d[6] + '0', 10), d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "year_num"], "postprocess": d => ({ edtf: buildYearModifierInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "year_num"], "postprocess": d => ({ edtf: buildYearCombinationInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess": d => ({ edtf: buildMonthModifierInterval(d[4], months[d[2].toLowerCase()], d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$11$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$11", "symbols": ["temporal_modifier_interval_value$subexpression$11$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$11$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$11", "symbols": ["temporal_modifier_interval_value$subexpression$11$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$11"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$12", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$13$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$13", "symbols": ["temporal_modifier_interval_value$subexpression$13$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$13$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$13", "symbols": ["temporal_modifier_interval_value$subexpression$13$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$12", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$13"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$14$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$14", "symbols": ["temporal_modifier_interval_value$subexpression$14$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$14$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$14", "symbols": ["temporal_modifier_interval_value$subexpression$14$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$14"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$15", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$16$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$16", "symbols": ["temporal_modifier_interval_value$subexpression$16$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$16$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$16", "symbols": ["temporal_modifier_interval_value$subexpression$16$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$15", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$16"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(1900 + parseInt(d[2], 10) * 10, d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$17", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$17", "__", "temporal_modifier_word", "__", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(1900 + parseInt(d[4], 10) * 10, d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(1900 + parseInt(d[2], 10) * 10, d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$18", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$18", "__", "combination_modifier", "__", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(1900 + parseInt(d[4], 10) * 10, d[2]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$19$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$19", "symbols": ["temporal_modifier_interval_value$subexpression$19$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$19$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$19", "symbols": ["temporal_modifier_interval_value$subexpression$19$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$19"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$20", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$21$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$21", "symbols": ["temporal_modifier_interval_value$subexpression$21$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$21$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$21", "symbols": ["temporal_modifier_interval_value$subexpression$21$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$20", "__", "temporal_modifier_word", "__", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$21"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$22$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$22", "symbols": ["temporal_modifier_interval_value$subexpression$22$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$22$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$22", "symbols": ["temporal_modifier_interval_value$subexpression$22$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$22"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value$subexpression$23", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$24$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$24", "symbols": ["temporal_modifier_interval_value$subexpression$24$subexpression$1"]},
+    {"name": "temporal_modifier_interval_value$subexpression$24$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier_interval_value$subexpression$24", "symbols": ["temporal_modifier_interval_value$subexpression$24$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$23", "__", "combination_modifier", "__", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$24"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) })},
+    {"name": "interval$subexpression$1$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$1"]},
+    {"name": "interval$subexpression$1$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$2"]},
+    {"name": "interval$subexpression$1$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$3"]},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval$subexpression$1", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$2", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$3$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$1"]},
+    {"name": "interval$subexpression$3$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$2"]},
+    {"name": "interval$subexpression$3$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$2", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$3", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "_", {"literal":"-"}, "_", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$4$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$1"]},
+    {"name": "interval$subexpression$4$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$2"]},
+    {"name": "interval$subexpression$4$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$3"]},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval$subexpression$4", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
+    {"name": "interval$subexpression$5", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$6$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$1"]},
+    {"name": "interval$subexpression$6$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$2"]},
+    {"name": "interval$subexpression$6$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$5", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$6", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
+    {"name": "interval$subexpression$7$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$7", "symbols": ["interval$subexpression$7$subexpression$1"]},
+    {"name": "interval$subexpression$7$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$7", "symbols": ["interval$subexpression$7$subexpression$2"]},
+    {"name": "interval$subexpression$7$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$7", "symbols": ["interval$subexpression$7$subexpression$3"]},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval$subexpression$7", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$8", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$9$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$9", "symbols": ["interval$subexpression$9$subexpression$1"]},
+    {"name": "interval$subexpression$9$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$9", "symbols": ["interval$subexpression$9$subexpression$2"]},
+    {"name": "interval$subexpression$9$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$9", "symbols": ["interval$subexpression$9$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$8", "__", "datevalue", "__", "interval$subexpression$9", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$10", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$11", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval", "symbols": ["interval$subexpression$10", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$11", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$12$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$12", "symbols": ["interval$subexpression$12$subexpression$1"]},
+    {"name": "interval$subexpression$12$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$12", "symbols": ["interval$subexpression$12$subexpression$2"]},
+    {"name": "interval$subexpression$12$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$12", "symbols": ["interval$subexpression$12$subexpression$3"]},
+    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval$subexpression$12", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$13$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$13", "symbols": ["interval$subexpression$13$subexpression$1"]},
+    {"name": "interval$subexpression$13$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$13", "symbols": ["interval$subexpression$13$subexpression$2"]},
+    {"name": "interval$subexpression$13$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$13", "symbols": ["interval$subexpression$13$subexpression$3"]},
+    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval$subexpression$13", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$14$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$14", "symbols": ["interval$subexpression$14$subexpression$1"]},
+    {"name": "interval$subexpression$14$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$14", "symbols": ["interval$subexpression$14$subexpression$2"]},
+    {"name": "interval$subexpression$14$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$14", "symbols": ["interval$subexpression$14$subexpression$3"]},
+    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval$subexpression$14", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
+    {"name": "interval$subexpression$15$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$15", "symbols": ["interval$subexpression$15$subexpression$1"]},
+    {"name": "interval$subexpression$15$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$15", "symbols": ["interval$subexpression$15$subexpression$2"]},
+    {"name": "interval$subexpression$15$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$15", "symbols": ["interval$subexpression$15$subexpression$3"]},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval$subexpression$15", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$16$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$16", "symbols": ["interval$subexpression$16$subexpression$1"]},
+    {"name": "interval$subexpression$16$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$16", "symbols": ["interval$subexpression$16$subexpression$2"]},
+    {"name": "interval$subexpression$16$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$16", "symbols": ["interval$subexpression$16$subexpression$3"]},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval$subexpression$16", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$17", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$18$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$18", "symbols": ["interval$subexpression$18$subexpression$1"]},
+    {"name": "interval$subexpression$18$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$18", "symbols": ["interval$subexpression$18$subexpression$2"]},
+    {"name": "interval$subexpression$18$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$18", "symbols": ["interval$subexpression$18$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$17", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$18", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$19", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$20$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$20", "symbols": ["interval$subexpression$20$subexpression$1"]},
+    {"name": "interval$subexpression$20$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$20", "symbols": ["interval$subexpression$20$subexpression$2"]},
+    {"name": "interval$subexpression$20$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$20", "symbols": ["interval$subexpression$20$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$19", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$20", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$21", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$22$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$22", "symbols": ["interval$subexpression$22$subexpression$1"]},
+    {"name": "interval$subexpression$22$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$22", "symbols": ["interval$subexpression$22$subexpression$2"]},
+    {"name": "interval$subexpression$22$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$22", "symbols": ["interval$subexpression$22$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$21", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$22", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
+    {"name": "interval$subexpression$23", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$24$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$24", "symbols": ["interval$subexpression$24$subexpression$1"]},
+    {"name": "interval$subexpression$24$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$24", "symbols": ["interval$subexpression$24$subexpression$2"]},
+    {"name": "interval$subexpression$24$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$24", "symbols": ["interval$subexpression$24$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$23", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$24", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$25", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$26$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$26", "symbols": ["interval$subexpression$26$subexpression$1"]},
+    {"name": "interval$subexpression$26$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$26", "symbols": ["interval$subexpression$26$subexpression$2"]},
+    {"name": "interval$subexpression$26$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$26", "symbols": ["interval$subexpression$26$subexpression$3"]},
+    {"name": "interval", "symbols": ["interval$subexpression$25", "__", "datevalue", "__", "interval$subexpression$26", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$27", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$28", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval", "symbols": ["interval$subexpression$27", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$28", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$29", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$30", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval", "symbols": ["interval$subexpression$29", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$30", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$31", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$32", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval", "symbols": ["interval$subexpression$31", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$32", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval$subexpression$33$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$33$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$33$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$1", {"literal":"."}, "_", "interval$subexpression$33$subexpression$2", {"literal":"."}, "_", "interval$subexpression$33$subexpression$3", {"literal":"."}]},
+    {"name": "interval$subexpression$33$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$33$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$4", {"literal":"."}, "_", "interval$subexpression$33$subexpression$5", {"literal":"."}]},
+    {"name": "interval$subexpression$33$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$6"]},
+    {"name": "interval$subexpression$33$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$7"]},
+    {"name": "interval", "symbols": ["numeric_year", "_", {"literal":"-"}, "_", "numeric_year", "__", "interval$subexpression$33"], "postprocess":  d => {
           const startYear = parseInt(d[0], 10) - 1;
           const endYear = parseInt(d[4], 10) - 1;
           return { type: 'interval', edtf: `-${pad4(startYear)}/-${pad4(endYear)}`, confidence: 0.98 };
         } },
-    {"name": "interval$subexpression$2", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$1", {"literal":"."}, "_", "interval$subexpression$3$subexpression$2", {"literal":"."}, "_", "interval$subexpression$3$subexpression$3", {"literal":"."}]},
-    {"name": "interval$subexpression$3$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$4", {"literal":"."}, "_", "interval$subexpression$3$subexpression$5", {"literal":"."}]},
-    {"name": "interval$subexpression$3$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$6"]},
-    {"name": "interval$subexpression$3$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$7"]},
-    {"name": "interval", "symbols": ["numeric_year", "__", "interval$subexpression$2", "__", "numeric_year", "__", "interval$subexpression$3"], "postprocess":  d => {
+    {"name": "interval$subexpression$34", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$1", {"literal":"."}, "_", "interval$subexpression$35$subexpression$2", {"literal":"."}, "_", "interval$subexpression$35$subexpression$3", {"literal":"."}]},
+    {"name": "interval$subexpression$35$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$4", {"literal":"."}, "_", "interval$subexpression$35$subexpression$5", {"literal":"."}]},
+    {"name": "interval$subexpression$35$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$6"]},
+    {"name": "interval$subexpression$35$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$7"]},
+    {"name": "interval", "symbols": ["numeric_year", "__", "interval$subexpression$34", "__", "numeric_year", "__", "interval$subexpression$35"], "postprocess":  d => {
           const startYear = parseInt(d[0], 10) - 1;
           const endYear = parseInt(d[4], 10) - 1;
           return { type: 'interval', edtf: `-${pad4(startYear)}/-${pad4(endYear)}`, confidence: 0.98 };
         } },
-    {"name": "interval$subexpression$4$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$1", {"literal":"."}, "_", "interval$subexpression$4$subexpression$2", {"literal":"."}]},
-    {"name": "interval$subexpression$4$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$3", {"literal":"."}, "_", "interval$subexpression$4$subexpression$4", {"literal":"."}]},
-    {"name": "interval$subexpression$4$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$5"]},
-    {"name": "interval$subexpression$4$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$6"]},
-    {"name": "interval", "symbols": ["numeric_year", "_", {"literal":"-"}, "_", "numeric_year", "__", "interval$subexpression$4"], "postprocess":  d => {
+    {"name": "interval$subexpression$36$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$36$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$1", {"literal":"."}, "_", "interval$subexpression$36$subexpression$2", {"literal":"."}]},
+    {"name": "interval$subexpression$36$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$36$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$3", {"literal":"."}, "_", "interval$subexpression$36$subexpression$4", {"literal":"."}]},
+    {"name": "interval$subexpression$36$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$5"]},
+    {"name": "interval$subexpression$36$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$6"]},
+    {"name": "interval", "symbols": ["numeric_year", "_", {"literal":"-"}, "_", "numeric_year", "__", "interval$subexpression$36"], "postprocess":  d => {
           const startYear = parseInt(d[0], 10);
           const endYear = parseInt(d[4], 10);
           return { type: 'interval', edtf: `${pad4(startYear)}/${pad4(endYear)}`, confidence: 0.98 };
         } },
-    {"name": "interval$subexpression$5", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$1", {"literal":"."}, "_", "interval$subexpression$6$subexpression$2", {"literal":"."}]},
-    {"name": "interval$subexpression$6$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$3", {"literal":"."}, "_", "interval$subexpression$6$subexpression$4", {"literal":"."}]},
-    {"name": "interval$subexpression$6$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$5"]},
-    {"name": "interval$subexpression$6$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$6"]},
-    {"name": "interval", "symbols": ["numeric_year", "__", "interval$subexpression$5", "__", "numeric_year", "__", "interval$subexpression$6"], "postprocess":  d => {
+    {"name": "interval$subexpression$37", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$38$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$38$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$1", {"literal":"."}, "_", "interval$subexpression$38$subexpression$2", {"literal":"."}]},
+    {"name": "interval$subexpression$38$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$38$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$3", {"literal":"."}, "_", "interval$subexpression$38$subexpression$4", {"literal":"."}]},
+    {"name": "interval$subexpression$38$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$5"]},
+    {"name": "interval$subexpression$38$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$6"]},
+    {"name": "interval", "symbols": ["numeric_year", "__", "interval$subexpression$37", "__", "numeric_year", "__", "interval$subexpression$38"], "postprocess":  d => {
           const startYear = parseInt(d[0], 10);
           const endYear = parseInt(d[4], 10);
           return { type: 'interval', edtf: `${pad4(startYear)}/${pad4(endYear)}`, confidence: 0.98 };
         } },
-    {"name": "interval$subexpression$7", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$8", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["interval$subexpression$7", "__", "month_name", "__", "interval$subexpression$8", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[8])}-${months[d[2].toLowerCase()]}/${pad4(d[8])}-${months[d[6].toLowerCase()]}`, confidence: 0.95 })},
-    {"name": "interval$subexpression$9", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["month_name", "__", "interval$subexpression$9", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}/${pad4(d[6])}-${months[d[4].toLowerCase()]}`, confidence: 0.9 })},
+    {"name": "interval$subexpression$39", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$40", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval", "symbols": ["interval$subexpression$39", "__", "month_name", "__", "interval$subexpression$40", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[8])}-${months[d[2].toLowerCase()]}/${pad4(d[8])}-${months[d[6].toLowerCase()]}`, confidence: 0.95 })},
+    {"name": "interval$subexpression$41", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval", "symbols": ["month_name", "__", "interval$subexpression$41", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}/${pad4(d[6])}-${months[d[4].toLowerCase()]}`, confidence: 0.9 })},
     {"name": "interval", "symbols": ["month_name", "_", {"literal":"-"}, "_", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}/${pad4(d[6])}-${months[d[4].toLowerCase()]}`, confidence: 0.9 })},
     {"name": "interval$string$1", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"f"}, {"literal":"o"}, {"literal":"r"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "interval", "symbols": ["interval$string$1", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[2].edtf}`, confidence: 0.95 })},
@@ -838,16 +1170,16 @@ var grammar = {
     {"name": "interval$string$17", "symbols": [{"literal":"a"}, {"literal":"f"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "interval", "symbols": ["datevalue", "__", "interval$string$16", "__", "interval$string$17"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
     {"name": "interval$string$18", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$subexpression$10$subexpression$1", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$10", "symbols": ["interval$subexpression$10$subexpression$1"]},
-    {"name": "interval$subexpression$10$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$10", "symbols": ["interval$subexpression$10$subexpression$2"]},
-    {"name": "interval", "symbols": ["interval$string$18", "__", "datevalue", "__", "interval$subexpression$10", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
-    {"name": "interval$subexpression$11$subexpression$1", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$11", "symbols": ["interval$subexpression$11$subexpression$1"]},
-    {"name": "interval$subexpression$11$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$11", "symbols": ["interval$subexpression$11$subexpression$2"]},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$subexpression$11", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval$subexpression$42$subexpression$1", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$42", "symbols": ["interval$subexpression$42$subexpression$1"]},
+    {"name": "interval$subexpression$42$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$42", "symbols": ["interval$subexpression$42$subexpression$2"]},
+    {"name": "interval", "symbols": ["interval$string$18", "__", "datevalue", "__", "interval$subexpression$42", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
+    {"name": "interval$subexpression$43$subexpression$1", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$43", "symbols": ["interval$subexpression$43$subexpression$1"]},
+    {"name": "interval$subexpression$43$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "interval$subexpression$43", "symbols": ["interval$subexpression$43$subexpression$2"]},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval$subexpression$43", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
     {"name": "interval$string$19", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "interval$string$20", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"t"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "interval", "symbols": ["interval$string$19", "__", "datevalue", "__", "interval$string$20", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
