@@ -56,3 +56,34 @@ pnpm docs:build
 # Preview built docs
 pnpm docs:preview
 ```
+
+## Publishing to npm
+
+**IMPORTANT: Always use `pnpm publish`, never `npm publish`.**
+
+This is a pnpm workspace monorepo. The `@edtf-ts/natural` package depends on `@edtf-ts/core` using `workspace:*` protocol. Only `pnpm publish` correctly converts this to an actual version number. Using `npm publish` will publish the literal `workspace:*` string, breaking the package for consumers.
+
+### Release Process
+
+1. Update version in both `packages/core/package.json` and `packages/natural/package.json`
+
+2. Build and test:
+   ```bash
+   pnpm run build
+   pnpm run test
+   ```
+
+3. Commit and tag:
+   ```bash
+   git add packages/core/package.json packages/natural/package.json
+   git commit -m "chore: bump version to X.Y.Z"
+   git tag vX.Y.Z
+   git push origin main
+   git push origin vX.Y.Z
+   ```
+
+4. Publish (core first, then natural):
+   ```bash
+   cd packages/core && pnpm publish --access public
+   cd ../natural && pnpm publish --access public
+   ```
