@@ -1,6 +1,6 @@
 {
   "name": "@edtf-ts/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Modern TypeScript implementation of Extended Date/Time Format (EDTF) with temporal reasoning",
   "type": "module",
   "main": "./dist/index.cjs",
