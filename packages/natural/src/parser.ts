@@ -203,15 +203,25 @@ export function parseNatural(input: string, options: ParseNaturalOptions = {}): 
   // First, try to parse as EDTF directly (pass-through for valid EDTF)
   const edtfResult = parseEDTF(normalized);
   if (edtfResult.success) {
-    // Valid EDTF string - return it as-is with high confidence
+    // Normalize combined qualifiers (~ and ? become %) even for valid EDTF pass-through
+    const normalizedEdtf = normalizeCombinedQualifiers(edtfResult.value.edtf);
+    // Re-parse if normalization changed the EDTF string
+    let finalParsed = edtfResult.value;
+    if (normalizedEdtf !== edtfResult.value.edtf) {
+      const reparsed = parseEDTF(normalizedEdtf);
+      if (reparsed.success) {
+        finalParsed = reparsed.value;
+      }
+    }
+    // Valid EDTF string - return it with high confidence
     return [
       {
-        edtf: edtfResult.value.edtf,
-        type: edtfResult.value.type.toLowerCase() as ParseResult['type'],
+        edtf: normalizedEdtf,
+        type: (finalParsed?.type || edtfResult.value.type).toLowerCase() as ParseResult['type'],
         confidence: 1.0,
-        interpretation: `Valid EDTF: ${edtfResult.value.edtf}`,
-        parsed: edtfResult.value,
-        fuzzyDate: FuzzyDate.wrap(edtfResult.value),
+        interpretation: `Valid EDTF: ${normalizedEdtf}`,
+        parsed: finalParsed,
+        fuzzyDate: finalParsed ? FuzzyDate.wrap(finalParsed) : undefined,
         ambiguous: false,
       },
     ];
@@ -393,15 +403,109 @@ function getNumericDateInterpretations(result: any, locale: string): ParseResult
 }
 
 /**
+ * Normalize combined uncertain (~) and approximate (?) qualifiers for natural language parsing.
+ *
+ * This function handles the case where natural language input produces BOTH ~ and ? on the
+ * same date component (e.g., "circa 1984?" produces "1984~?" which should become "1984%").
+ *
+ * IMPORTANT: This does NOT normalize valid EDTF Level 2 partial qualifications:
+ * - "~1950" (approximate year) - KEEP as-is (Level 2 format)
+ * - "?2004-06-~11" (year uncertain, day approximate) - KEEP as-is (Level 2 partial qualification)
+ * - "1984~?" or "1984?~" (both qualifiers at END of same component) -> "1984%"
+ *
+ * The distinction is:
+ * - Level 2 uses PREFIX qualifiers for individual components (~ or ? before a component)
+ * - Level 1 uses SUFFIX qualifiers (~ or ? after the whole date)
+ * - When BOTH ~ AND ? appear at the SUFFIX of the same string, combine to %
+ */
+function normalizeCombinedQualifiers(edtf: string): string {
+  // Check for complex Level 2 partial qualification patterns - don't modify these
+  // Level 2 patterns have qualifiers embedded in the middle (e.g., ?2004-06-~11)
+  // These are partial qualifications on specific date components
+  const isComplexLevel2Pattern =
+    /-[?~%]\d/.test(edtf); // Has qualifier before a component in the middle (not at end)
+
+  if (isComplexLevel2Pattern) {
+    return edtf; // Don't modify complex Level 2 partial qualifications
+  }
+
+  // Handle prefix qualifiers on simple year expressions
+  // e.g., ~1950 -> 1950~, ?1950 -> 1950?
+  const prefixYearMatch = edtf.match(/^([?~%])(\d{4})([?~%])?$/);
+  if (prefixYearMatch) {
+    const prefixQual = prefixYearMatch[1]!;
+    const year = prefixYearMatch[2]!;
+    const suffixQual = prefixYearMatch[3] || '';
+
+    // Collect all qualifiers
+    const allQuals = prefixQual + suffixQual;
+    const hasApprox = allQuals.includes('~');
+    const hasUncertain = allQuals.includes('?');
+
+    if (hasApprox && hasUncertain) {
+      return `${year}%`;
+    } else if (hasApprox) {
+      return `${year}~`;
+    } else if (hasUncertain) {
+      return `${year}?`;
+    }
+    return `${year}${prefixQual}`;
+  }
+
+  // Handle prefix qualifiers on full dates (year-month or year-month-day)
+  // e.g., ~1950-06 -> 1950-06~
+  const prefixDateMatch = edtf.match(/^([?~%])(\d{4}-\d{2}(?:-\d{2})?)([?~%])?$/);
+  if (prefixDateMatch) {
+    const prefixQual = prefixDateMatch[1]!;
+    const date = prefixDateMatch[2]!;
+    const suffixQual = prefixDateMatch[3] || '';
+
+    // Collect all qualifiers
+    const allQuals = prefixQual + suffixQual;
+    const hasApprox = allQuals.includes('~');
+    const hasUncertain = allQuals.includes('?');
+
+    if (hasApprox && hasUncertain) {
+      return `${date}%`;
+    } else if (hasApprox) {
+      return `${date}~`;
+    } else if (hasUncertain) {
+      return `${date}?`;
+    }
+    return `${date}${prefixQual}`;
+  }
+
+  // Check if both ~ and ? are at the END (suffix position) - this is natural language ambiguity
+  // e.g., "circa 1984?" -> "1984~?" which should become "1984%"
+  const suffixMatch = edtf.match(/^(.+?)([?~]{2})$/);
+  if (suffixMatch) {
+    const base = suffixMatch[1]!;
+    const qualifiers = suffixMatch[2]!;
+    if (qualifiers.includes('~') && qualifiers.includes('?')) {
+      return `${base}%`;
+    }
+  }
+
+  // Check for adjacent qualifiers at end like "1984?~" or "1984~?"
+  if (edtf.endsWith('?~') || edtf.endsWith('~?')) {
+    return `${edtf.slice(0, -2)}%`;
+  }
+
+  return edtf;
+}
+
+/**
  * Enrich a parse result with interpretation and parsed EDTF object
  */
 function enrichResult(result: any): ParseResult {
-  const parsed = tryParse(result.edtf);
+  // Normalize combined qualifiers (~ and ? become %)
+  const normalizedEdtf = normalizeCombinedQualifiers(result.edtf);
+  const parsed = tryParse(normalizedEdtf);
   return {
-    edtf: result.edtf,
+    edtf: normalizedEdtf,
     type: result.type,
     confidence: result.confidence,
-    interpretation: generateInterpretation(result),
+    interpretation: generateInterpretation({ ...result, edtf: normalizedEdtf }),
     parsed,
     fuzzyDate: parsed ? FuzzyDate.wrap(parsed) : undefined,
     ambiguous: result.ambiguous,

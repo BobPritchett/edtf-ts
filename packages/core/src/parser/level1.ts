@@ -5,6 +5,7 @@ import type {
   EDTFInterval,
   Qualification,
   UnspecifiedDigits,
+  EDTFLevel,
 } from '../types/index.js';
 import {
   calculateEpochMs,
@@ -15,6 +16,67 @@ import {
   daysInMonth,
   isLeapYear,
 } from '../core-utils/date-helpers.js';
+
+/**
+ * Determine the correct EDTF level for unspecified digit patterns.
+ *
+ * Level 1 unspecified (fully unspecified at component boundaries):
+ * - XXXX (year only)
+ * - 201X, 20XX (partial year, no month/day)
+ * - XXXX-XX (year and month)
+ * - XXXX-XX-XX (year, month, and day)
+ * - 1985-XX (specific year, unspecified month)
+ * - 1985-04-XX (specific year and month, unspecified day)
+ * - 1985-XX-XX (specific year, unspecified month and day)
+ *
+ * Level 2 unspecified (partial unspecified within components, or mixed patterns):
+ * - 156X-12-25 (partial year with specific month/day)
+ * - 15XX-12-25 (partial year with specific month/day)
+ * - 1XXX-XX (partial year with unspecified month)
+ * - 1XXX-12 (partial year with specific month)
+ * - XXXX-12-XX (fully unspecified year with specific month)
+ * - 1984-1X (partial unspecified month)
+ */
+function determineUnspecifiedLevel(
+  yearStr: string,
+  monthStr?: string,
+  dayStr?: string
+): EDTFLevel {
+  const hasUnspecifiedYear = yearStr.includes('X');
+
+  // If no month component, it's Level 1 (year-only patterns like XXXX, 201X, 20XX)
+  if (!monthStr) {
+    return 1;
+  }
+
+  // Level 1: Fully specified year with any unspecified month/day (1985-XX, 1985-04-XX, 1985-XX-XX)
+  if (!hasUnspecifiedYear) {
+    // Check for partial unspecified month (1984-1X) which is Level 2
+    if (monthStr.includes('X') && monthStr !== 'XX') {
+      return 2;
+    }
+    // Otherwise it's Level 1 (1985-XX, 1985-04-XX, 1985-XX-XX)
+    return 1;
+  }
+
+  // Level 1: Fully unspecified year (XXXX) with fully unspecified month (XX)
+  // e.g., XXXX-XX, XXXX-XX-XX
+  if (yearStr === 'XXXX' && monthStr === 'XX') {
+    return 1;
+  }
+
+  // Level 2: Partial unspecified year with any month (156X-12, 15XX-12, 1XXX-12, 1XXX-XX)
+  if (hasUnspecifiedYear && yearStr !== 'XXXX') {
+    return 2;
+  }
+
+  // Level 2: Fully unspecified year (XXXX) with specific month (XXXX-12, XXXX-12-XX)
+  if (yearStr === 'XXXX' && monthStr && monthStr !== 'XX') {
+    return 2;
+  }
+
+  return 1;
+}
 
 /**
  * Parse EDTF Level 1 strings
@@ -222,9 +284,12 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
   // Pre-calculate bounds for closure
   const boundsResult = calculateBounds(year, month, day);
 
+  // Determine the correct level for unspecified patterns
+  const level = hasUnspecified ? determineUnspecifiedLevel(yearStr, monthStr, dayStr) : 1;
+
   const edtfDate: EDTFDate = {
     type: 'Date',
-    level: 1,
+    level,
     edtf: input,
     precision,
     year,
@@ -260,7 +325,7 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
     },
   };
 
-  return { success: true, value: edtfDate, level: 1 };
+  return { success: true, value: edtfDate, level };
 }
 
 /**
@@ -375,6 +440,8 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
   let end: EDTFDate | EDTFSeason | null = null;
   let openStart = false;
   let openEnd = false;
+  let startLevel: EDTFLevel = 1;
+  let endLevel: EDTFLevel = 1;
 
   // Parse start
   if (startStr === '..') {
@@ -395,6 +462,7 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
       };
     }
     start = startResult.value as EDTFDate | EDTFSeason;
+    startLevel = startResult.level ?? 1;
   }
 
   // Parse end
@@ -414,6 +482,7 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
       };
     }
     end = endResult.value as EDTFDate | EDTFSeason;
+    endLevel = endResult.level ?? 1;
   }
 
   // Validate interval order (if both endpoints are known and not open)
@@ -435,9 +504,18 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
   const DATE_MIN_MS_VAL = -8640000000000000n;
   const DATE_MAX_MS_VAL = 8640000000000000n;
 
+  // Determine interval level: max of start and end levels
+  // Also, intervals where one endpoint has unspecified digits (XX) are Level 2
+  let intervalLevel = Math.max(startLevel, endLevel) as EDTFLevel;
+
+  // Check if either endpoint has unspecified digits - if so, it's Level 2
+  if (intervalLevel === 1 && (startStr.includes('X') || endStr.includes('X'))) {
+    intervalLevel = 2;
+  }
+
   const edtfInterval: EDTFInterval = {
     type: 'Interval',
-    level: 1,
+    level: intervalLevel,
     edtf: input,
     precision: start?.precision || end?.precision || 'year',
     start,
@@ -474,7 +552,7 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
     },
   };
 
-  return { success: true, value: edtfInterval, level: 1 };
+  return { success: true, value: edtfInterval, level: intervalLevel };
 }
 
 // Helper functions

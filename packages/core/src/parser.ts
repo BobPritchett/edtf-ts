@@ -82,15 +82,52 @@ function detectLevel(input: string): EDTFLevel {
     }
   }
 
+  // Level 2 unspecified digit patterns (partial unspecified - more complex than Level 1)
+  // Level 2: partial unspecified within year (156X, 15XX, 1XXX) with month or day components
+  // Level 2: partial unspecified month (1984-1X)
+  // Level 2: mixed patterns (XXXX-12-XX where month is specific but year/day are not)
+  if (/X/.test(input)) {
+    // Check for Level 2 partial unspecified patterns
+    const level2UnspecifiedPatterns = [
+      /^\d{1,3}X+-\d{2}/,     // Partial year with month: 156X-12, 15XX-12, 1XXX-12
+      /^X{4}-\d{2}-/,         // Fully unspecified year with specific month: XXXX-12-XX
+      /^\d{4}-\dX/,           // Partial unspecified month: 1984-1X
+      /^\d{1,3}X+-X{2}/,      // Partial year with unspecified month: 1XXX-XX
+    ];
+
+    for (const pattern of level2UnspecifiedPatterns) {
+      if (pattern.test(input)) {
+        return 2;
+      }
+    }
+
+    // Check for intervals containing Level 2 unspecified patterns
+    if (input.includes('/')) {
+      const [start, end] = input.split('/');
+      if (start && end) {
+        for (const pattern of level2UnspecifiedPatterns) {
+          if (pattern.test(start) || pattern.test(end)) {
+            return 2;
+          }
+        }
+        // Also check for XX day in intervals: 2004-06-XX
+        if (/\d{4}-\d{2}-XX/.test(start) || /\d{4}-\d{2}-XX/.test(end)) {
+          return 2;
+        }
+      }
+    }
+  }
+
   // Level 1 indicators
   const level1Indicators = [
     /[?~%]/,           // Uncertainty/approximation qualifiers
-    /X/,               // Unspecified digits
+    /X/,               // Unspecified digits (Level 1: XXXX, XXXX-XX, XXXX-XX-XX)
     /^\.\./,           // Open interval start
     /\/\.\.$/,         // Open interval end
     /^\/|\/$/,         // Unknown interval endpoint
     /Y-?\d{5,}/,       // Extended year (5+ digits)
-    /-2[1-4](?:[?~%]|$)/  // Level 1 seasons (21-24)
+    /-2[1-4](?:[?~%]|$)/,  // Level 1 seasons (21-24)
+    /^-\d+$/           // Negative year (years before year 0000)
   ];
 
   for (const indicator of level1Indicators) {

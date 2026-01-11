@@ -52,7 +52,7 @@ describe('Qualified Dates', () => {
   it('should parse "2004 (year approximate)"', () => {
     const results = parseNatural('2004 (year approximate)');
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0]!.edtf).toBe('~2004');
+    expect(results[0]!.edtf).toBe('2004~'); // Normalized to Level 1 suffix format
   });
 
   it('should parse "January 2004 (month uncertain)"', () => {
@@ -347,7 +347,7 @@ describe('Approximation Symbol Variants', () => {
   it('should parse "~1950"', () => {
     const results = parseNatural('~1950');
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0]!.edtf).toBe('~1950'); // Note: EDTF allows leading ~ for approximate years
+    expect(results[0]!.edtf).toBe('1950~'); // Normalized to Level 1 suffix format
   });
 
   it('should parse "1950-ish"', () => {
