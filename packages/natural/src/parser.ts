@@ -244,10 +244,19 @@ export function parseNatural(input: string, options: ParseNaturalOptions = {}): 
     throw new ParseError('No valid parse found for input', normalized);
   }
 
+  // Filter out null and rejected results (from ambiguous grammar rules)
+  const validResults = results.filter(
+    (r: any) => r !== null && r !== undefined && !r.__reject
+  );
+
+  if (validResults.length === 0) {
+    throw new ParseError('No valid parse found for input', normalized);
+  }
+
   // Process results
   const processedResults: ParseResult[] = [];
 
-  for (const result of results) {
+  for (const result of validResults) {
     // Handle ambiguous numeric dates (MM/DD vs DD/MM)
     if (result.ambiguous && locale) {
       const interpretations = getNumericDateInterpretations(result, locale);

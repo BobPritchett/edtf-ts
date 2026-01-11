@@ -63,10 +63,16 @@ importers:
       '@edtf-ts/core':
         specifier: workspace:*
         version: link:../core
+      moo:
+        specifier: ^0.5.2
+        version: 0.5.2
       nearley:
         specifier: ^2.20.1
         version: 2.20.1
     devDependencies:
+      '@types/moo':
+        specifier: ^0.5.10
+        version: 0.5.10
       '@types/nearley':
         specifier: ^2.11.5
         version: 2.11.5
@@ -715,6 +721,9 @@ packages:
 
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
+
+  '@types/moo@0.5.10':
+    resolution: {integrity: sha512-W6KzyZjXUYpwQfLK1O1UDzqcqYlul+lO7Bt71luyIIyNlOZwJaNeWWdqFs1C/f2hohZvUFHMk6oFNe9Rg48DbA==}
 
   '@types/nearley@2.11.5':
     resolution: {integrity: sha512-dM7TrN0bVxGGXTYGx4YhGear8ysLO5SOuouAWM9oltjQ3m9oYa13qi8Z1DJp5zxVMPukvQdsrnZmgzpeuTSEQA==}
@@ -2295,6 +2304,8 @@ snapshots:
       '@types/unist': 3.0.3
 
   '@types/mdurl@2.0.0': {}
+
+  '@types/moo@0.5.10': {}
 
   '@types/nearley@2.11.5': {}
 

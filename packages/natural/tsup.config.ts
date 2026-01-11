@@ -9,4 +9,7 @@ export default defineConfig({
   treeshake: true,
   minify: false,
   splitting: false,
+  // Bundle moo and nearley into the output since they're CommonJS modules
+  // that don't have proper ESM support for browser environments
+  noExternal: ['moo', 'nearley'],
 });

@@ -54,7 +54,13 @@
       "Bash(timeout 5 pnpm run:*)",
       "Bash(git checkout:*)",
       "Bash(dir:*)",
-      "Bash(pnpm --filter @edtf-ts/natural exec node:*)"
+      "Bash(pnpm --filter @edtf-ts/natural exec node:*)",
+      "Bash(npm run benchmark:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }

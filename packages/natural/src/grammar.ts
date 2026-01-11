@@ -1,8 +1,189 @@
+import moo from "moo";
 // Generated automatically by nearley, version 2.20.1
 // http://github.com/Hardmath123/nearley
 var grammar_export = (function() {
 function id(x) { return x[0]; }
 
+
+
+// Case-insensitive keyword matching helper
+const caseInsensitiveKeywords = (map) => {
+  const transform = moo.keywords(map);
+  return (text) => transform(text.toLowerCase());
+};
+
+// Create lexer with case-insensitive keyword matching
+const lexer = moo.compile({
+  ws: { match: /\s+/, lineBreaks: true },
+  number: /[0-9]+/,
+  ordinalSuffix: /(?:st|nd|rd|th)\b/,
+  ish: /-?ish\b/,
+  decadeSuffix: /'?s\b/,
+  doubleDot: /\.\./,
+  dash: /-/,
+  slash: /\//,
+  comma: /,/,
+  colon: /:/,
+  questionMark: /\?/,
+  tilde: /[~≈]/,
+  percent: /%/,
+  apostrophe: /['']/,
+  lparen: /\(/,
+  rparen: /\)/,
+  lbracket: /\[/,
+  rbracket: /\]/,
+  lbrace: /\{/,
+  rbrace: /\}/,
+  dot: /\./,
+  word: {
+    match: /[a-zA-Z]+/,
+    type: caseInsensitiveKeywords({
+      early: 'early',
+      mid: ['mid', 'middle'],
+      late: 'late',
+      from: 'from',
+      to: 'to',
+      through: ['through', 'thru'],
+      until: 'until',
+      between: 'between',
+      and: 'and',
+      or: 'or',
+      before: 'before',
+      after: 'after',
+      since: 'since',
+      onwards: ['onwards', 'onward'],
+      earlier: 'earlier',
+      later: 'later',
+      prior: 'prior',
+      up: 'up',
+      than: 'than',
+      open: 'open',
+      start: 'start',
+      end: 'end',
+      circa: 'circa',
+      ca: 'ca',
+      c: 'c',
+      about: 'about',
+      around: 'around',
+      approximately: ['approximately', 'approx'],
+      near: 'near',
+      possibly: 'possibly',
+      maybe: 'maybe',
+      perhaps: 'perhaps',
+      probably: 'probably',
+      uncertain: 'uncertain',
+      approximate: 'approximate',
+      the: 'the',
+      a: ['a', 'an'],
+      of: 'of',
+      inWord: 'in',
+      on: 'on',
+      year: 'year',
+      month: 'month',
+      day: 'day',
+      sometime: 'sometime',
+      some: 'some',
+      anno: 'anno',
+      domini: 'domini',
+      common: 'common',
+      era: 'era',
+      christ: 'christ',
+      bce: 'bce',
+      bc: 'bc',
+      ce: 'ce',
+      ad: 'ad',
+      b: 'b',
+      century: 'century',
+      hundreds: 'hundreds',
+      spring: 'spring',
+      summer: 'summer',
+      autumn: 'autumn',
+      fall: 'fall',
+      winter: 'winter',
+      northern: 'northern',
+      southern: 'southern',
+      hemisphere: 'hemisphere',
+      north: 'north',
+      south: 'south',
+      quarter: 'quarter',
+      q: 'q',
+      quadrimester: 'quadrimester',
+      semestral: 'semestral',
+      semester: 'semester',
+      first: 'first',
+      second: 'second',
+      third: 'third',
+      fourth: 'fourth',
+      fifth: 'fifth',
+      sixth: 'sixth',
+      seventh: 'seventh',
+      eighth: 'eighth',
+      ninth: 'ninth',
+      tenth: 'tenth',
+      eleventh: 'eleventh',
+      twelfth: 'twelfth',
+      thirteenth: 'thirteenth',
+      fourteenth: 'fourteenth',
+      fifteenth: 'fifteenth',
+      sixteenth: 'sixteenth',
+      seventeenth: 'seventeenth',
+      eighteenth: 'eighteenth',
+      nineteenth: 'nineteenth',
+      twentieth: 'twentieth',
+      twentyFirst: ['twenty-first'],
+      twenties: 'twenties',
+      thirties: 'thirties',
+      forties: 'forties',
+      fifties: 'fifties',
+      sixties: 'sixties',
+      seventies: 'seventies',
+      eighties: 'eighties',
+      nineties: 'nineties',
+      tens: 'tens',
+      eleven: 'eleven',
+      twelve: 'twelve',
+      thirteen: 'thirteen',
+      fourteen: 'fourteen',
+      fifteen: 'fifteen',
+      sixteen: 'sixteen',
+      seventeen: 'seventeen',
+      eighteen: 'eighteen',
+      nineteen: 'nineteen',
+      twenty: 'twenty',
+      january: 'january',
+      jan: 'jan',
+      february: 'february',
+      feb: 'feb',
+      march: 'march',
+      mar: 'mar',
+      april: 'april',
+      apr: 'apr',
+      may: 'may',
+      june: 'june',
+      jun: 'jun',
+      july: 'july',
+      jul: 'jul',
+      august: 'august',
+      aug: 'aug',
+      september: 'september',
+      sept: 'sept',
+      sep: 'sep',
+      october: 'october',
+      oct: 'oct',
+      november: 'november',
+      nov: 'nov',
+      december: 'december',
+      dec: 'dec',
+      either: 'either',
+      both: 'both',
+      one: 'one',
+      all: 'all',
+      unknown: 'unknown',
+    }),
+  },
+});
+
+// Month lookup
 const months = {
   'january': '01', 'jan': '01',
   'february': '02', 'feb': '02',
@@ -18,355 +199,183 @@ const months = {
   'december': '12', 'dec': '12'
 };
 
-// Seasons (independent of location) - Level 1
-const seasons = {
-  'spring': '21',
-  'summer': '22',
-  'autumn': '23', 'fall': '23',
-  'winter': '24'
-};
+// Seasons
+const seasons = { 'spring': '21', 'summer': '22', 'autumn': '23', 'fall': '23', 'winter': '24' };
+const northernSeasons = { 'spring': '25', 'summer': '26', 'autumn': '27', 'fall': '27', 'winter': '28' };
+const southernSeasons = { 'spring': '29', 'summer': '30', 'autumn': '31', 'fall': '31', 'winter': '32' };
 
-// Northern Hemisphere seasons - Level 2
-const northernSeasons = {
-  'spring': '25',
-  'summer': '26',
-  'autumn': '27', 'fall': '27',
-  'winter': '28'
-};
-
-// Southern Hemisphere seasons - Level 2
-const southernSeasons = {
-  'spring': '29',
-  'summer': '30',
-  'autumn': '31', 'fall': '31',
-  'winter': '32'
-};
-
+// Utility functions
 function pad2(n) { return String(n).padStart(2, '0'); }
 function pad4(n) { return String(n).padStart(4, '0'); }
 
 function twoDigitYear(yy) {
-  // Resolve 2-digit year to 4-digit year using the "Sliding Window" convention.
-  // This uses a -80/+20 rolling century window based on the current year.
-  //
-  // For example, if the current year is 2026:
-  //   - Window spans 1946 to 2046
-  //   - "25" -> 2025 (within +20 future window)
-  //   - "38" -> 2038 (within +20 future window)
-  //   - "50" -> 1950 (beyond +20, falls into -80 past window)
-  //   - "99" -> 1999 (beyond +20, falls into -80 past window)
-  //
-  // This approach is preferred over fixed pivot years (like Excel's 2029 or SQL Server's 2049)
-  // because it remains accurate as time progresses. The -80/+20 split reflects that most
-  // two-digit year references are historical, while still accommodating near-future dates.
-  //
-  // See: https://www.youtube.com/watch?v=-5wpm-gesOY (Computerphile: Time & Date glitches)
   const year = parseInt(yy, 10);
   const currentYear = new Date().getFullYear();
-
-  // Calculate the sliding window boundaries
-  const futureWindow = 20;  // Years into the future
+  const futureWindow = 20;
   const maxFutureYear = currentYear + futureWindow;
-
-  // Determine which century the 2-digit year falls into
   const currentCentury = Math.floor(currentYear / 100) * 100;
   const thisOption = currentCentury + year;
   const prevOption = thisOption - 100;
-
-  // If this century's interpretation is within the +20 future window, use it
-  // Otherwise, use the previous century
-  if (thisOption <= maxFutureYear) {
-    return thisOption;
-  }
-  return prevOption;
+  return thisOption <= maxFutureYear ? thisOption : prevOption;
 }
 
-// Check if a year is a leap year
 function isLeapYear(year) {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
-// Get the number of days in a given month
 function getDaysInMonth(year, month) {
   const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  if (month === 2 && isLeapYear(year)) {
-    return 29;
-  }
-  return daysInMonth[month - 1] || 0;
+  return month === 2 && isLeapYear(year) ? 29 : (daysInMonth[month - 1] || 0);
 }
 
-// Build intervals for early/mid/late modifiers
-// Month: 10-10-Remaining split (1-10, 11-20, 21-end)
+// Modifier interval builders
 function buildMonthModifierInterval(year, month, modifier) {
   const y = parseInt(year, 10);
   const m = parseInt(month, 10);
   const lastDay = getDaysInMonth(y, m);
-
   switch (modifier) {
-    case 'early':
-      return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-10`;
-    case 'mid':
-      return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-20`;
-    case 'late':
-      return `${pad4(y)}-${pad2(m)}-21/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
-    default:
-      return `${pad4(y)}-${pad2(m)}`;
+    case 'early': return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-10`;
+    case 'mid': return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-20`;
+    case 'late': return `${pad4(y)}-${pad2(m)}-21/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
+    default: return `${pad4(y)}-${pad2(m)}`;
   }
 }
 
-// Year: Quarterly trisections (Jan-Apr, May-Aug, Sep-Dec)
 function buildYearModifierInterval(year, modifier) {
   const y = parseInt(year, 10);
-
   switch (modifier) {
-    case 'early':
-      return `${pad4(y)}-01/${pad4(y)}-04`;
-    case 'mid':
-      return `${pad4(y)}-05/${pad4(y)}-08`;
-    case 'late':
-      return `${pad4(y)}-09/${pad4(y)}-12`;
-    default:
-      return pad4(y);
+    case 'early': return `${pad4(y)}-01/${pad4(y)}-04`;
+    case 'mid': return `${pad4(y)}-05/${pad4(y)}-08`;
+    case 'late': return `${pad4(y)}-09/${pad4(y)}-12`;
+    default: return pad4(y);
   }
 }
 
-// Decade: 4-3-3 Rule (0-3, 4-6, 7-9)
 function buildDecadeModifierInterval(decadeStart, modifier) {
   const d = parseInt(decadeStart, 10);
-
   switch (modifier) {
-    case 'early':
-      return `${d}/${d + 3}`;
-    case 'mid':
-      return `${d + 4}/${d + 6}`;
-    case 'late':
-      return `${d + 7}/${d + 9}`;
-    default:
-      return `${d}/${d + 9}`;
+    case 'early': return `${d}/${d + 3}`;
+    case 'mid': return `${d + 4}/${d + 6}`;
+    case 'late': return `${d + 7}/${d + 9}`;
+    default: return `${d}/${d + 9}`;
   }
 }
 
-// Century: Mathematical thirds (01-33, 34-66, 67-00)
-// Note: centuries are 1-indexed (20th century = 1901-2000)
 function buildCenturyModifierInterval(centuryNum, modifier) {
   const c = parseInt(centuryNum, 10);
-  const centuryStart = (c - 1) * 100 + 1; // 20th century starts at 1901
-
+  const centuryStart = (c - 1) * 100 + 1;
   switch (modifier) {
-    case 'early':
-      return `${pad4(centuryStart)}/${pad4(centuryStart + 32)}`;
-    case 'mid':
-      return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 65)}`;
-    case 'late':
-      return `${pad4(centuryStart + 66)}/${pad4(centuryStart + 99)}`;
-    default:
-      return `${String(c - 1).padStart(2, '0')}XX`;
+    case 'early': return `${pad4(centuryStart)}/${pad4(centuryStart + 32)}`;
+    case 'mid': return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 65)}`;
+    case 'late': return `${pad4(centuryStart + 66)}/${pad4(centuryStart + 99)}`;
+    default: return `${String(c - 1).padStart(2, '0')}XX`;
   }
 }
 
-// BCE Century intervals (negative years)
 function buildBCECenturyModifierInterval(centuryNum, modifier) {
   const c = parseInt(centuryNum, 10);
-  // For BCE, 1st century BCE = -0099 to -0001 (years 100 BCE to 1 BCE)
-  const centuryEnd = -((c - 1) * 100); // End year (closer to 0)
-  const centuryStart = -(c * 100 - 1);  // Start year (further from 0)
-
   switch (modifier) {
-    case 'early':
-      // Early part of BCE century is further from year 0
-      return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 67)}`;
-    case 'mid':
-      return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100 + 34)}`;
-    case 'late':
-      // Late part of BCE century is closer to year 0
-      return `-${pad4((c - 1) * 100 + 33)}/-${pad4((c - 1) * 100)}`;
-    default:
-      return `-${String(c - 1).padStart(2, '0')}XX`;
+    case 'early': return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 67)}`;
+    case 'mid': return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100 + 34)}`;
+    case 'late': return `-${pad4((c - 1) * 100 + 33)}/-${pad4((c - 1) * 100)}`;
+    default: return `-${String(c - 1).padStart(2, '0')}XX`;
   }
 }
 
-// Combination modifier intervals (early-to-mid, mid-to-late)
-// These combine the start of the first modifier with the end of the second
-
-// Month combination: combines day ranges
+// Combination modifier builders
 function buildMonthCombinationInterval(year, month, combo) {
   const y = parseInt(year, 10);
   const m = parseInt(month, 10);
   const lastDay = getDaysInMonth(y, m);
-
   switch (combo) {
-    case 'early-to-mid':
-      // early starts at 1, mid ends at 20
-      return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-20`;
-    case 'mid-to-late':
-      // mid starts at 11, late ends at lastDay
-      return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
-    default:
-      return `${pad4(y)}-${pad2(m)}`;
+    case 'early-to-mid': return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-20`;
+    case 'mid-to-late': return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
+    default: return `${pad4(y)}-${pad2(m)}`;
   }
 }
 
-// Year combination: combines quarterly ranges
 function buildYearCombinationInterval(year, combo) {
   const y = parseInt(year, 10);
-
   switch (combo) {
-    case 'early-to-mid':
-      // early starts at 01, mid ends at 08
-      return `${pad4(y)}-01/${pad4(y)}-08`;
-    case 'mid-to-late':
-      // mid starts at 05, late ends at 12
-      return `${pad4(y)}-05/${pad4(y)}-12`;
-    default:
-      return pad4(y);
+    case 'early-to-mid': return `${pad4(y)}-01/${pad4(y)}-08`;
+    case 'mid-to-late': return `${pad4(y)}-05/${pad4(y)}-12`;
+    default: return pad4(y);
   }
 }
 
-// Decade combination: combines year ranges using 4-3-3 rule
 function buildDecadeCombinationInterval(decadeStart, combo) {
   const d = parseInt(decadeStart, 10);
-
   switch (combo) {
-    case 'early-to-mid':
-      // early starts at 0, mid ends at 6
-      return `${d}/${d + 6}`;
-    case 'mid-to-late':
-      // mid starts at 4, late ends at 9
-      return `${d + 4}/${d + 9}`;
-    default:
-      return `${d}/${d + 9}`;
+    case 'early-to-mid': return `${d}/${d + 6}`;
+    case 'mid-to-late': return `${d + 4}/${d + 9}`;
+    default: return `${d}/${d + 9}`;
   }
 }
 
-// Century combination: combines year ranges using thirds
 function buildCenturyCombinationInterval(centuryNum, combo) {
   const c = parseInt(centuryNum, 10);
-  const centuryStart = (c - 1) * 100 + 1; // 20th century starts at 1901
-
+  const centuryStart = (c - 1) * 100 + 1;
   switch (combo) {
-    case 'early-to-mid':
-      // early starts at 01, mid ends at 65
-      return `${pad4(centuryStart)}/${pad4(centuryStart + 65)}`;
-    case 'mid-to-late':
-      // mid starts at 33, late ends at 99
-      return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 99)}`;
-    default:
-      return `${String(c - 1).padStart(2, '0')}XX`;
+    case 'early-to-mid': return `${pad4(centuryStart)}/${pad4(centuryStart + 65)}`;
+    case 'mid-to-late': return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 99)}`;
+    default: return `${String(c - 1).padStart(2, '0')}XX`;
   }
 }
 
-// BCE Century combination intervals
 function buildBCECenturyCombinationInterval(centuryNum, combo) {
   const c = parseInt(centuryNum, 10);
-
   switch (combo) {
-    case 'early-to-mid':
-      // early starts further from 0, mid ends at 34
-      return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 34)}`;
-    case 'mid-to-late':
-      // mid starts at 66, late ends closer to 0
-      return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100)}`;
-    default:
-      return `-${String(c - 1).padStart(2, '0')}XX`;
+    case 'early-to-mid': return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 34)}`;
+    case 'mid-to-late': return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100)}`;
+    default: return `-${String(c - 1).padStart(2, '0')}XX`;
   }
 }
 
-function bceToBCE(year) {
-  return -(parseInt(year, 10) - 1);
-}
+function bceToBCE(year) { return -(parseInt(year, 10) - 1); }
 
-// Build slash-delimited date result
-// Returns both possible interpretations when ambiguous, or just one when unambiguous
 function buildSlashDate(first, second, yearStr) {
   const firstNum = parseInt(first, 10);
   const secondNum = parseInt(second, 10);
   const year = yearStr.length === 2 ? twoDigitYear(yearStr) : parseInt(yearStr, 10);
-
   const isFirstValidMonth = firstNum >= 1 && firstNum <= 12;
   const isSecondValidMonth = secondNum >= 1 && secondNum <= 12;
   const isFirstValidDay = firstNum >= 1 && firstNum <= 31;
   const isSecondValidDay = secondNum >= 1 && secondNum <= 31;
-
-  // If first number > 12, it must be a day (EU format: DD/MM/YYYY)
   if (firstNum > 12 && isFirstValidDay && isSecondValidMonth) {
-    return {
-      type: 'date',
-      edtf: `${pad4(year)}-${pad2(secondNum)}-${pad2(firstNum)}`,
-      confidence: 0.9,
-      ambiguous: false
-    };
+    return { type: 'date', edtf: `${pad4(year)}-${pad2(secondNum)}-${pad2(firstNum)}`, confidence: 0.9, ambiguous: false };
   }
-
-  // If second number > 12, it must be a day (US format: MM/DD/YYYY)
   if (secondNum > 12 && isSecondValidDay && isFirstValidMonth) {
-    return {
-      type: 'date',
-      edtf: `${pad4(year)}-${pad2(firstNum)}-${pad2(secondNum)}`,
-      confidence: 0.9,
-      ambiguous: false
-    };
+    return { type: 'date', edtf: `${pad4(year)}-${pad2(firstNum)}-${pad2(secondNum)}`, confidence: 0.9, ambiguous: false };
   }
-
-  // Both could be valid - ambiguous case
-  // Return with US interpretation (MM/DD/YYYY) as the primary EDTF
-  // The parser will generate both interpretations in post-processing
   if (isFirstValidMonth && isSecondValidDay) {
-    return {
-      type: 'date',
-      edtf: `${pad4(year)}-${pad2(firstNum)}-${pad2(secondNum)}`,
-      confidence: 0.5,
-      ambiguous: true
-    };
+    return { type: 'date', edtf: `${pad4(year)}-${pad2(firstNum)}-${pad2(secondNum)}`, confidence: 0.5, ambiguous: true };
   }
-
-  // Invalid date
   return null;
 }
 
-// Build EDTF with partial qualifications
-// e.g., buildPartialQual('2004-06-11', { year: '?', day: '~' }) => '?2004-06-~11'
 function buildPartialQual(baseEdtf, quals) {
   const parts = baseEdtf.split('-');
   const year = parts[0] || '';
   const month = parts[1] || '';
   const day = parts[2] || '';
-
   const yearQual = quals.year || '';
   const monthQual = quals.month || '';
   const dayQual = quals.day || '';
-
-  if (day) {
-    // Full date: YYYY-MM-DD
-    return `${yearQual}${year}-${monthQual}${month}-${dayQual}${day}`;
-  } else if (month) {
-    // Year-month: YYYY-MM
-    return `${yearQual}${year}-${monthQual}${month}`;
-  } else {
-    // Year only
-    return `${yearQual}${year}`;
-  }
+  if (day) return `${yearQual}${year}-${monthQual}${month}-${dayQual}${day}`;
+  if (month) return `${yearQual}${year}-${monthQual}${month}`;
+  return `${yearQual}${year}`;
 }
 
-function getIntervalStart(edtf) {
-  var parts = edtf.split('/');
-  return parts[0] || edtf;
-}
-
-function getIntervalEnd(edtf) {
-  var parts = edtf.split('/');
-  return parts[1] || parts[0] || edtf;
-}
-
+function getIntervalStart(edtf) { var parts = edtf.split('/'); return parts[0] || edtf; }
+function getIntervalEnd(edtf) { var parts = edtf.split('/'); return parts[1] || parts[0] || edtf; }
 function applyQualifierToInterval(edtf, qualifier) {
   if (!qualifier) return edtf;
   var parts = edtf.split('/');
-  if (parts.length === 2) {
-    return parts[0] + qualifier + '/' + parts[1] + qualifier;
-  }
+  if (parts.length === 2) return parts[0] + qualifier + '/' + parts[1] + qualifier;
   return edtf + qualifier;
 }
 var grammar = {
-    Lexer: undefined,
+    Lexer: lexer as any,
     ParserRules: [
     {"name": "main", "symbols": ["_", "value", "_"], "postprocess": d => d[1]},
     {"name": "value", "symbols": ["interval"], "postprocess": id},
@@ -377,1036 +386,362 @@ var grammar = {
     {"name": "value", "symbols": ["season"], "postprocess": id},
     {"name": "value", "symbols": ["date"], "postprocess": id},
     {"name": "_$ebnf$1", "symbols": []},
-    {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", /[\s]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", (lexer.has("ws") ? {type: "ws"} : ws)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "_", "symbols": ["_$ebnf$1"], "postprocess": () => null},
-    {"name": "__$ebnf$1", "symbols": [/[\s]/]},
-    {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", /[\s]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "__$ebnf$1", "symbols": [(lexer.has("ws") ? {type: "ws"} : ws)]},
+    {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", (lexer.has("ws") ? {type: "ws"} : ws)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "__", "symbols": ["__$ebnf$1"], "postprocess": () => null},
-    {"name": "temporal_modifier_word$subexpression$1", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$1"], "postprocess": () => 'early'},
-    {"name": "temporal_modifier_word$subexpression$2", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$2"], "postprocess": () => 'mid'},
-    {"name": "temporal_modifier_word$subexpression$3", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$3"], "postprocess": () => 'mid'},
-    {"name": "temporal_modifier_word$subexpression$4", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$4"], "postprocess": () => 'late'},
-    {"name": "combination_modifier$subexpression$1", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$2", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$3", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$1", "combo_sep", "combination_modifier$subexpression$2", "combo_sep", "combination_modifier$subexpression$3"], "postprocess": () => 'early-to-mid'},
-    {"name": "combination_modifier$subexpression$4", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$5", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$6", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$4", "combo_sep", "combination_modifier$subexpression$5", "combo_sep", "combination_modifier$subexpression$6"], "postprocess": () => 'early-to-mid'},
-    {"name": "combination_modifier$subexpression$7", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$8", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$7", {"literal":"-"}, "combination_modifier$subexpression$8"], "postprocess": () => 'early-to-mid'},
-    {"name": "combination_modifier$subexpression$9", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$10", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$9", {"literal":"-"}, "combination_modifier$subexpression$10"], "postprocess": () => 'early-to-mid'},
-    {"name": "combination_modifier$subexpression$11", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$12", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$13", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$11", "combo_sep", "combination_modifier$subexpression$12", "combo_sep", "combination_modifier$subexpression$13"], "postprocess": () => 'mid-to-late'},
-    {"name": "combination_modifier$subexpression$14", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$15", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$16", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$14", "combo_sep", "combination_modifier$subexpression$15", "combo_sep", "combination_modifier$subexpression$16"], "postprocess": () => 'mid-to-late'},
-    {"name": "combination_modifier$subexpression$17", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$18", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$17", {"literal":"-"}, "combination_modifier$subexpression$18"], "postprocess": () => 'mid-to-late'},
-    {"name": "combination_modifier$subexpression$19", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier$subexpression$20", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$19", {"literal":"-"}, "combination_modifier$subexpression$20"], "postprocess": () => 'mid-to-late'},
-    {"name": "combo_sep", "symbols": ["__"], "postprocess": id},
-    {"name": "combo_sep", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "year_4digit", "symbols": [(lexer.has("number") ? {type: "number"} : number)], "postprocess": d => d[0].value},
+    {"name": "year_num", "symbols": [(lexer.has("number") ? {type: "number"} : number)], "postprocess": d => d[0].value},
+    {"name": "numeric_year", "symbols": [(lexer.has("number") ? {type: "number"} : number)], "postprocess": d => d[0].value},
+    {"name": "day_num", "symbols": [(lexer.has("number") ? {type: "number"} : number)], "postprocess": d => parseInt(d[0].value, 10)},
+    {"name": "ordinal_num", "symbols": [(lexer.has("number") ? {type: "number"} : number), (lexer.has("ordinalSuffix") ? {type: "ordinalSuffix"} : ordinalSuffix)], "postprocess": d => parseInt(d[0].value, 10)},
+    {"name": "ordinal_day", "symbols": ["ordinal_num"], "postprocess": id},
+    {"name": "ordinal_century", "symbols": ["ordinal_num"], "postprocess": id},
+    {"name": "month_name", "symbols": [(lexer.has("january") ? {type: "january"} : january)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("jan") ? {type: "jan"} : jan)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("february") ? {type: "february"} : february)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("feb") ? {type: "feb"} : feb)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("march") ? {type: "march"} : march)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("mar") ? {type: "mar"} : mar)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("april") ? {type: "april"} : april)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("apr") ? {type: "apr"} : apr)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("may") ? {type: "may"} : may)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("june") ? {type: "june"} : june)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("jun") ? {type: "jun"} : jun)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("july") ? {type: "july"} : july)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("jul") ? {type: "jul"} : jul)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("august") ? {type: "august"} : august)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("aug") ? {type: "aug"} : aug)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("september") ? {type: "september"} : september)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("sept") ? {type: "sept"} : sept)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("sep") ? {type: "sep"} : sep)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("october") ? {type: "october"} : october)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("oct") ? {type: "oct"} : oct)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("november") ? {type: "november"} : november)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("nov") ? {type: "nov"} : nov)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("december") ? {type: "december"} : december)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "month_name", "symbols": [(lexer.has("dec") ? {type: "dec"} : dec)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "season_name", "symbols": [(lexer.has("spring") ? {type: "spring"} : spring)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "season_name", "symbols": [(lexer.has("summer") ? {type: "summer"} : summer)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "season_name", "symbols": [(lexer.has("autumn") ? {type: "autumn"} : autumn)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "season_name", "symbols": [(lexer.has("fall") ? {type: "fall"} : fall)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "season_name", "symbols": [(lexer.has("winter") ? {type: "winter"} : winter)], "postprocess": d => d[0].value.toLowerCase()},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("first") ? {type: "first"} : first)], "postprocess": () => 1},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("second") ? {type: "second"} : second)], "postprocess": () => 2},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("third") ? {type: "third"} : third)], "postprocess": () => 3},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("fourth") ? {type: "fourth"} : fourth)], "postprocess": () => 4},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("fifth") ? {type: "fifth"} : fifth)], "postprocess": () => 5},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("sixth") ? {type: "sixth"} : sixth)], "postprocess": () => 6},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("seventh") ? {type: "seventh"} : seventh)], "postprocess": () => 7},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("eighth") ? {type: "eighth"} : eighth)], "postprocess": () => 8},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("ninth") ? {type: "ninth"} : ninth)], "postprocess": () => 9},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("tenth") ? {type: "tenth"} : tenth)], "postprocess": () => 10},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("eleventh") ? {type: "eleventh"} : eleventh)], "postprocess": () => 11},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("twelfth") ? {type: "twelfth"} : twelfth)], "postprocess": () => 12},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("thirteenth") ? {type: "thirteenth"} : thirteenth)], "postprocess": () => 13},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("fourteenth") ? {type: "fourteenth"} : fourteenth)], "postprocess": () => 14},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("fifteenth") ? {type: "fifteenth"} : fifteenth)], "postprocess": () => 15},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("sixteenth") ? {type: "sixteenth"} : sixteenth)], "postprocess": () => 16},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("seventeenth") ? {type: "seventeenth"} : seventeenth)], "postprocess": () => 17},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("eighteenth") ? {type: "eighteenth"} : eighteenth)], "postprocess": () => 18},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("nineteenth") ? {type: "nineteenth"} : nineteenth)], "postprocess": () => 19},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("twentieth") ? {type: "twentieth"} : twentieth)], "postprocess": () => 20},
+    {"name": "spelled_ordinal_century", "symbols": [(lexer.has("twenty") ? {type: "twenty"} : twenty), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("first") ? {type: "first"} : first)], "postprocess": () => 21},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("eighteen") ? {type: "eighteen"} : eighteen)], "postprocess": () => '18'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("seventeen") ? {type: "seventeen"} : seventeen)], "postprocess": () => '17'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("sixteen") ? {type: "sixteen"} : sixteen)], "postprocess": () => '16'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("fifteen") ? {type: "fifteen"} : fifteen)], "postprocess": () => '15'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("fourteen") ? {type: "fourteen"} : fourteen)], "postprocess": () => '14'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("thirteen") ? {type: "thirteen"} : thirteen)], "postprocess": () => '13'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("twelve") ? {type: "twelve"} : twelve)], "postprocess": () => '12'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("eleven") ? {type: "eleven"} : eleven)], "postprocess": () => '11'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("nineteen") ? {type: "nineteen"} : nineteen)], "postprocess": () => '19'},
+    {"name": "spelled_number_word", "symbols": [(lexer.has("twenty") ? {type: "twenty"} : twenty)], "postprocess": () => '20'},
+    {"name": "spelled_century", "symbols": [(lexer.has("nineteenth") ? {type: "nineteenth"} : nineteenth)], "postprocess": () => '18'},
+    {"name": "spelled_century", "symbols": [(lexer.has("eighteenth") ? {type: "eighteenth"} : eighteenth)], "postprocess": () => '17'},
+    {"name": "spelled_century", "symbols": [(lexer.has("seventeenth") ? {type: "seventeenth"} : seventeenth)], "postprocess": () => '16'},
+    {"name": "spelled_century", "symbols": [(lexer.has("sixteenth") ? {type: "sixteenth"} : sixteenth)], "postprocess": () => '15'},
+    {"name": "spelled_century", "symbols": [(lexer.has("fifteenth") ? {type: "fifteenth"} : fifteenth)], "postprocess": () => '14'},
+    {"name": "spelled_century", "symbols": [(lexer.has("twentieth") ? {type: "twentieth"} : twentieth)], "postprocess": () => '19'},
+    {"name": "spelled_century", "symbols": [(lexer.has("twenty") ? {type: "twenty"} : twenty), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("first") ? {type: "first"} : first)], "postprocess": () => '20'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("sixties") ? {type: "sixties"} : sixties)], "postprocess": () => '6'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("fifties") ? {type: "fifties"} : fifties)], "postprocess": () => '5'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("forties") ? {type: "forties"} : forties)], "postprocess": () => '4'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("thirties") ? {type: "thirties"} : thirties)], "postprocess": () => '3'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("twenties") ? {type: "twenties"} : twenties)], "postprocess": () => '2'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("tens") ? {type: "tens"} : tens)], "postprocess": () => '1'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("seventies") ? {type: "seventies"} : seventies)], "postprocess": () => '7'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("eighties") ? {type: "eighties"} : eighties)], "postprocess": () => '8'},
+    {"name": "spelled_decade", "symbols": [(lexer.has("nineties") ? {type: "nineties"} : nineties)], "postprocess": () => '9'},
+    {"name": "decade", "symbols": [(lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess":  d => {
+          const num = d[0].value;
+          // Must be a 4-digit year ending in 0
+          if (num.length === 4 && num.endsWith('0')) {
+            return parseInt(num.substring(0, 3) + '0', 10);
+          }
+          return null;
+        } },
+    {"name": "qualifier", "symbols": [(lexer.has("questionMark") ? {type: "questionMark"} : questionMark)], "postprocess": () => '?'},
+    {"name": "qualifier", "symbols": [(lexer.has("tilde") ? {type: "tilde"} : tilde)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("circa") ? {type: "circa"} : circa)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("circa") ? {type: "circa"} : circa), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("ca") ? {type: "ca"} : ca)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("ca") ? {type: "ca"} : ca), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("c") ? {type: "c"} : c), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("c") ? {type: "c"} : c)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("about") ? {type: "about"} : about)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("around") ? {type: "around"} : around)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("near") ? {type: "near"} : near)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("approximately") ? {type: "approximately"} : approximately)], "postprocess": () => '~'},
+    {"name": "qualifier", "symbols": [(lexer.has("possibly") ? {type: "possibly"} : possibly)], "postprocess": () => '?'},
+    {"name": "qualifier", "symbols": [(lexer.has("maybe") ? {type: "maybe"} : maybe)], "postprocess": () => '?'},
+    {"name": "qualifier", "symbols": [(lexer.has("perhaps") ? {type: "perhaps"} : perhaps)], "postprocess": () => '?'},
+    {"name": "qualifier", "symbols": [(lexer.has("probably") ? {type: "probably"} : probably)], "postprocess": () => '?'},
+    {"name": "qualifier", "symbols": [(lexer.has("uncertain") ? {type: "uncertain"} : uncertain)], "postprocess": () => '?'},
+    {"name": "parenthetical_qualification", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("uncertain") ? {type: "uncertain"} : uncertain), (lexer.has("slash") ? {type: "slash"} : slash), (lexer.has("approximate") ? {type: "approximate"} : approximate), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => ({ type: 'global', qual: '%' })},
+    {"name": "parenthetical_qualification", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("uncertain") ? {type: "uncertain"} : uncertain), "__", (lexer.has("and") ? {type: "and"} : and), "__", (lexer.has("approximate") ? {type: "approximate"} : approximate), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => ({ type: 'global', qual: '%' })},
+    {"name": "parenthetical_qualification", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("uncertain") ? {type: "uncertain"} : uncertain), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => ({ type: 'global', qual: '?' })},
+    {"name": "parenthetical_qualification", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("approximate") ? {type: "approximate"} : approximate), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => ({ type: 'global', qual: '~' })},
+    {"name": "parenthetical_qualification", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", "partial_qual_list", "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": d => ({ type: 'partial', quals: d[2] })},
+    {"name": "partial_qual_list", "symbols": ["partial_qual", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "partial_qual_list"], "postprocess": d => ({ ...d[4], ...d[0] })},
+    {"name": "partial_qual_list", "symbols": ["partial_qual", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "partial_qual"], "postprocess": d => ({ ...d[0], ...d[4] })},
+    {"name": "partial_qual_list", "symbols": ["partial_qual"], "postprocess": id},
+    {"name": "partial_qual", "symbols": [(lexer.has("year") ? {type: "year"} : year), "__", "qual_type"], "postprocess": d => ({ year: d[2] })},
+    {"name": "partial_qual", "symbols": [(lexer.has("month") ? {type: "month"} : month), "__", "qual_type"], "postprocess": d => ({ month: d[2] })},
+    {"name": "partial_qual", "symbols": [(lexer.has("day") ? {type: "day"} : day), "__", "qual_type"], "postprocess": d => ({ day: d[2] })},
+    {"name": "qual_type", "symbols": [(lexer.has("uncertain") ? {type: "uncertain"} : uncertain), (lexer.has("slash") ? {type: "slash"} : slash), (lexer.has("approximate") ? {type: "approximate"} : approximate)], "postprocess": () => '%'},
+    {"name": "qual_type", "symbols": [(lexer.has("uncertain") ? {type: "uncertain"} : uncertain)], "postprocess": () => '?'},
+    {"name": "qual_type", "symbols": [(lexer.has("approximate") ? {type: "approximate"} : approximate)], "postprocess": () => '~'},
+    {"name": "temporal_modifier_word", "symbols": [(lexer.has("early") ? {type: "early"} : early)], "postprocess": () => 'early'},
+    {"name": "temporal_modifier_word", "symbols": [(lexer.has("mid") ? {type: "mid"} : mid)], "postprocess": () => 'mid'},
+    {"name": "temporal_modifier_word", "symbols": [(lexer.has("late") ? {type: "late"} : late)], "postprocess": () => 'late'},
+    {"name": "combination_modifier", "symbols": [(lexer.has("early") ? {type: "early"} : early), "__", (lexer.has("to") ? {type: "to"} : to), "__", (lexer.has("mid") ? {type: "mid"} : mid)], "postprocess": () => 'early-to-mid'},
+    {"name": "combination_modifier", "symbols": [(lexer.has("early") ? {type: "early"} : early), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("mid") ? {type: "mid"} : mid)], "postprocess": () => 'early-to-mid'},
+    {"name": "combination_modifier", "symbols": [(lexer.has("early") ? {type: "early"} : early), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("to") ? {type: "to"} : to), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("mid") ? {type: "mid"} : mid)], "postprocess": () => 'early-to-mid'},
+    {"name": "combination_modifier", "symbols": [(lexer.has("mid") ? {type: "mid"} : mid), "__", (lexer.has("to") ? {type: "to"} : to), "__", (lexer.has("late") ? {type: "late"} : late)], "postprocess": () => 'mid-to-late'},
+    {"name": "combination_modifier", "symbols": [(lexer.has("mid") ? {type: "mid"} : mid), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("late") ? {type: "late"} : late)], "postprocess": () => 'mid-to-late'},
+    {"name": "combination_modifier", "symbols": [(lexer.has("mid") ? {type: "mid"} : mid), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("to") ? {type: "to"} : to), (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("late") ? {type: "late"} : late)], "postprocess": () => 'mid-to-late'},
     {"name": "modifier_sep", "symbols": ["__"], "postprocess": id},
-    {"name": "modifier_sep", "symbols": [{"literal":"-"}], "postprocess": id},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
-          const modifier = d[0];
-          const month = months[d[2].toLowerCase()];
-          const year = d[4];
-          return { type: 'interval', edtf: buildMonthModifierInterval(year, month, modifier), confidence: 0.95 };
+    {"name": "modifier_sep", "symbols": [(lexer.has("dash") ? {type: "dash"} : dash)], "postprocess": id},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: buildMonthModifierInterval(d[4], months[d[2]], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'interval', edtf: buildMonthModifierInterval(d[6], months[d[2]], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "year_num"], "postprocess": d => ({ type: 'interval', edtf: buildYearModifierInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeModifierInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeModifierInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "__", (lexer.has("the") ? {type: "the"} : the), "__", "decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeModifierInterval(d[4], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyModifierInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyModifierInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "century_word", "__", "era_ce"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyModifierInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "ordinal_century", "__", "century_word", "__", "era_ce"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyModifierInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'interval', edtf: buildBCECenturyModifierInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'interval', edtf: buildBCECenturyModifierInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyModifierInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyModifierInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeModifierInterval(1900 + parseInt(d[2], 10) * 10, d[0]), confidence: 0.9 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "spelled_decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeModifierInterval(1900 + parseInt(d[4], 10) * 10, d[2]), confidence: 0.9 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: buildMonthCombinationInterval(d[4], months[d[2]], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "month_name", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'interval', edtf: buildMonthCombinationInterval(d[6], months[d[2]], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "year_num"], "postprocess": d => ({ type: 'interval', edtf: buildYearCombinationInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeCombinationInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeCombinationInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyCombinationInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyCombinationInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "century_word", "__", "era_ce"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyCombinationInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "ordinal_century", "__", "century_word", "__", "era_ce"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyCombinationInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'interval', edtf: buildBCECenturyCombinationInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'interval', edtf: buildBCECenturyCombinationInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyCombinationInterval(d[2], d[0]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'interval', edtf: buildCenturyCombinationInterval(d[4], d[2]), confidence: 0.95 })},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "spelled_decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeCombinationInterval(1900 + parseInt(d[2], 10) * 10, d[0]), confidence: 0.9 })},
+    {"name": "temporal_modifier", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "spelled_decade"], "postprocess": d => ({ type: 'interval', edtf: buildDecadeCombinationInterval(1900 + parseInt(d[4], 10) * 10, d[2]), confidence: 0.9 })},
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "decade"], "postprocess":  d => {
+          const baseEdtf = buildDecadeModifierInterval(d[4], d[2]);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, d[0]), confidence: 0.9 };
         } },
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess":  d => {
-          const modifier = d[0];
-          const month = months[d[2].toLowerCase()];
-          const year = d[6];
-          return { type: 'interval', edtf: buildMonthModifierInterval(year, month, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "year_num"], "postprocess":  d => {
-          const modifier = d[0];
-          const year = d[2];
-          return { type: 'interval', edtf: buildYearModifierInterval(year, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$1", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier$subexpression$1", "symbols": []},
-    {"name": "temporal_modifier$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$1", "temporal_modifier$subexpression$2"], "postprocess":  d => {
-          const modifier = d[0];
-          const decadeStart = parseInt(d[2] + d[3] + d[4] + '0', 10);
-          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$4", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier$subexpression$4", "symbols": []},
-    {"name": "temporal_modifier$subexpression$5", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "__", "temporal_modifier$subexpression$3", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$4", "temporal_modifier$subexpression$5"], "postprocess":  d => {
-          const modifier = d[0];
-          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
-          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$6", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$7", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier$subexpression$7", "symbols": []},
-    {"name": "temporal_modifier$subexpression$8", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$6", "__", "temporal_modifier_word", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$7", "temporal_modifier$subexpression$8"], "postprocess":  d => {
-          const modifier = d[2];
-          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
-          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$9$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$9", "symbols": ["temporal_modifier$subexpression$9$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$9$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$9", "symbols": ["temporal_modifier$subexpression$9$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$9"], "postprocess":  d => {
-          const modifier = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$10", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$11$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$11", "symbols": ["temporal_modifier$subexpression$11$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$11$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$11", "symbols": ["temporal_modifier$subexpression$11$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$10", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier$subexpression$11"], "postprocess":  d => {
-          const modifier = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$12$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$12", "symbols": ["temporal_modifier$subexpression$12$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$12$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$12", "symbols": ["temporal_modifier$subexpression$12$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$13$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$13$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$13$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$13$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$13$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$13$subexpression$4", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$13$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$5"]},
-    {"name": "temporal_modifier$subexpression$13$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$13", "symbols": ["temporal_modifier$subexpression$13$subexpression$6"]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$12", "__", "temporal_modifier$subexpression$13"], "postprocess":  d => {
-          const modifier = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$14", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$15$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$15", "symbols": ["temporal_modifier$subexpression$15$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$15$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$15", "symbols": ["temporal_modifier$subexpression$15$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$16$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$16$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$16$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$16$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$16$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$16$subexpression$4", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$16$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$5"]},
-    {"name": "temporal_modifier$subexpression$16$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$16", "symbols": ["temporal_modifier$subexpression$16$subexpression$6"]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$14", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier$subexpression$15", "__", "temporal_modifier$subexpression$16"], "postprocess":  d => {
-          const modifier = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$17$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$17", "symbols": ["temporal_modifier$subexpression$17$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$17$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$17", "symbols": ["temporal_modifier$subexpression$17$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$18$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$18$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$18$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$18$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$18$subexpression$3", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$18$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$18$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$18$subexpression$5", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$18$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$6"]},
-    {"name": "temporal_modifier$subexpression$18$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$18", "symbols": ["temporal_modifier$subexpression$18$subexpression$7"]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$17", "__", "temporal_modifier$subexpression$18"], "postprocess":  d => {
-          const modifier = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildBCECenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$19", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$20$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$20", "symbols": ["temporal_modifier$subexpression$20$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$20$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$20", "symbols": ["temporal_modifier$subexpression$20$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$21$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$21$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$21$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$21$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$21$subexpression$3", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$21$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$21$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$21$subexpression$5", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$21$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$6"]},
-    {"name": "temporal_modifier$subexpression$21$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$21", "symbols": ["temporal_modifier$subexpression$21$subexpression$7"]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$19", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier$subexpression$20", "__", "temporal_modifier$subexpression$21"], "postprocess":  d => {
-          const modifier = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildBCECenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$22$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$22", "symbols": ["temporal_modifier$subexpression$22$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$22$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$22", "symbols": ["temporal_modifier$subexpression$22$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$22"], "postprocess":  d => {
-          const modifier = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$23", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$24$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$24", "symbols": ["temporal_modifier$subexpression$24$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$24$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$24", "symbols": ["temporal_modifier$subexpression$24$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$23", "__", "temporal_modifier_word", "__", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$24"], "postprocess":  d => {
-          const modifier = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildCenturyModifierInterval(centuryNum, modifier), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess":  d => {
-          const modifier = d[0];
-          const decadeDigit = d[2];
-          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
-          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
-        } },
-    {"name": "temporal_modifier$subexpression$25", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$25", "__", "temporal_modifier_word", "__", "spelled_decade"], "postprocess":  d => {
-          const modifier = d[2];
-          const decadeDigit = d[4];
-          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
-          return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
-        } },
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
-          const combo = d[0];
-          const month = months[d[2].toLowerCase()];
-          const year = d[4];
-          return { type: 'interval', edtf: buildMonthCombinationInterval(year, month, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess":  d => {
-          const combo = d[0];
-          const month = months[d[2].toLowerCase()];
-          const year = d[6];
-          return { type: 'interval', edtf: buildMonthCombinationInterval(year, month, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "year_num"], "postprocess":  d => {
-          const combo = d[0];
-          const year = d[2];
-          return { type: 'interval', edtf: buildYearCombinationInterval(year, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$26", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier$subexpression$26", "symbols": []},
-    {"name": "temporal_modifier$subexpression$27", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$26", "temporal_modifier$subexpression$27"], "postprocess":  d => {
-          const combo = d[0];
-          const decadeStart = parseInt(d[2] + d[3] + d[4] + '0', 10);
-          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$28", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$29", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier$subexpression$29", "symbols": []},
-    {"name": "temporal_modifier$subexpression$30", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$28", "__", "combination_modifier", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$29", "temporal_modifier$subexpression$30"], "postprocess":  d => {
-          const combo = d[2];
-          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
-          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$31$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$31", "symbols": ["temporal_modifier$subexpression$31$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$31$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$31", "symbols": ["temporal_modifier$subexpression$31$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$31"], "postprocess":  d => {
-          const combo = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$32", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$33$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$33", "symbols": ["temporal_modifier$subexpression$33$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$33$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$33", "symbols": ["temporal_modifier$subexpression$33$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$32", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier$subexpression$33"], "postprocess":  d => {
-          const combo = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$34$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$34", "symbols": ["temporal_modifier$subexpression$34$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$34$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$34", "symbols": ["temporal_modifier$subexpression$34$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$35$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$35$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$35$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$35$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$35$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$35$subexpression$4", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$35$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$5"]},
-    {"name": "temporal_modifier$subexpression$35$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$6"]},
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$34", "__", "temporal_modifier$subexpression$35"], "postprocess":  d => {
-          const combo = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$36", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$37$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$37", "symbols": ["temporal_modifier$subexpression$37$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$37$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$37", "symbols": ["temporal_modifier$subexpression$37$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$38$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$38$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$38$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$38$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$38$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$38$subexpression$4", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$38$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$5"]},
-    {"name": "temporal_modifier$subexpression$38$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$6"]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$36", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier$subexpression$37", "__", "temporal_modifier$subexpression$38"], "postprocess":  d => {
-          const combo = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$39$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$39", "symbols": ["temporal_modifier$subexpression$39$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$39$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$39", "symbols": ["temporal_modifier$subexpression$39$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$40$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$40$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$40$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$40$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$40$subexpression$3", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$40$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$40$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$40$subexpression$5", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$40$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$6"]},
-    {"name": "temporal_modifier$subexpression$40$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$7"]},
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$39", "__", "temporal_modifier$subexpression$40"], "postprocess":  d => {
-          const combo = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildBCECenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$41", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$42$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$42", "symbols": ["temporal_modifier$subexpression$42$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$42$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$42", "symbols": ["temporal_modifier$subexpression$42$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$43$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$43$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$43$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$43$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$43$subexpression$3", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$43$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$43$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$43$subexpression$5", {"literal":"."}]},
-    {"name": "temporal_modifier$subexpression$43$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$6"]},
-    {"name": "temporal_modifier$subexpression$43$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$7"]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$41", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier$subexpression$42", "__", "temporal_modifier$subexpression$43"], "postprocess":  d => {
-          const combo = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildBCECenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$44$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$44", "symbols": ["temporal_modifier$subexpression$44$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$44$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$44", "symbols": ["temporal_modifier$subexpression$44$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$44"], "postprocess":  d => {
-          const combo = d[0];
-          const centuryNum = d[2];
-          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier$subexpression$45", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$46$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$46", "symbols": ["temporal_modifier$subexpression$46$subexpression$1"]},
-    {"name": "temporal_modifier$subexpression$46$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier$subexpression$46", "symbols": ["temporal_modifier$subexpression$46$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$45", "__", "combination_modifier", "__", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$46"], "postprocess":  d => {
-          const combo = d[2];
-          const centuryNum = d[4];
-          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
-        } },
-    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "spelled_decade"], "postprocess":  d => {
-          const combo = d[0];
-          const decadeDigit = d[2];
-          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
-          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.9 };
-        } },
-    {"name": "temporal_modifier$subexpression$47", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$47", "__", "combination_modifier", "__", "spelled_decade"], "postprocess":  d => {
-          const combo = d[2];
-          const decadeDigit = d[4];
-          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
-          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.9 };
-        } },
-    {"name": "qualified_temporal_modifier$subexpression$1", "symbols": [{"literal":"'"}]},
-    {"name": "qualified_temporal_modifier$subexpression$1", "symbols": []},
-    {"name": "qualified_temporal_modifier$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier$subexpression$1", "qualified_temporal_modifier$subexpression$2"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
-          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
-          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
-        } },
-    {"name": "qualified_temporal_modifier$subexpression$3", "symbols": [{"literal":"'"}]},
-    {"name": "qualified_temporal_modifier$subexpression$3", "symbols": []},
-    {"name": "qualified_temporal_modifier$subexpression$4", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier$subexpression$3", "qualified_temporal_modifier$subexpression$4"], "postprocess":  d => {
-          const qual = d[0];
-          const combo = d[2];
-          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
-          const baseEdtf = buildDecadeCombinationInterval(decadeStart, combo);
-          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "combination_modifier", "modifier_sep", "decade"], "postprocess":  d => {
+          const baseEdtf = buildDecadeCombinationInterval(d[4], d[2]);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, d[0]), confidence: 0.9 };
         } },
     {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "year_num"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const year = d[4];
-          const baseEdtf = buildYearModifierInterval(year, modifier);
-          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+          const baseEdtf = buildYearModifierInterval(d[4], d[2]);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, d[0]), confidence: 0.9 };
         } },
     {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const month = months[d[4].toLowerCase()];
-          const year = d[6];
-          const baseEdtf = buildMonthModifierInterval(year, month, modifier);
-          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+          const baseEdtf = buildMonthModifierInterval(d[6], months[d[4]], d[2]);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, d[0]), confidence: 0.9 };
         } },
-    {"name": "qualified_temporal_modifier$subexpression$5$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier$subexpression$5", "symbols": ["qualified_temporal_modifier$subexpression$5$subexpression$1"]},
-    {"name": "qualified_temporal_modifier$subexpression$5$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier$subexpression$5", "symbols": ["qualified_temporal_modifier$subexpression$5$subexpression$2", {"literal":"."}]},
-    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "qualified_temporal_modifier$subexpression$5"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const centuryNum = d[4];
-          const baseEdtf = buildCenturyModifierInterval(centuryNum, modifier);
-          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.9 };
+    {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "century_word"], "postprocess":  d => {
+          const baseEdtf = buildCenturyModifierInterval(d[4], d[2]);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, d[0]), confidence: 0.9 };
         } },
     {"name": "qualified_temporal_modifier", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const decadeDigit = d[4];
-          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
-          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
-          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, qual), confidence: 0.85 };
+          const baseEdtf = buildDecadeModifierInterval(1900 + parseInt(d[4], 10) * 10, d[2]);
+          return { type: 'interval', edtf: applyQualifierToInterval(baseEdtf, d[0]), confidence: 0.85 };
         } },
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$1", "symbols": [{"literal":"'"}]},
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$1", "symbols": []},
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier_interval_value$subexpression$1", "qualified_temporal_modifier_interval_value$subexpression$2"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
-          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
-          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
-        } },
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$3", "symbols": [{"literal":"'"}]},
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$3", "symbols": []},
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$4", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "qualified_temporal_modifier_interval_value$subexpression$3", "qualified_temporal_modifier_interval_value$subexpression$4"], "postprocess":  d => {
-          const qual = d[0];
-          const combo = d[2];
-          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
-          const baseEdtf = buildDecadeCombinationInterval(decadeStart, combo);
-          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
-        } },
-    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "year_num"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const year = d[4];
-          const baseEdtf = buildYearModifierInterval(year, modifier);
-          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
-        } },
-    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const month = months[d[4].toLowerCase()];
-          const year = d[6];
-          const baseEdtf = buildMonthModifierInterval(year, month, modifier);
-          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
-        } },
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$5$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$5", "symbols": ["qualified_temporal_modifier_interval_value$subexpression$5$subexpression$1"]},
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$5$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qualified_temporal_modifier_interval_value$subexpression$5", "symbols": ["qualified_temporal_modifier_interval_value$subexpression$5$subexpression$2", {"literal":"."}]},
-    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "qualified_temporal_modifier_interval_value$subexpression$5"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const centuryNum = d[4];
-          const baseEdtf = buildCenturyModifierInterval(centuryNum, modifier);
-          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
-        } },
-    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess":  d => {
-          const qual = d[0];
-          const modifier = d[2];
-          const decadeDigit = d[4];
-          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
-          const baseEdtf = buildDecadeModifierInterval(decadeStart, modifier);
-          return { edtf: applyQualifierToInterval(baseEdtf, qual) };
-        } },
-    {"name": "temporal_modifier_interval_value$subexpression$1", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier_interval_value$subexpression$1", "symbols": []},
-    {"name": "temporal_modifier_interval_value$subexpression$2", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$1", "temporal_modifier_interval_value$subexpression$2"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(parseInt(d[2] + d[3] + d[4] + '0', 10), d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$4", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier_interval_value$subexpression$4", "symbols": []},
-    {"name": "temporal_modifier_interval_value$subexpression$5", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$3", "__", "temporal_modifier_word", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$4", "temporal_modifier_interval_value$subexpression$5"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(parseInt(d[4] + d[5] + d[6] + '0', 10), d[2]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$6", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier_interval_value$subexpression$6", "symbols": []},
-    {"name": "temporal_modifier_interval_value$subexpression$7", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$6", "temporal_modifier_interval_value$subexpression$7"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(parseInt(d[2] + d[3] + d[4] + '0', 10), d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$8", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$9", "symbols": [{"literal":"'"}]},
-    {"name": "temporal_modifier_interval_value$subexpression$9", "symbols": []},
-    {"name": "temporal_modifier_interval_value$subexpression$10", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$8", "__", "combination_modifier", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier_interval_value$subexpression$9", "temporal_modifier_interval_value$subexpression$10"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(parseInt(d[4] + d[5] + d[6] + '0', 10), d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "decade"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "decade"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(d[4], d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "decade"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "decade"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(d[4], d[2]) })},
     {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "year_num"], "postprocess": d => ({ edtf: buildYearModifierInterval(d[2], d[0]) })},
     {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "year_num"], "postprocess": d => ({ edtf: buildYearCombinationInterval(d[2], d[0]) })},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess": d => ({ edtf: buildMonthModifierInterval(d[4], months[d[2].toLowerCase()], d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$11$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$11", "symbols": ["temporal_modifier_interval_value$subexpression$11$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$11$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$11", "symbols": ["temporal_modifier_interval_value$subexpression$11$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$11"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$12", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$13$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$13", "symbols": ["temporal_modifier_interval_value$subexpression$13$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$13$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$13", "symbols": ["temporal_modifier_interval_value$subexpression$13$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$12", "__", "temporal_modifier_word", "__", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$13"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$14$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$14", "symbols": ["temporal_modifier_interval_value$subexpression$14$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$14$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$14", "symbols": ["temporal_modifier_interval_value$subexpression$14$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$14"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$15", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$16$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$16", "symbols": ["temporal_modifier_interval_value$subexpression$16$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$16$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$16", "symbols": ["temporal_modifier_interval_value$subexpression$16$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$15", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier_interval_value$subexpression$16"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess": d => ({ edtf: buildMonthModifierInterval(d[4], months[d[2]], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) })},
     {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(1900 + parseInt(d[2], 10) * 10, d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$17", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$17", "__", "temporal_modifier_word", "__", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(1900 + parseInt(d[4], 10) * 10, d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeModifierInterval(1900 + parseInt(d[4], 10) * 10, d[2]) })},
     {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(1900 + parseInt(d[2], 10) * 10, d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$18", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$18", "__", "combination_modifier", "__", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(1900 + parseInt(d[4], 10) * 10, d[2]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$19$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$19", "symbols": ["temporal_modifier_interval_value$subexpression$19$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$19$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$19", "symbols": ["temporal_modifier_interval_value$subexpression$19$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$19"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$20", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$21$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$21", "symbols": ["temporal_modifier_interval_value$subexpression$21$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$21$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$21", "symbols": ["temporal_modifier_interval_value$subexpression$21$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$20", "__", "temporal_modifier_word", "__", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$21"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$22$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$22", "symbols": ["temporal_modifier_interval_value$subexpression$22$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$22$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$22", "symbols": ["temporal_modifier_interval_value$subexpression$22$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$22"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) })},
-    {"name": "temporal_modifier_interval_value$subexpression$23", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$24$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$24", "symbols": ["temporal_modifier_interval_value$subexpression$24$subexpression$1"]},
-    {"name": "temporal_modifier_interval_value$subexpression$24$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "temporal_modifier_interval_value$subexpression$24", "symbols": ["temporal_modifier_interval_value$subexpression$24$subexpression$2", {"literal":"."}]},
-    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_interval_value$subexpression$23", "__", "combination_modifier", "__", "spelled_ordinal_century", "__", "temporal_modifier_interval_value$subexpression$24"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) })},
-    {"name": "interval$subexpression$1$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$1"]},
-    {"name": "interval$subexpression$1$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$2"]},
-    {"name": "interval$subexpression$1$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$1", "symbols": ["interval$subexpression$1$subexpression$3"]},
-    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval$subexpression$1", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$2", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$1"]},
-    {"name": "interval$subexpression$3$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$2"]},
-    {"name": "interval$subexpression$3$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$3", "symbols": ["interval$subexpression$3$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$2", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$3", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "_", {"literal":"-"}, "_", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$4$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$1"]},
-    {"name": "interval$subexpression$4$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$2"]},
-    {"name": "interval$subexpression$4$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$4", "symbols": ["interval$subexpression$4$subexpression$3"]},
-    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval$subexpression$4", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
-    {"name": "interval$subexpression$5", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$1"]},
-    {"name": "interval$subexpression$6$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$2"]},
-    {"name": "interval$subexpression$6$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$6", "symbols": ["interval$subexpression$6$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$5", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$6", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
-    {"name": "interval$subexpression$7$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$7", "symbols": ["interval$subexpression$7$subexpression$1"]},
-    {"name": "interval$subexpression$7$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$7", "symbols": ["interval$subexpression$7$subexpression$2"]},
-    {"name": "interval$subexpression$7$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$7", "symbols": ["interval$subexpression$7$subexpression$3"]},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$subexpression$7", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$8", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$9$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$9", "symbols": ["interval$subexpression$9$subexpression$1"]},
-    {"name": "interval$subexpression$9$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$9", "symbols": ["interval$subexpression$9$subexpression$2"]},
-    {"name": "interval$subexpression$9$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$9", "symbols": ["interval$subexpression$9$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$8", "__", "datevalue", "__", "interval$subexpression$9", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$10", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$11", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["interval$subexpression$10", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$11", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$12$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$12", "symbols": ["interval$subexpression$12$subexpression$1"]},
-    {"name": "interval$subexpression$12$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$12", "symbols": ["interval$subexpression$12$subexpression$2"]},
-    {"name": "interval$subexpression$12$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$12", "symbols": ["interval$subexpression$12$subexpression$3"]},
-    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval$subexpression$12", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$13$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$13", "symbols": ["interval$subexpression$13$subexpression$1"]},
-    {"name": "interval$subexpression$13$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$13", "symbols": ["interval$subexpression$13$subexpression$2"]},
-    {"name": "interval$subexpression$13$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$13", "symbols": ["interval$subexpression$13$subexpression$3"]},
-    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval$subexpression$13", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$14$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$14", "symbols": ["interval$subexpression$14$subexpression$1"]},
-    {"name": "interval$subexpression$14$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$14", "symbols": ["interval$subexpression$14$subexpression$2"]},
-    {"name": "interval$subexpression$14$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$14", "symbols": ["interval$subexpression$14$subexpression$3"]},
-    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval$subexpression$14", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
-    {"name": "interval$subexpression$15$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$15", "symbols": ["interval$subexpression$15$subexpression$1"]},
-    {"name": "interval$subexpression$15$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$15", "symbols": ["interval$subexpression$15$subexpression$2"]},
-    {"name": "interval$subexpression$15$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$15", "symbols": ["interval$subexpression$15$subexpression$3"]},
-    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval$subexpression$15", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$16$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$16", "symbols": ["interval$subexpression$16$subexpression$1"]},
-    {"name": "interval$subexpression$16$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$16", "symbols": ["interval$subexpression$16$subexpression$2"]},
-    {"name": "interval$subexpression$16$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$16", "symbols": ["interval$subexpression$16$subexpression$3"]},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$subexpression$16", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$17", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$18$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$18", "symbols": ["interval$subexpression$18$subexpression$1"]},
-    {"name": "interval$subexpression$18$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$18", "symbols": ["interval$subexpression$18$subexpression$2"]},
-    {"name": "interval$subexpression$18$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$18", "symbols": ["interval$subexpression$18$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$17", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$18", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$19", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$20$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$20", "symbols": ["interval$subexpression$20$subexpression$1"]},
-    {"name": "interval$subexpression$20$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$20", "symbols": ["interval$subexpression$20$subexpression$2"]},
-    {"name": "interval$subexpression$20$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$20", "symbols": ["interval$subexpression$20$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$19", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$20", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$21", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$22$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$22", "symbols": ["interval$subexpression$22$subexpression$1"]},
-    {"name": "interval$subexpression$22$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$22", "symbols": ["interval$subexpression$22$subexpression$2"]},
-    {"name": "interval$subexpression$22$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$22", "symbols": ["interval$subexpression$22$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$21", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$22", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
-    {"name": "interval$subexpression$23", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$24$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$24", "symbols": ["interval$subexpression$24$subexpression$1"]},
-    {"name": "interval$subexpression$24$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$24", "symbols": ["interval$subexpression$24$subexpression$2"]},
-    {"name": "interval$subexpression$24$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$24", "symbols": ["interval$subexpression$24$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$23", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$24", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$25", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$26$subexpression$1", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$26", "symbols": ["interval$subexpression$26$subexpression$1"]},
-    {"name": "interval$subexpression$26$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$26", "symbols": ["interval$subexpression$26$subexpression$2"]},
-    {"name": "interval$subexpression$26$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$26", "symbols": ["interval$subexpression$26$subexpression$3"]},
-    {"name": "interval", "symbols": ["interval$subexpression$25", "__", "datevalue", "__", "interval$subexpression$26", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$27", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$28", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["interval$subexpression$27", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$28", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$29", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$30", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["interval$subexpression$29", "__", "qualified_temporal_modifier_interval_value", "__", "interval$subexpression$30", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$31", "symbols": [/[bB]/, /[eE]/, /[tT]/, /[wW]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$32", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["interval$subexpression$31", "__", "temporal_modifier_interval_value", "__", "interval$subexpression$32", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval$subexpression$33$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$33$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$33$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$1", {"literal":"."}, "_", "interval$subexpression$33$subexpression$2", {"literal":"."}, "_", "interval$subexpression$33$subexpression$3", {"literal":"."}]},
-    {"name": "interval$subexpression$33$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$33$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$4", {"literal":"."}, "_", "interval$subexpression$33$subexpression$5", {"literal":"."}]},
-    {"name": "interval$subexpression$33$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$6"]},
-    {"name": "interval$subexpression$33$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$33", "symbols": ["interval$subexpression$33$subexpression$7"]},
-    {"name": "interval", "symbols": ["numeric_year", "_", {"literal":"-"}, "_", "numeric_year", "__", "interval$subexpression$33"], "postprocess":  d => {
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "spelled_decade"], "postprocess": d => ({ edtf: buildDecadeCombinationInterval(1900 + parseInt(d[4], 10) * 10, d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["temporal_modifier_word", "modifier_sep", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "temporal_modifier_word", "__", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyModifierInterval(d[4], d[2]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": ["combination_modifier", "modifier_sep", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[2], d[0]) })},
+    {"name": "temporal_modifier_interval_value", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "combination_modifier", "__", "spelled_ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: buildCenturyCombinationInterval(d[4], d[2]) })},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "decade"], "postprocess": d => ({ edtf: applyQualifierToInterval(buildDecadeModifierInterval(d[4], d[2]), d[0]) })},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "combination_modifier", "modifier_sep", "decade"], "postprocess": d => ({ edtf: applyQualifierToInterval(buildDecadeCombinationInterval(d[4], d[2]), d[0]) })},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "year_num"], "postprocess": d => ({ edtf: applyQualifierToInterval(buildYearModifierInterval(d[4], d[2]), d[0]) })},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess": d => ({ edtf: applyQualifierToInterval(buildMonthModifierInterval(d[6], months[d[4]], d[2]), d[0]) })},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "ordinal_century", "__", "century_word"], "postprocess": d => ({ edtf: applyQualifierToInterval(buildCenturyModifierInterval(d[4], d[2]), d[0]) })},
+    {"name": "qualified_temporal_modifier_interval_value", "symbols": ["qualifier", "__", "temporal_modifier_word", "modifier_sep", "spelled_decade"], "postprocess": d => ({ edtf: applyQualifierToInterval(buildDecadeModifierInterval(1900 + parseInt(d[4], 10) * 10, d[2]), d[0]) })},
+    {"name": "century_word", "symbols": [(lexer.has("century") ? {type: "century"} : century)], "postprocess": id},
+    {"name": "century_word", "symbols": [(lexer.has("c") ? {type: "c"} : c), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": id},
+    {"name": "era_ce", "symbols": [(lexer.has("ad") ? {type: "ad"} : ad)], "postprocess": id},
+    {"name": "era_ce", "symbols": [(lexer.has("ce") ? {type: "ce"} : ce)], "postprocess": id},
+    {"name": "era_ce", "symbols": [(lexer.has("a") ? {type: "a"} : a), (lexer.has("dot") ? {type: "dot"} : dot), "_", (lexer.has("d") ? {type: "d"} : d), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": id},
+    {"name": "era_ce", "symbols": [(lexer.has("c") ? {type: "c"} : c), (lexer.has("dot") ? {type: "dot"} : dot), "_", (lexer.has("e") ? {type: "e"} : e), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": id},
+    {"name": "era_ce", "symbols": [(lexer.has("anno") ? {type: "anno"} : anno), "__", (lexer.has("domini") ? {type: "domini"} : domini)], "postprocess": id},
+    {"name": "era_ce", "symbols": [(lexer.has("common") ? {type: "common"} : common), "__", (lexer.has("era") ? {type: "era"} : era)], "postprocess": id},
+    {"name": "era_a", "symbols": [(lexer.has("a") ? {type: "a"} : a)], "postprocess": id},
+    {"name": "era_bce", "symbols": [(lexer.has("bc") ? {type: "bc"} : bc)], "postprocess": id},
+    {"name": "era_bce", "symbols": [(lexer.has("bce") ? {type: "bce"} : bce)], "postprocess": id},
+    {"name": "era_bce", "symbols": [(lexer.has("b") ? {type: "b"} : b), (lexer.has("dot") ? {type: "dot"} : dot), "_", (lexer.has("c") ? {type: "c"} : c), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": id},
+    {"name": "era_bce", "symbols": [(lexer.has("b") ? {type: "b"} : b), (lexer.has("dot") ? {type: "dot"} : dot), "_", (lexer.has("c") ? {type: "c"} : c), (lexer.has("dot") ? {type: "dot"} : dot), "_", (lexer.has("e") ? {type: "e"} : e), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": id},
+    {"name": "era_bce", "symbols": [(lexer.has("before") ? {type: "before"} : before), "__", (lexer.has("christ") ? {type: "christ"} : christ)], "postprocess": id},
+    {"name": "era_bce", "symbols": [(lexer.has("before") ? {type: "before"} : before), "__", (lexer.has("common") ? {type: "common"} : common), "__", (lexer.has("era") ? {type: "era"} : era)], "postprocess": id},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "temporal_modifier_interval_value", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "qualified_temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "qualified_temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["numeric_year", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "numeric_year", "__", "era_bce"], "postprocess":  d => {
           const startYear = parseInt(d[0], 10) - 1;
           const endYear = parseInt(d[4], 10) - 1;
           return { type: 'interval', edtf: `-${pad4(startYear)}/-${pad4(endYear)}`, confidence: 0.98 };
         } },
-    {"name": "interval$subexpression$34", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$1", {"literal":"."}, "_", "interval$subexpression$35$subexpression$2", {"literal":"."}, "_", "interval$subexpression$35$subexpression$3", {"literal":"."}]},
-    {"name": "interval$subexpression$35$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$4", {"literal":"."}, "_", "interval$subexpression$35$subexpression$5", {"literal":"."}]},
-    {"name": "interval$subexpression$35$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$6"]},
-    {"name": "interval$subexpression$35$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$35", "symbols": ["interval$subexpression$35$subexpression$7"]},
-    {"name": "interval", "symbols": ["numeric_year", "__", "interval$subexpression$34", "__", "numeric_year", "__", "interval$subexpression$35"], "postprocess":  d => {
+    {"name": "interval", "symbols": ["numeric_year", "__", (lexer.has("to") ? {type: "to"} : to), "__", "numeric_year", "__", "era_bce"], "postprocess":  d => {
           const startYear = parseInt(d[0], 10) - 1;
           const endYear = parseInt(d[4], 10) - 1;
           return { type: 'interval', edtf: `-${pad4(startYear)}/-${pad4(endYear)}`, confidence: 0.98 };
         } },
-    {"name": "interval$subexpression$36$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$36$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$1", {"literal":"."}, "_", "interval$subexpression$36$subexpression$2", {"literal":"."}]},
-    {"name": "interval$subexpression$36$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$36$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$3", {"literal":"."}, "_", "interval$subexpression$36$subexpression$4", {"literal":"."}]},
-    {"name": "interval$subexpression$36$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$5"]},
-    {"name": "interval$subexpression$36$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$36", "symbols": ["interval$subexpression$36$subexpression$6"]},
-    {"name": "interval", "symbols": ["numeric_year", "_", {"literal":"-"}, "_", "numeric_year", "__", "interval$subexpression$36"], "postprocess":  d => {
-          const startYear = parseInt(d[0], 10);
-          const endYear = parseInt(d[4], 10);
-          return { type: 'interval', edtf: `${pad4(startYear)}/${pad4(endYear)}`, confidence: 0.98 };
-        } },
-    {"name": "interval$subexpression$37", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$38$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$38$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$1", {"literal":"."}, "_", "interval$subexpression$38$subexpression$2", {"literal":"."}]},
-    {"name": "interval$subexpression$38$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$38$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$3", {"literal":"."}, "_", "interval$subexpression$38$subexpression$4", {"literal":"."}]},
-    {"name": "interval$subexpression$38$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$5"]},
-    {"name": "interval$subexpression$38$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$38", "symbols": ["interval$subexpression$38$subexpression$6"]},
-    {"name": "interval", "symbols": ["numeric_year", "__", "interval$subexpression$37", "__", "numeric_year", "__", "interval$subexpression$38"], "postprocess":  d => {
-          const startYear = parseInt(d[0], 10);
-          const endYear = parseInt(d[4], 10);
-          return { type: 'interval', edtf: `${pad4(startYear)}/${pad4(endYear)}`, confidence: 0.98 };
-        } },
-    {"name": "interval$subexpression$39", "symbols": [/[fF]/, /[rR]/, /[oO]/, /[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$40", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["interval$subexpression$39", "__", "month_name", "__", "interval$subexpression$40", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[8])}-${months[d[2].toLowerCase()]}/${pad4(d[8])}-${months[d[6].toLowerCase()]}`, confidence: 0.95 })},
-    {"name": "interval$subexpression$41", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval", "symbols": ["month_name", "__", "interval$subexpression$41", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}/${pad4(d[6])}-${months[d[4].toLowerCase()]}`, confidence: 0.9 })},
-    {"name": "interval", "symbols": ["month_name", "_", {"literal":"-"}, "_", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}/${pad4(d[6])}-${months[d[4].toLowerCase()]}`, confidence: 0.9 })},
-    {"name": "interval$string$1", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"f"}, {"literal":"o"}, {"literal":"r"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$1", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[2].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$2", "symbols": [{"literal":"e"}, {"literal":"a"}, {"literal":"r"}, {"literal":"l"}, {"literal":"i"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$3", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$2", "__", "interval$string$3", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$4", "symbols": [{"literal":"p"}, {"literal":"r"}, {"literal":"i"}, {"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$5", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$4", "__", "interval$string$5", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$6", "symbols": [{"literal":"u"}, {"literal":"p"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$7", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$6", "__", "interval$string$7", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$8", "symbols": [{"literal":"l"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$9", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$8", "__", "interval$string$9", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[4].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$10", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$11", "symbols": [{"literal":"o"}, {"literal":"n"}, {"literal":"w"}, {"literal":"a"}, {"literal":"r"}, {"literal":"d"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$10", "__", "datevalue", "__", "interval$string$11"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$12", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$13", "symbols": [{"literal":"a"}, {"literal":"f"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$string$12", "__", "interval$string$13"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$14", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$15", "symbols": [{"literal":"l"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$string$14", "__", "interval$string$15"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$16", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$17", "symbols": [{"literal":"a"}, {"literal":"f"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$string$16", "__", "interval$string$17"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$18", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$subexpression$42$subexpression$1", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$42", "symbols": ["interval$subexpression$42$subexpression$1"]},
-    {"name": "interval$subexpression$42$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$42", "symbols": ["interval$subexpression$42$subexpression$2"]},
-    {"name": "interval", "symbols": ["interval$string$18", "__", "datevalue", "__", "interval$subexpression$42", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
-    {"name": "interval$subexpression$43$subexpression$1", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$43", "symbols": ["interval$subexpression$43$subexpression$1"]},
-    {"name": "interval$subexpression$43$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[rR]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval$subexpression$43", "symbols": ["interval$subexpression$43$subexpression$2"]},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$subexpression$43", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$19", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$20", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"t"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$19", "__", "datevalue", "__", "interval$string$20", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$21", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"t"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$string$21", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$22", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$23", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$22", "__", "datevalue", "__", "interval$string$23", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$24", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$25", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$24", "__", "datevalue", "__", "interval$string$25", "__", "interval_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/`, confidence: 0.95 })},
-    {"name": "interval$string$26", "symbols": [{"literal":"f"}, {"literal":"r"}, {"literal":"o"}, {"literal":"m"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$27", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$26", "__", "datevalue", "__", "interval$string$27", "__", "open_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$28", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$string$28", "__", "interval_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/`, confidence: 0.95 })},
-    {"name": "interval$string$29", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$string$29", "__", "open_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$30", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["open_endpoint", "__", "interval$string$30", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$31", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval$string$31", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval", "symbols": ["datevalue", "_", {"literal":"-"}, "_", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$32", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"t"}, {"literal":"w"}, {"literal":"e"}, {"literal":"e"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval$string$33", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$32", "__", "datevalue", "__", "interval$string$33", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$34", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval_endpoint", "__", "interval$string$34", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `/${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$35", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"t"}, {"literal":"i"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$35", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[2].edtf}`, confidence: 0.95 })},
-    {"name": "interval$string$36", "symbols": [{"literal":"a"}, {"literal":"f"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$36", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval$string$37", "symbols": [{"literal":"s"}, {"literal":"i"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "interval", "symbols": ["interval$string$37", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval_endpoint$subexpression$1", "symbols": [/[uU]/, /[nN]/, /[kK]/, /[nN]/, /[oO]/, /[wW]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "interval_endpoint", "symbols": ["interval_endpoint$subexpression$1"], "postprocess": () => ''},
-    {"name": "interval_endpoint", "symbols": [{"literal":"?"}], "postprocess": () => ''},
-    {"name": "open_endpoint$subexpression$1$subexpression$1", "symbols": [/[oO]/, /[pP]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "open_endpoint$subexpression$1$subexpression$2$subexpression$1", "symbols": [/[sS]/, /[tT]/, /[aA]/, /[rR]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "open_endpoint$subexpression$1$subexpression$2", "symbols": ["open_endpoint$subexpression$1$subexpression$2$subexpression$1"]},
-    {"name": "open_endpoint$subexpression$1$subexpression$2$subexpression$2", "symbols": [/[eE]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "open_endpoint$subexpression$1$subexpression$2", "symbols": ["open_endpoint$subexpression$1$subexpression$2$subexpression$2"]},
-    {"name": "open_endpoint$subexpression$1", "symbols": ["open_endpoint$subexpression$1$subexpression$1", "__", "open_endpoint$subexpression$1$subexpression$2"]},
-    {"name": "open_endpoint", "symbols": ["open_endpoint$subexpression$1"], "postprocess": () => '..'},
-    {"name": "open_endpoint$subexpression$2", "symbols": [/[oO]/, /[nN]/, /[wW]/, /[aA]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "open_endpoint", "symbols": ["open_endpoint$subexpression$2"], "postprocess": () => '..'},
-    {"name": "open_endpoint$subexpression$3", "symbols": [/[oO]/, /[nN]/, /[wW]/, /[aA]/, /[rR]/, /[dD]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "open_endpoint", "symbols": ["open_endpoint$subexpression$3"], "postprocess": () => '..'},
-    {"name": "set$subexpression$1", "symbols": [/[oO]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "set$subexpression$2", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "set", "symbols": ["set$subexpression$1", "__", "set$subexpression$2", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf},${d[14].edtf}]`, confidence: 0.95 })},
-    {"name": "set$subexpression$3", "symbols": [/[oO]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "set$subexpression$4", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "set", "symbols": ["set$subexpression$3", "__", "set$subexpression$4", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf}]`, confidence: 0.95 })},
-    {"name": "set$subexpression$5", "symbols": [/[eE]/, /[iI]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "set$string$1", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set", "symbols": ["set$subexpression$5", "__", "datevalue", "__", "set$string$1", "__", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[2].edtf},${d[6].edtf}]`, confidence: 0.95 })},
-    {"name": "set$string$2", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set$string$3", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set", "symbols": ["datevalue", "__", "set$string$2", "__", "datevalue", "__", "set$string$3", "__", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[0].edtf},${d[4].edtf},${d[8].edtf}]`, confidence: 0.9 })},
-    {"name": "set$string$4", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set", "symbols": ["datevalue", "__", "set$string$4", "__", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[0].edtf},${d[4].edtf}]`, confidence: 0.9 })},
-    {"name": "set$string$5", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set$string$6", "symbols": [{"literal":"e"}, {"literal":"a"}, {"literal":"r"}, {"literal":"l"}, {"literal":"i"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set", "symbols": ["datevalue", "__", "set$string$5", "__", "set$string$6"], "postprocess": d => ({ type: 'set', edtf: `[..${d[0].edtf}]`, confidence: 0.9 })},
-    {"name": "set$string$7", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set$string$8", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"f"}, {"literal":"o"}, {"literal":"r"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "set", "symbols": ["datevalue", "__", "set$string$7", "__", "set$string$8"], "postprocess": d => ({ type: 'set', edtf: `[..${d[0].edtf}]`, confidence: 0.9 })},
-    {"name": "list$subexpression$1", "symbols": [/[aA]/, /[lL]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "list$subexpression$2", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "list", "symbols": ["list$subexpression$1", "__", "list$subexpression$2", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf},${d[14].edtf}}`, confidence: 0.95 })},
-    {"name": "list$subexpression$3", "symbols": [/[aA]/, /[lL]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "list$subexpression$4", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "list", "symbols": ["list$subexpression$3", "__", "list$subexpression$4", "_", {"literal":":"}, "_", "datevalue", "_", {"literal":","}, "_", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf}}`, confidence: 0.95 })},
-    {"name": "list$subexpression$5", "symbols": [/[bB]/, /[oO]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "list$string$1", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "list", "symbols": ["list$subexpression$5", "__", "datevalue", "__", "list$string$1", "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[2].edtf},${d[6].edtf}}`, confidence: 0.95 })},
-    {"name": "list$string$2", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "list$string$3", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "list", "symbols": ["datevalue", "__", "list$string$2", "__", "datevalue", "__", "list$string$3", "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf},${d[8].edtf}}`, confidence: 0.9 })},
-    {"name": "list$string$4", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "list", "symbols": ["datevalue", "__", "list$string$4", "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf}}`, confidence: 0.9 })},
-    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "hemisphere_north", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[6])}-${northernSeasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 })},
-    {"name": "season", "symbols": ["season_name", "__", "hemisphere_north", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${northernSeasons[d[0].toLowerCase()]}`, confidence: 0.95 })},
-    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "hemisphere_south", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[6])}-${southernSeasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 })},
-    {"name": "season", "symbols": ["season_name", "__", "hemisphere_south", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${southernSeasons[d[0].toLowerCase()]}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["numeric_year", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "numeric_year", "__", "era_ce"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(parseInt(d[0], 10))}/${pad4(parseInt(d[4], 10))}`, confidence: 0.98 })},
+    {"name": "interval", "symbols": ["numeric_year", "__", (lexer.has("to") ? {type: "to"} : to), "__", "numeric_year", "__", "era_ce"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(parseInt(d[0], 10))}/${pad4(parseInt(d[4], 10))}`, confidence: 0.98 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "month_name", "__", (lexer.has("to") ? {type: "to"} : to), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[8])}-${months[d[2]]}/${pad4(d[8])}-${months[d[6]]}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["month_name", "__", (lexer.has("to") ? {type: "to"} : to), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0]]}/${pad4(d[6])}-${months[d[4]]}`, confidence: 0.9 })},
+    {"name": "interval", "symbols": ["month_name", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'interval', edtf: `${pad4(d[6])}-${months[d[0]]}/${pad4(d[6])}-${months[d[4]]}`, confidence: 0.9 })},
+    {"name": "interval", "symbols": [(lexer.has("before") ? {type: "before"} : before), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[2].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("earlier") ? {type: "earlier"} : earlier), "__", (lexer.has("than") ? {type: "than"} : than), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("prior") ? {type: "prior"} : prior), "__", (lexer.has("to") ? {type: "to"} : to), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("up") ? {type: "up"} : up), "__", (lexer.has("to") ? {type: "to"} : to), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("later") ? {type: "later"} : later), "__", (lexer.has("than") ? {type: "than"} : than), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[4].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", (lexer.has("onwards") ? {type: "onwards"} : onwards)], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", (lexer.has("after") ? {type: "after"} : after)], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", (lexer.has("later") ? {type: "later"} : later)], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", (lexer.has("after") ? {type: "after"} : after)], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", (lexer.has("to") ? {type: "to"} : to), "__", "interval_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", (lexer.has("to") ? {type: "to"} : to), "__", "open_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("to") ? {type: "to"} : to), "__", "interval_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("to") ? {type: "to"} : to), "__", "open_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["open_endpoint", "__", (lexer.has("to") ? {type: "to"} : to), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": ["interval_endpoint", "__", (lexer.has("to") ? {type: "to"} : to), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `/${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("until") ? {type: "until"} : until), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `../${d[2].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("after") ? {type: "after"} : after), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("since") ? {type: "since"} : since), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
+    {"name": "interval_connector", "symbols": [(lexer.has("to") ? {type: "to"} : to)], "postprocess": id},
+    {"name": "interval_connector", "symbols": [(lexer.has("through") ? {type: "through"} : through)], "postprocess": id},
+    {"name": "interval_connector", "symbols": [(lexer.has("until") ? {type: "until"} : until)], "postprocess": id},
+    {"name": "interval_endpoint", "symbols": [(lexer.has("unknown") ? {type: "unknown"} : unknown)], "postprocess": () => ''},
+    {"name": "interval_endpoint", "symbols": [(lexer.has("questionMark") ? {type: "questionMark"} : questionMark)], "postprocess": () => ''},
+    {"name": "open_endpoint", "symbols": [(lexer.has("open") ? {type: "open"} : open), "__", (lexer.has("start") ? {type: "start"} : start)], "postprocess": () => '..'},
+    {"name": "open_endpoint", "symbols": [(lexer.has("open") ? {type: "open"} : open), "__", (lexer.has("end") ? {type: "end"} : end)], "postprocess": () => '..'},
+    {"name": "open_endpoint", "symbols": [(lexer.has("onwards") ? {type: "onwards"} : onwards)], "postprocess": () => '..'},
+    {"name": "set", "symbols": [(lexer.has("one") ? {type: "one"} : one), "__", (lexer.has("of") ? {type: "of"} : of), "_", (lexer.has("colon") ? {type: "colon"} : colon), "_", "datevalue", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "datevalue", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf},${d[14].edtf}]`, confidence: 0.95 })},
+    {"name": "set", "symbols": [(lexer.has("one") ? {type: "one"} : one), "__", (lexer.has("of") ? {type: "of"} : of), "_", (lexer.has("colon") ? {type: "colon"} : colon), "_", "datevalue", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[6].edtf},${d[10].edtf}]`, confidence: 0.95 })},
+    {"name": "set", "symbols": [(lexer.has("either") ? {type: "either"} : either), "__", "datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[2].edtf},${d[6].edtf}]`, confidence: 0.95 })},
+    {"name": "set", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[0].edtf},${d[4].edtf},${d[8].edtf}]`, confidence: 0.9 })},
+    {"name": "set", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "datevalue"], "postprocess": d => ({ type: 'set', edtf: `[${d[0].edtf},${d[4].edtf}]`, confidence: 0.9 })},
+    {"name": "set", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", (lexer.has("earlier") ? {type: "earlier"} : earlier)], "postprocess": d => ({ type: 'set', edtf: `[..${d[0].edtf}]`, confidence: 0.9 })},
+    {"name": "set", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", (lexer.has("before") ? {type: "before"} : before)], "postprocess": d => ({ type: 'set', edtf: `[..${d[0].edtf}]`, confidence: 0.9 })},
+    {"name": "list", "symbols": [(lexer.has("all") ? {type: "all"} : all), "__", (lexer.has("of") ? {type: "of"} : of), "_", (lexer.has("colon") ? {type: "colon"} : colon), "_", "datevalue", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "datevalue", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf},${d[14].edtf}}`, confidence: 0.95 })},
+    {"name": "list", "symbols": [(lexer.has("all") ? {type: "all"} : all), "__", (lexer.has("of") ? {type: "of"} : of), "_", (lexer.has("colon") ? {type: "colon"} : colon), "_", "datevalue", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[6].edtf},${d[10].edtf}}`, confidence: 0.95 })},
+    {"name": "list", "symbols": [(lexer.has("both") ? {type: "both"} : both), "__", "datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[2].edtf},${d[6].edtf}}`, confidence: 0.95 })},
+    {"name": "list", "symbols": ["datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf},${d[8].edtf}}`, confidence: 0.9 })},
+    {"name": "list", "symbols": ["datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "datevalue"], "postprocess": d => ({ type: 'list', edtf: `{${d[0].edtf},${d[4].edtf}}`, confidence: 0.9 })},
+    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "hemisphere_north", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[6])}-${northernSeasons[d[2]]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["season_name", "__", "hemisphere_north", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${northernSeasons[d[0]]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "hemisphere_south", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[6])}-${southernSeasons[d[2]]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["season_name", "__", "hemisphere_south", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${southernSeasons[d[0]]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["qualifier", "__", "quarter_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["quarter_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["qualifier", "__", "quadrimester_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["quadrimester_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["qualifier", "__", "semestral_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${d[2]}${d[0]}`, confidence: 0.95 })},
     {"name": "season", "symbols": ["semestral_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${d[0]}`, confidence: 0.95 })},
-    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${seasons[d[2].toLowerCase()]}${d[0]}`, confidence: 0.95 })},
-    {"name": "season", "symbols": ["season_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${seasons[d[0].toLowerCase()]}`, confidence: 0.95 })},
-    {"name": "season_name$subexpression$1$subexpression$1", "symbols": [/[sS]/, /[pP]/, /[rR]/, /[iI]/, /[nN]/, /[gG]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "season_name$subexpression$1", "symbols": ["season_name$subexpression$1$subexpression$1"]},
-    {"name": "season_name$subexpression$1$subexpression$2", "symbols": [/[sS]/, /[uU]/, /[mM]/, /[mM]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "season_name$subexpression$1", "symbols": ["season_name$subexpression$1$subexpression$2"]},
-    {"name": "season_name$subexpression$1$subexpression$3", "symbols": [/[aA]/, /[uU]/, /[tT]/, /[uU]/, /[mM]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "season_name$subexpression$1", "symbols": ["season_name$subexpression$1$subexpression$3"]},
-    {"name": "season_name$subexpression$1$subexpression$4", "symbols": [/[fF]/, /[aA]/, /[lL]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "season_name$subexpression$1", "symbols": ["season_name$subexpression$1$subexpression$4"]},
-    {"name": "season_name$subexpression$1$subexpression$5", "symbols": [/[wW]/, /[iI]/, /[nN]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "season_name$subexpression$1", "symbols": ["season_name$subexpression$1$subexpression$5"]},
-    {"name": "season_name", "symbols": ["season_name$subexpression$1"], "postprocess": d => d[0][0]},
-    {"name": "hemisphere_north$subexpression$1$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_north$subexpression$1$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_north$subexpression$1", "symbols": ["hemisphere_north$subexpression$1$subexpression$1", "__", "hemisphere_north$subexpression$1$subexpression$2"]},
-    {"name": "hemisphere_north$subexpression$1$subexpression$3", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_north$subexpression$1", "symbols": ["hemisphere_north$subexpression$1$subexpression$3"]},
-    {"name": "hemisphere_north", "symbols": [{"literal":"("}, "_", "hemisphere_north$subexpression$1", "_", {"literal":")"}], "postprocess": () => 'north'},
-    {"name": "hemisphere_north$subexpression$2$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_north$subexpression$2$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_north$subexpression$2", "symbols": ["hemisphere_north$subexpression$2$subexpression$1", "__", "hemisphere_north$subexpression$2$subexpression$2"]},
-    {"name": "hemisphere_north$subexpression$2$subexpression$3", "symbols": [/[nN]/, /[oO]/, /[rR]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_north$subexpression$2", "symbols": ["hemisphere_north$subexpression$2$subexpression$3"]},
-    {"name": "hemisphere_north", "symbols": [{"literal":","}, "_", "hemisphere_north$subexpression$2"], "postprocess": () => 'north'},
-    {"name": "hemisphere_south$subexpression$1$subexpression$1", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_south$subexpression$1$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_south$subexpression$1", "symbols": ["hemisphere_south$subexpression$1$subexpression$1", "__", "hemisphere_south$subexpression$1$subexpression$2"]},
-    {"name": "hemisphere_south$subexpression$1$subexpression$3", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_south$subexpression$1", "symbols": ["hemisphere_south$subexpression$1$subexpression$3"]},
-    {"name": "hemisphere_south", "symbols": [{"literal":"("}, "_", "hemisphere_south$subexpression$1", "_", {"literal":")"}], "postprocess": () => 'south'},
-    {"name": "hemisphere_south$subexpression$2$subexpression$1", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/, /[eE]/, /[rR]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_south$subexpression$2$subexpression$2", "symbols": [/[hH]/, /[eE]/, /[mM]/, /[iI]/, /[sS]/, /[pP]/, /[hH]/, /[eE]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_south$subexpression$2", "symbols": ["hemisphere_south$subexpression$2$subexpression$1", "__", "hemisphere_south$subexpression$2$subexpression$2"]},
-    {"name": "hemisphere_south$subexpression$2$subexpression$3", "symbols": [/[sS]/, /[oO]/, /[uU]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "hemisphere_south$subexpression$2", "symbols": ["hemisphere_south$subexpression$2$subexpression$3"]},
-    {"name": "hemisphere_south", "symbols": [{"literal":","}, "_", "hemisphere_south$subexpression$2"], "postprocess": () => 'south'},
-    {"name": "quarter_name$subexpression$1", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$1", {"literal":"1"}], "postprocess": () => '33'},
-    {"name": "quarter_name$subexpression$2", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$2", {"literal":"2"}], "postprocess": () => '34'},
-    {"name": "quarter_name$subexpression$3", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$3", {"literal":"3"}], "postprocess": () => '35'},
-    {"name": "quarter_name$subexpression$4", "symbols": [/[qQ]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$4", {"literal":"4"}], "postprocess": () => '36'},
-    {"name": "quarter_name$subexpression$5", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$5", "__", {"literal":"1"}], "postprocess": () => '33'},
-    {"name": "quarter_name$subexpression$6", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$6", "__", {"literal":"2"}], "postprocess": () => '34'},
-    {"name": "quarter_name$subexpression$7", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$7", "__", {"literal":"3"}], "postprocess": () => '35'},
-    {"name": "quarter_name$subexpression$8", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$8", "__", {"literal":"4"}], "postprocess": () => '36'},
-    {"name": "quarter_name$subexpression$9$subexpression$1", "symbols": [{"literal":"1"}, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$9", "symbols": ["quarter_name$subexpression$9$subexpression$1"]},
-    {"name": "quarter_name$subexpression$9$subexpression$2", "symbols": [/[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$9", "symbols": ["quarter_name$subexpression$9$subexpression$2"]},
-    {"name": "quarter_name$subexpression$10", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$9", "__", "quarter_name$subexpression$10"], "postprocess": () => '33'},
-    {"name": "quarter_name$subexpression$11$subexpression$1", "symbols": [{"literal":"2"}, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$11", "symbols": ["quarter_name$subexpression$11$subexpression$1"]},
-    {"name": "quarter_name$subexpression$11$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[cC]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$11", "symbols": ["quarter_name$subexpression$11$subexpression$2"]},
-    {"name": "quarter_name$subexpression$12", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$11", "__", "quarter_name$subexpression$12"], "postprocess": () => '34'},
-    {"name": "quarter_name$subexpression$13$subexpression$1", "symbols": [{"literal":"3"}, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$13", "symbols": ["quarter_name$subexpression$13$subexpression$1"]},
-    {"name": "quarter_name$subexpression$13$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$13", "symbols": ["quarter_name$subexpression$13$subexpression$2"]},
-    {"name": "quarter_name$subexpression$14", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$13", "__", "quarter_name$subexpression$14"], "postprocess": () => '35'},
-    {"name": "quarter_name$subexpression$15$subexpression$1", "symbols": [{"literal":"4"}, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$15", "symbols": ["quarter_name$subexpression$15$subexpression$1"]},
-    {"name": "quarter_name$subexpression$15$subexpression$2", "symbols": [/[fF]/, /[oO]/, /[uU]/, /[rR]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name$subexpression$15", "symbols": ["quarter_name$subexpression$15$subexpression$2"]},
-    {"name": "quarter_name$subexpression$16", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[rR]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quarter_name", "symbols": ["quarter_name$subexpression$15", "__", "quarter_name$subexpression$16"], "postprocess": () => '36'},
-    {"name": "quadrimester_name$subexpression$1", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$1", "__", {"literal":"1"}], "postprocess": () => '37'},
-    {"name": "quadrimester_name$subexpression$2", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$2", "__", {"literal":"2"}], "postprocess": () => '38'},
-    {"name": "quadrimester_name$subexpression$3", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$3", "__", {"literal":"3"}], "postprocess": () => '39'},
-    {"name": "quadrimester_name$subexpression$4$subexpression$1", "symbols": [{"literal":"1"}, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name$subexpression$4", "symbols": ["quadrimester_name$subexpression$4$subexpression$1"]},
-    {"name": "quadrimester_name$subexpression$4$subexpression$2", "symbols": [/[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name$subexpression$4", "symbols": ["quadrimester_name$subexpression$4$subexpression$2"]},
-    {"name": "quadrimester_name$subexpression$5", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$4", "__", "quadrimester_name$subexpression$5"], "postprocess": () => '37'},
-    {"name": "quadrimester_name$subexpression$6$subexpression$1", "symbols": [{"literal":"2"}, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name$subexpression$6", "symbols": ["quadrimester_name$subexpression$6$subexpression$1"]},
-    {"name": "quadrimester_name$subexpression$6$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[cC]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name$subexpression$6", "symbols": ["quadrimester_name$subexpression$6$subexpression$2"]},
-    {"name": "quadrimester_name$subexpression$7", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$6", "__", "quadrimester_name$subexpression$7"], "postprocess": () => '38'},
-    {"name": "quadrimester_name$subexpression$8$subexpression$1", "symbols": [{"literal":"3"}, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name$subexpression$8", "symbols": ["quadrimester_name$subexpression$8$subexpression$1"]},
-    {"name": "quadrimester_name$subexpression$8$subexpression$2", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name$subexpression$8", "symbols": ["quadrimester_name$subexpression$8$subexpression$2"]},
-    {"name": "quadrimester_name$subexpression$9", "symbols": [/[qQ]/, /[uU]/, /[aA]/, /[dD]/, /[rR]/, /[iI]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "quadrimester_name", "symbols": ["quadrimester_name$subexpression$8", "__", "quadrimester_name$subexpression$9"], "postprocess": () => '39'},
-    {"name": "semestral_name$subexpression$1$subexpression$1", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[rR]/, /[aA]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$1", "symbols": ["semestral_name$subexpression$1$subexpression$1"]},
-    {"name": "semestral_name$subexpression$1$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$1", "symbols": ["semestral_name$subexpression$1$subexpression$2"]},
-    {"name": "semestral_name", "symbols": ["semestral_name$subexpression$1", "__", {"literal":"1"}], "postprocess": () => '40'},
-    {"name": "semestral_name$subexpression$2$subexpression$1", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[rR]/, /[aA]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$2", "symbols": ["semestral_name$subexpression$2$subexpression$1"]},
-    {"name": "semestral_name$subexpression$2$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$2", "symbols": ["semestral_name$subexpression$2$subexpression$2"]},
-    {"name": "semestral_name", "symbols": ["semestral_name$subexpression$2", "__", {"literal":"2"}], "postprocess": () => '41'},
-    {"name": "semestral_name$subexpression$3$subexpression$1", "symbols": [{"literal":"1"}, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$3", "symbols": ["semestral_name$subexpression$3$subexpression$1"]},
-    {"name": "semestral_name$subexpression$3$subexpression$2", "symbols": [/[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$3", "symbols": ["semestral_name$subexpression$3$subexpression$2"]},
-    {"name": "semestral_name$subexpression$4$subexpression$1", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[rR]/, /[aA]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$4", "symbols": ["semestral_name$subexpression$4$subexpression$1"]},
-    {"name": "semestral_name$subexpression$4$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$4", "symbols": ["semestral_name$subexpression$4$subexpression$2"]},
-    {"name": "semestral_name", "symbols": ["semestral_name$subexpression$3", "__", "semestral_name$subexpression$4"], "postprocess": () => '40'},
-    {"name": "semestral_name$subexpression$5$subexpression$1", "symbols": [{"literal":"2"}, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$5", "symbols": ["semestral_name$subexpression$5$subexpression$1"]},
-    {"name": "semestral_name$subexpression$5$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[cC]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$5", "symbols": ["semestral_name$subexpression$5$subexpression$2"]},
-    {"name": "semestral_name$subexpression$6$subexpression$1", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[rR]/, /[aA]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$6", "symbols": ["semestral_name$subexpression$6$subexpression$1"]},
-    {"name": "semestral_name$subexpression$6$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[mM]/, /[eE]/, /[sS]/, /[tT]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "semestral_name$subexpression$6", "symbols": ["semestral_name$subexpression$6$subexpression$2"]},
-    {"name": "semestral_name", "symbols": ["semestral_name$subexpression$5", "__", "semestral_name$subexpression$6"], "postprocess": () => '41'},
+    {"name": "season", "symbols": ["qualifier", "__", "season_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[4])}-${seasons[d[2]]}${d[0]}`, confidence: 0.95 })},
+    {"name": "season", "symbols": ["season_name", "__", "year_num"], "postprocess": d => ({ type: 'season', edtf: `${pad4(d[2])}-${seasons[d[0]]}`, confidence: 0.95 })},
+    {"name": "hemisphere_north", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("northern") ? {type: "northern"} : northern), "__", (lexer.has("hemisphere") ? {type: "hemisphere"} : hemisphere), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => 'north'},
+    {"name": "hemisphere_north", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("north") ? {type: "north"} : north), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => 'north'},
+    {"name": "hemisphere_north", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma), "_", (lexer.has("northern") ? {type: "northern"} : northern), "__", (lexer.has("hemisphere") ? {type: "hemisphere"} : hemisphere)], "postprocess": () => 'north'},
+    {"name": "hemisphere_north", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma), "_", (lexer.has("north") ? {type: "north"} : north)], "postprocess": () => 'north'},
+    {"name": "hemisphere_south", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("southern") ? {type: "southern"} : southern), "__", (lexer.has("hemisphere") ? {type: "hemisphere"} : hemisphere), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => 'south'},
+    {"name": "hemisphere_south", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", (lexer.has("south") ? {type: "south"} : south), "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": () => 'south'},
+    {"name": "hemisphere_south", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma), "_", (lexer.has("southern") ? {type: "southern"} : southern), "__", (lexer.has("hemisphere") ? {type: "hemisphere"} : hemisphere)], "postprocess": () => 'south'},
+    {"name": "hemisphere_south", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma), "_", (lexer.has("south") ? {type: "south"} : south)], "postprocess": () => 'south'},
+    {"name": "quarter_name", "symbols": [(lexer.has("q") ? {type: "q"} : q), (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => String(32 + parseInt(d[1].value, 10))},
+    {"name": "quarter_name", "symbols": [(lexer.has("quarter") ? {type: "quarter"} : quarter), "__", (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => String(32 + parseInt(d[2].value, 10))},
+    {"name": "quarter_name", "symbols": ["ordinal_num", "__", (lexer.has("quarter") ? {type: "quarter"} : quarter)], "postprocess": d => String(32 + d[0])},
+    {"name": "quarter_name", "symbols": [(lexer.has("first") ? {type: "first"} : first), "__", (lexer.has("quarter") ? {type: "quarter"} : quarter)], "postprocess": () => '33'},
+    {"name": "quarter_name", "symbols": [(lexer.has("second") ? {type: "second"} : second), "__", (lexer.has("quarter") ? {type: "quarter"} : quarter)], "postprocess": () => '34'},
+    {"name": "quarter_name", "symbols": [(lexer.has("third") ? {type: "third"} : third), "__", (lexer.has("quarter") ? {type: "quarter"} : quarter)], "postprocess": () => '35'},
+    {"name": "quarter_name", "symbols": [(lexer.has("fourth") ? {type: "fourth"} : fourth), "__", (lexer.has("quarter") ? {type: "quarter"} : quarter)], "postprocess": () => '36'},
+    {"name": "quadrimester_name", "symbols": [(lexer.has("quadrimester") ? {type: "quadrimester"} : quadrimester), "__", (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => String(36 + parseInt(d[2].value, 10))},
+    {"name": "quadrimester_name", "symbols": ["ordinal_num", "__", (lexer.has("quadrimester") ? {type: "quadrimester"} : quadrimester)], "postprocess": d => String(36 + d[0])},
+    {"name": "quadrimester_name", "symbols": [(lexer.has("first") ? {type: "first"} : first), "__", (lexer.has("quadrimester") ? {type: "quadrimester"} : quadrimester)], "postprocess": () => '37'},
+    {"name": "quadrimester_name", "symbols": [(lexer.has("second") ? {type: "second"} : second), "__", (lexer.has("quadrimester") ? {type: "quadrimester"} : quadrimester)], "postprocess": () => '38'},
+    {"name": "quadrimester_name", "symbols": [(lexer.has("third") ? {type: "third"} : third), "__", (lexer.has("quadrimester") ? {type: "quadrimester"} : quadrimester)], "postprocess": () => '39'},
+    {"name": "semestral_name", "symbols": [(lexer.has("semestral") ? {type: "semestral"} : semestral), "__", (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => String(39 + parseInt(d[2].value, 10))},
+    {"name": "semestral_name", "symbols": [(lexer.has("semester") ? {type: "semester"} : semester), "__", (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => String(39 + parseInt(d[2].value, 10))},
+    {"name": "semestral_name", "symbols": ["ordinal_num", "__", (lexer.has("semestral") ? {type: "semestral"} : semestral)], "postprocess": d => String(39 + d[0])},
+    {"name": "semestral_name", "symbols": ["ordinal_num", "__", (lexer.has("semester") ? {type: "semester"} : semester)], "postprocess": d => String(39 + d[0])},
+    {"name": "semestral_name", "symbols": [(lexer.has("first") ? {type: "first"} : first), "__", (lexer.has("semestral") ? {type: "semestral"} : semestral)], "postprocess": () => '40'},
+    {"name": "semestral_name", "symbols": [(lexer.has("second") ? {type: "second"} : second), "__", (lexer.has("semestral") ? {type: "semestral"} : semestral)], "postprocess": () => '41'},
+    {"name": "semestral_name", "symbols": [(lexer.has("first") ? {type: "first"} : first), "__", (lexer.has("semester") ? {type: "semester"} : semester)], "postprocess": () => '40'},
+    {"name": "semestral_name", "symbols": [(lexer.has("second") ? {type: "second"} : second), "__", (lexer.has("semester") ? {type: "semester"} : semester)], "postprocess": () => '41'},
     {"name": "date", "symbols": ["datevalue", "_", "parenthetical_qualification"], "postprocess":  d => {
           const qual = d[2];
           if (qual.type === 'global') {
             return { type: 'date', edtf: `${d[0].edtf}${qual.qual}`, confidence: d[0].confidence * 0.9 };
           } else {
-            // Partial qualifications
             return { type: 'date', edtf: buildPartialQual(d[0].edtf, qual.quals), confidence: d[0].confidence * 0.85 };
           }
         } },
@@ -1418,674 +753,146 @@ var grammar = {
           if (qual.type === 'global') {
             return { type: 'date', edtf: `${d[0].edtf}${qual.qual}`, confidence: d[0].confidence * 0.9 };
           } else {
-            // Partial qualifications
             return { type: 'date', edtf: buildPartialQual(d[0].edtf, qual.quals), confidence: d[0].confidence * 0.85 };
           }
         } },
     {"name": "datevalue", "symbols": ["qualifier", "_", "datevalue_base"], "postprocess": d => ({ type: 'date', edtf: `${d[2].edtf}${d[0]}`, confidence: d[2].confidence * 0.95 })},
     {"name": "datevalue", "symbols": ["datevalue_base", "_", "qualifier"], "postprocess": d => ({ type: 'date', edtf: `${d[0].edtf}${d[2]}`, confidence: d[0].confidence * 0.95 })},
     {"name": "datevalue", "symbols": ["datevalue_base"], "postprocess": id},
-    {"name": "datevalue_base$subexpression$1", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$2", "symbols": [/[yY]/, /[eE]/, /[aA]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$1", "__", "datevalue_base$subexpression$2", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[4]), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$3", "symbols": [/[yY]/, /[eE]/, /[aA]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$3", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[2]), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$4", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$4", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[2]), confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$5", "symbols": [/[sS]/, /[oO]/, /[mM]/, /[eE]/, /[tT]/, /[iI]/, /[mM]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$6", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$5", "__", "datevalue_base$subexpression$6", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4].toLowerCase()]}-XX`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$7", "symbols": [/[sS]/, /[oO]/, /[mM]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$8", "symbols": [/[dD]/, /[aA]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$9", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$7", "__", "datevalue_base$subexpression$8", "__", "datevalue_base$subexpression$9", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6].toLowerCase()]}-XX`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$10", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$11", "symbols": [/[dD]/, /[aA]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$12", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$10", "__", "datevalue_base$subexpression$11", "__", "datevalue_base$subexpression$12", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6].toLowerCase()]}-XX`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$13", "symbols": [/[sS]/, /[oO]/, /[mM]/, /[eE]/, /[tT]/, /[iI]/, /[mM]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$14", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$13", "__", "datevalue_base$subexpression$14", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-XX-XX`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$15", "symbols": [/[sS]/, /[oO]/, /[mM]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$16", "symbols": [/[mM]/, /[oO]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$17", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$15", "__", "datevalue_base$subexpression$16", "__", "datevalue_base$subexpression$17", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-XX`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$18", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$19", "symbols": [/[mM]/, /[oO]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$20", "symbols": [/[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$18", "__", "datevalue_base$subexpression$19", "__", "datevalue_base$subexpression$20", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-XX`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$21", "symbols": [/[bB]/, /[eE]/, /[fF]/, /[oO]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$22", "symbols": [/[cC]/, /[oO]/, /[mM]/, /[mM]/, /[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$23", "symbols": [/[eE]/, /[rR]/, /[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$21", "__", "datevalue_base$subexpression$22", "__", "datevalue_base$subexpression$23"], "postprocess":  d => {
-          const year = parseInt(d[0], 10);
-          const bceYear = year - 1;
-          return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$24", "symbols": [/[bB]/, /[eE]/, /[fF]/, /[oO]/, /[rR]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$25", "symbols": [/[cC]/, /[hH]/, /[rR]/, /[iI]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$24", "__", "datevalue_base$subexpression$25"], "postprocess":  d => {
-          const year = parseInt(d[0], 10);
-          const bceYear = year - 1;
-          return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$26", "symbols": [/[aA]/, /[nN]/, /[nN]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$27", "symbols": [/[dD]/, /[oO]/, /[mM]/, /[iI]/, /[nN]/, /[iI]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$26", "__", "datevalue_base$subexpression$27", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$28", "symbols": [/[aA]/, /[nN]/, /[nN]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$29", "symbols": [/[dD]/, /[oO]/, /[mM]/, /[iI]/, /[nN]/, /[iI]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$28", "__", "datevalue_base$subexpression$29"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$30", "symbols": [/[cC]/, /[oO]/, /[mM]/, /[mM]/, /[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$31", "symbols": [/[eE]/, /[rR]/, /[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$30", "__", "datevalue_base$subexpression$31", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$32", "symbols": [/[cC]/, /[oO]/, /[mM]/, /[mM]/, /[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$33", "symbols": [/[eE]/, /[rR]/, /[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$32", "__", "datevalue_base$subexpression$33"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$34", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$34"], "postprocess":  d => {
-          const year = parseInt(d[0], 10);
-          const bceYear = year - 1;
-          return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.9 };
-        } },
-    {"name": "datevalue_base$subexpression$35", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$35", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$36", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "datevalue_base$subexpression$36"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$37$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$37$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$37$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$37", "symbols": ["datevalue_base$subexpression$37$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$37$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$37$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$37$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$37$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$37", "symbols": ["datevalue_base$subexpression$37$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$37$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$37$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$37", "symbols": ["datevalue_base$subexpression$37$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$37$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$37", "symbols": ["datevalue_base$subexpression$37$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "_", "datevalue_base$subexpression$37"], "postprocess":  d => {
-          const year = parseInt(d[0], 10);
-          const bceYear = year - 1;
-          return { type: 'date', edtf: `-${pad4(bceYear)}`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$38$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$38$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$38", "symbols": ["datevalue_base$subexpression$38$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$38$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$38$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$38$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$38", "symbols": ["datevalue_base$subexpression$38$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$38$subexpression$4", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$38$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$38", "symbols": ["datevalue_base$subexpression$38$subexpression$5"]},
-    {"name": "datevalue_base$subexpression$38$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$38", "symbols": ["datevalue_base$subexpression$38$subexpression$6"]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$38", "_", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$39$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$39$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$39", "symbols": ["datevalue_base$subexpression$39$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$39$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$39$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$39$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$39", "symbols": ["datevalue_base$subexpression$39$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$39$subexpression$4", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$39$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$39", "symbols": ["datevalue_base$subexpression$39$subexpression$5"]},
-    {"name": "datevalue_base$subexpression$39$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$39", "symbols": ["datevalue_base$subexpression$39$subexpression$6"]},
-    {"name": "datevalue_base", "symbols": ["numeric_year", "_", "datevalue_base$subexpression$39"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$40", "symbols": [/[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$41", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$42", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$40", "__", "datevalue_base$subexpression$41", "__", "ordinal_day", "__", "datevalue_base$subexpression$42", "__", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[12])}-${months[d[8].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$43", "symbols": [/[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$44", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$45", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$43", "__", "datevalue_base$subexpression$44", "__", "ordinal_day", "__", "datevalue_base$subexpression$45", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[10])}-${months[d[8].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$46", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$47", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$46", "__", "ordinal_day", "__", "datevalue_base$subexpression$47", "__", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[10])}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$48", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$49", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$48", "__", "ordinal_day", "__", "datevalue_base$subexpression$49", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$50", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "datevalue_base$subexpression$50", "__", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$51", "symbols": [/[oO]/, /[fF]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "datevalue_base$subexpression$51", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$52", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "datevalue_base$subexpression$52", "__", "ordinal_day", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[0].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$53", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "datevalue_base$subexpression$53", "__", "ordinal_day", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}-${pad2(d[4])}`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "ordinal_day", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "ordinal_day", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "day_num", "_", {"literal":","}, "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "day_num", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[0].toLowerCase()]}-${pad2(d[2])}`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["day_num", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2].toLowerCase()]}-${pad2(d[0])}`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0].toLowerCase()]}`, confidence: 0.95 })},
-    {"name": "datevalue_base$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base$string$2", "symbols": [{"literal":"0"}, {"literal":"'"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$string$1", "__", "digit", "digit", {"literal":"0"}, "datevalue_base$string$2", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `${d[2]}${d[3]}XX`, confidence: 0.98 })},
-    {"name": "datevalue_base$string$3", "symbols": [{"literal":"0"}, {"literal":"'"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["digit", "digit", {"literal":"0"}, "datevalue_base$string$3", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `${d[0]}${d[1]}XX`, confidence: 0.98 })},
-    {"name": "datevalue_base$string$4", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base$string$5", "symbols": [{"literal":"0"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$string$4", "__", "digit", "digit", {"literal":"0"}, "datevalue_base$string$5"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}${d[3]}XX`, confidence: 0.98 })},
-    {"name": "datevalue_base$string$6", "symbols": [{"literal":"0"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["digit", "digit", {"literal":"0"}, "datevalue_base$string$6"], "postprocess": d => ({ type: 'date', edtf: `${d[0]}${d[1]}XX`, confidence: 0.98 })},
-    {"name": "datevalue_base$string$7", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base$string$8", "symbols": [{"literal":"0"}, {"literal":"'"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$string$7", "__", "digit", "digit", "digit", "datevalue_base$string$8", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `${d[2]}${d[3]}${d[4]}X`, confidence: 0.95 })},
-    {"name": "datevalue_base$string$9", "symbols": [{"literal":"0"}, {"literal":"'"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["digit", "digit", "digit", "datevalue_base$string$9", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `${d[0]}${d[1]}${d[2]}X`, confidence: 0.95 })},
-    {"name": "datevalue_base$string$10", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base$string$11", "symbols": [{"literal":"0"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$string$10", "__", "digit", "digit", "digit", "datevalue_base$string$11"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}${d[3]}${d[4]}X`, confidence: 0.95 })},
-    {"name": "datevalue_base$string$12", "symbols": [{"literal":"0"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["digit", "digit", "digit", "datevalue_base$string$12"], "postprocess": d => ({ type: 'date', edtf: `${d[0]}${d[1]}${d[2]}X`, confidence: 0.95 })},
-    {"name": "datevalue_base$string$13", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$string$13", "__", {"literal":"'"}, "digit", "digit", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `19${d[3]}X`, confidence: 0.9 })},
-    {"name": "datevalue_base", "symbols": [{"literal":"'"}, "digit", "digit", {"literal":"s"}], "postprocess": d => ({ type: 'date', edtf: `19${d[1]}X`, confidence: 0.9 })},
-    {"name": "datevalue_base$subexpression$54", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$55$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$55", "symbols": ["datevalue_base$subexpression$55$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$55$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$55", "symbols": ["datevalue_base$subexpression$55$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$56$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$56$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$56$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$56", "symbols": ["datevalue_base$subexpression$56$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$56$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$56$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$56$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$56$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$56", "symbols": ["datevalue_base$subexpression$56$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$56$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$56$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$56", "symbols": ["datevalue_base$subexpression$56$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$56$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$56", "symbols": ["datevalue_base$subexpression$56$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$54", "__", "ordinal_century", "__", "datevalue_base$subexpression$55", "__", "datevalue_base$subexpression$56"], "postprocess":  d => {
-          const centuryNum = d[2];
-          const yearPrefix = String(centuryNum - 1).padStart(2, '0');
-          return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$57$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$57", "symbols": ["datevalue_base$subexpression$57$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$57$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$57", "symbols": ["datevalue_base$subexpression$57$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$58$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$58$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$58$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$58", "symbols": ["datevalue_base$subexpression$58$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$58$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$58$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$58$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$58$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$58", "symbols": ["datevalue_base$subexpression$58$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$58$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$58$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$58", "symbols": ["datevalue_base$subexpression$58$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$58$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$58", "symbols": ["datevalue_base$subexpression$58$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "datevalue_base$subexpression$57", "__", "datevalue_base$subexpression$58"], "postprocess":  d => {
-          const centuryNum = d[0];
-          const yearPrefix = String(centuryNum - 1).padStart(2, '0');
-          return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$59", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$60$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$60", "symbols": ["datevalue_base$subexpression$60$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$60$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$60", "symbols": ["datevalue_base$subexpression$60$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$61$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$61$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$61$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$61", "symbols": ["datevalue_base$subexpression$61$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$61$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$61$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$61$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$61$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$61", "symbols": ["datevalue_base$subexpression$61$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$61$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$61$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$61", "symbols": ["datevalue_base$subexpression$61$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$61$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$61", "symbols": ["datevalue_base$subexpression$61$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$59", "__", "spelled_ordinal_century", "__", "datevalue_base$subexpression$60", "__", "datevalue_base$subexpression$61"], "postprocess":  d => {
-          const centuryNum = d[2];
-          const yearPrefix = String(centuryNum - 1).padStart(2, '0');
-          return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$62$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$62", "symbols": ["datevalue_base$subexpression$62$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$62$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$62", "symbols": ["datevalue_base$subexpression$62$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$63$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$63$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$63$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$63", "symbols": ["datevalue_base$subexpression$63$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$63$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$63$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$63$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$63$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$63", "symbols": ["datevalue_base$subexpression$63$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$63$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$63$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$63", "symbols": ["datevalue_base$subexpression$63$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$63$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$63", "symbols": ["datevalue_base$subexpression$63$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["spelled_ordinal_century", "__", "datevalue_base$subexpression$62", "__", "datevalue_base$subexpression$63"], "postprocess":  d => {
-          const centuryNum = d[0];
-          const yearPrefix = String(centuryNum - 1).padStart(2, '0');
-          return { type: 'date', edtf: `-${yearPrefix}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$64", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$65", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66", "symbols": ["datevalue_base$subexpression$66$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$66$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$66$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$66$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66", "symbols": ["datevalue_base$subexpression$66$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$66$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$66$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66", "symbols": ["datevalue_base$subexpression$66$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$66$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$66", "symbols": ["datevalue_base$subexpression$66$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$64", "__", "spelled_century", "__", "datevalue_base$subexpression$65", "__", "datevalue_base$subexpression$66"], "postprocess":  d => {
-          const centuryPrefix = d[2];
-          const year = parseInt(centuryPrefix, 10) * 100;
-          return { type: 'date', edtf: `-${pad4(year - 1)}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$67", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68", "symbols": ["datevalue_base$subexpression$68$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$68$subexpression$2", {"literal":"."}, "_", "datevalue_base$subexpression$68$subexpression$3", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$68$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68", "symbols": ["datevalue_base$subexpression$68$subexpression$4", {"literal":"."}, "_", "datevalue_base$subexpression$68$subexpression$5", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$68$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68", "symbols": ["datevalue_base$subexpression$68$subexpression$6"]},
-    {"name": "datevalue_base$subexpression$68$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$68", "symbols": ["datevalue_base$subexpression$68$subexpression$7"]},
-    {"name": "datevalue_base", "symbols": ["spelled_century", "__", "datevalue_base$subexpression$67", "__", "datevalue_base$subexpression$68"], "postprocess":  d => {
-          const centuryPrefix = d[0];
-          const year = parseInt(centuryPrefix, 10) * 100;
-          return { type: 'date', edtf: `-${pad4(year - 1)}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$69", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$70$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$70", "symbols": ["datevalue_base$subexpression$70$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$70$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$70", "symbols": ["datevalue_base$subexpression$70$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$71$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$71$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$71", "symbols": ["datevalue_base$subexpression$71$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$71$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$71$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$71$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$71", "symbols": ["datevalue_base$subexpression$71$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$71$subexpression$4", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$71$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$71", "symbols": ["datevalue_base$subexpression$71$subexpression$5"]},
-    {"name": "datevalue_base$subexpression$71$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$71", "symbols": ["datevalue_base$subexpression$71$subexpression$6"]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$69", "__", "ordinal_century", "__", "datevalue_base$subexpression$70", "__", "datevalue_base$subexpression$71"], "postprocess":  d => {
-          const centuryNum = d[2];
-          const year = (centuryNum - 1) * 100;
-          const yearPrefix = String(year).substring(0, 2);
-          return { type: 'date', edtf: `${yearPrefix}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$72$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$72", "symbols": ["datevalue_base$subexpression$72$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$72$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$72", "symbols": ["datevalue_base$subexpression$72$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$73$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$73$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$73", "symbols": ["datevalue_base$subexpression$73$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$73$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$73$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$73$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$73", "symbols": ["datevalue_base$subexpression$73$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$73$subexpression$4", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$73$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$73", "symbols": ["datevalue_base$subexpression$73$subexpression$5"]},
-    {"name": "datevalue_base$subexpression$73$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$73", "symbols": ["datevalue_base$subexpression$73$subexpression$6"]},
-    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "datevalue_base$subexpression$72", "__", "datevalue_base$subexpression$73"], "postprocess":  d => {
-          const centuryNum = d[0];
-          const year = (centuryNum - 1) * 100;
-          const yearPrefix = String(year).substring(0, 2);
-          return { type: 'date', edtf: `${yearPrefix}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$74", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$75", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$76$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$76$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$76", "symbols": ["datevalue_base$subexpression$76$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$76$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$76$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$76$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$76", "symbols": ["datevalue_base$subexpression$76$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$76$subexpression$4", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$76$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$76", "symbols": ["datevalue_base$subexpression$76$subexpression$5"]},
-    {"name": "datevalue_base$subexpression$76$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$76", "symbols": ["datevalue_base$subexpression$76$subexpression$6"]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$74", "__", "spelled_century", "__", "datevalue_base$subexpression$75", "__", "datevalue_base$subexpression$76"], "postprocess":  d => {
-          const centuryPrefix = d[2];
-          const year = (parseInt(centuryPrefix, 10) - 1) * 100;
-          return { type: 'date', edtf: `${String(year).padStart(2, '0')}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$77", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$78$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$78$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$78", "symbols": ["datevalue_base$subexpression$78$subexpression$1", {"literal":"."}, "_", "datevalue_base$subexpression$78$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$78$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$78$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$78", "symbols": ["datevalue_base$subexpression$78$subexpression$3", {"literal":"."}, "_", "datevalue_base$subexpression$78$subexpression$4", {"literal":"."}]},
-    {"name": "datevalue_base$subexpression$78$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$78", "symbols": ["datevalue_base$subexpression$78$subexpression$5"]},
-    {"name": "datevalue_base$subexpression$78$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$78", "symbols": ["datevalue_base$subexpression$78$subexpression$6"]},
-    {"name": "datevalue_base", "symbols": ["spelled_century", "__", "datevalue_base$subexpression$77", "__", "datevalue_base$subexpression$78"], "postprocess":  d => {
-          const centuryPrefix = d[0];
-          const year = (parseInt(centuryPrefix, 10) - 1) * 100;
-          return { type: 'date', edtf: `${String(year).padStart(2, '0')}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$79", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$80$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$80", "symbols": ["datevalue_base$subexpression$80$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$80$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$80", "symbols": ["datevalue_base$subexpression$80$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$79", "__", "ordinal_century", "__", "datevalue_base$subexpression$80"], "postprocess":  d => {
-          const centuryNum = d[2];
-          const year = (centuryNum - 1) * 100;
-          return { type: 'date', edtf: `${String(year).substring(0, 2)}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$81$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$81", "symbols": ["datevalue_base$subexpression$81$subexpression$1"]},
-    {"name": "datevalue_base$subexpression$81$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$81", "symbols": ["datevalue_base$subexpression$81$subexpression$2", {"literal":"."}]},
-    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "datevalue_base$subexpression$81"], "postprocess":  d => {
-          const centuryNum = d[0];
-          const year = (centuryNum - 1) * 100;
-          return { type: 'date', edtf: `${String(year).substring(0, 2)}XX`, confidence: 0.95 };
-        } },
-    {"name": "datevalue_base$subexpression$82", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$83", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$82", "__", "spelled_century", "__", "datevalue_base$subexpression$83"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$84", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["spelled_century", "__", "datevalue_base$subexpression$84"], "postprocess": d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$85", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base$subexpression$86", "symbols": [/[hH]/, /[uU]/, /[nN]/, /[dD]/, /[rR]/, /[eE]/, /[dD]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$85", "__", "spelled_number_word", "__", "datevalue_base$subexpression$86"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$87", "symbols": [/[hH]/, /[uU]/, /[nN]/, /[dD]/, /[rR]/, /[eE]/, /[dD]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["spelled_number_word", "__", "datevalue_base$subexpression$87"], "postprocess": d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 })},
-    {"name": "datevalue_base$subexpression$88", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "datevalue_base", "symbols": ["datevalue_base$subexpression$88", "__", "spelled_decade"], "postprocess": d => ({ type: 'date', edtf: `19${d[2]}X`, confidence: 0.9 })},
-    {"name": "datevalue_base", "symbols": ["spelled_decade"], "postprocess": d => ({ type: 'date', edtf: `19${d[0]}X`, confidence: 0.9 })},
-    {"name": "datevalue_base", "symbols": ["digit", "digit", {"literal":"s"}], "postprocess":  d => {
-          const twoDigit = d[0] + d[1];
-          const year = parseInt(twoDigit, 10);
-          // Determine century: if >= 30, assume 1900s, else 2000s
-          const fullYear = year >= 30 ? 1900 + year : 2000 + year;
-          return { type: 'date', edtf: `${String(fullYear).substring(0, 3)}X`, confidence: 0.9 };
-        } },
-    {"name": "datevalue_base", "symbols": ["slash_date_num", {"literal":"/"}, "digit", "digit", "digit", "digit"], "postprocess":  d => {
-          const month = parseInt(d[0], 10);
-          const year = d[2] + d[3] + d[4] + d[5];
-          if (month >= 1 && month <= 12) {
-            return { type: 'date', edtf: `${year}-${pad2(month)}`, confidence: 0.9 };
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", (lexer.has("year") ? {type: "year"} : year), "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[4]), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("year") ? {type: "year"} : year), "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[2]), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("inWord") ? {type: "inWord"} : inWord), "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[2]), confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("sometime") ? {type: "sometime"} : sometime), "__", (lexer.has("inWord") ? {type: "inWord"} : inWord), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4]]}-XX`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("some") ? {type: "some"} : some), "__", (lexer.has("day") ? {type: "day"} : day), "__", (lexer.has("inWord") ? {type: "inWord"} : inWord), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6]]}-XX`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("a") ? {type: "a"} : a), "__", (lexer.has("day") ? {type: "day"} : day), "__", (lexer.has("inWord") ? {type: "inWord"} : inWord), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6]]}-XX`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("sometime") ? {type: "sometime"} : sometime), "__", (lexer.has("inWord") ? {type: "inWord"} : inWord), "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-XX-XX`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("some") ? {type: "some"} : some), "__", (lexer.has("month") ? {type: "month"} : month), "__", (lexer.has("inWord") ? {type: "inWord"} : inWord), "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-XX`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("a") ? {type: "a"} : a), "__", (lexer.has("month") ? {type: "month"} : month), "__", (lexer.has("inWord") ? {type: "inWord"} : inWord), "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-XX`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", (lexer.has("before") ? {type: "before"} : before), "__", (lexer.has("common") ? {type: "common"} : common), "__", (lexer.has("era") ? {type: "era"} : era)], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[0], 10) - 1)}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", (lexer.has("before") ? {type: "before"} : before), "__", (lexer.has("christ") ? {type: "christ"} : christ)], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[0], 10) - 1)}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("anno") ? {type: "anno"} : anno), "__", (lexer.has("domini") ? {type: "domini"} : domini), "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", (lexer.has("anno") ? {type: "anno"} : anno), "__", (lexer.has("domini") ? {type: "domini"} : domini)], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("common") ? {type: "common"} : common), "__", (lexer.has("era") ? {type: "era"} : era), "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[4], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", (lexer.has("common") ? {type: "common"} : common), "__", (lexer.has("era") ? {type: "era"} : era)], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "era_bce"], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[0], 10) - 1)}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", (lexer.has("b") ? {type: "b"} : b)], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[0], 10) - 1)}`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": ["era_ce", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "era_ce"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["era_a", "__", "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[2], 10)), confidence: 0.85 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", "__", "era_a"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.85 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", (lexer.has("bc") ? {type: "bc"} : bc)], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[0], 10) - 1)}`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", (lexer.has("bce") ? {type: "bce"} : bce)], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[0], 10) - 1)}`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("bc") ? {type: "bc"} : bc), "numeric_year"], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[1], 10) - 1)}`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("bce") ? {type: "bce"} : bce), "numeric_year"], "postprocess": d => ({ type: 'date', edtf: `-${pad4(parseInt(d[1], 10) - 1)}`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", (lexer.has("ad") ? {type: "ad"} : ad)], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": ["numeric_year", (lexer.has("ce") ? {type: "ce"} : ce)], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[0], 10)), confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("ad") ? {type: "ad"} : ad), "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[1], 10)), confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("ce") ? {type: "ce"} : ce), "numeric_year"], "postprocess": d => ({ type: 'date', edtf: pad4(parseInt(d[1], 10)), confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("on") ? {type: "on"} : on), "__", (lexer.has("the") ? {type: "the"} : the), "__", "ordinal_day", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[12])}-${months[d[8]]}-${pad2(d[4])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("on") ? {type: "on"} : on), "__", (lexer.has("the") ? {type: "the"} : the), "__", "ordinal_day", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[10])}-${months[d[8]]}-${pad2(d[4])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "ordinal_day", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[10])}-${months[d[6]]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "ordinal_day", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6]]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[4]]}-${pad2(d[0])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4]]}-${pad2(d[0])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", (lexer.has("the") ? {type: "the"} : the), "__", "ordinal_day", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[0]]}-${pad2(d[4])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", (lexer.has("the") ? {type: "the"} : the), "__", "ordinal_day", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0]]}-${pad2(d[4])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", "ordinal_day", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0]]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", "ordinal_day", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[0]]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["ordinal_day", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2]]}-${pad2(d[0])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", "day_num", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0]]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", "day_num", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[0]]}-${pad2(d[2])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["day_num", "__", "month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2]]}-${pad2(d[0])}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", "year_num"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0]]}`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", (lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess":  d => {
+          const num = d[2].value;
+          if (num.length === 4) {
+            if (num.endsWith('00')) {
+              // Century interpretation: 1800s -> 18XX
+              return { type: 'date', edtf: `${num.substring(0, 2)}XX`, confidence: 0.98 };
+            }
+            // Regular decade: 1960s -> 196X
+            return { type: 'date', edtf: `${num.substring(0, 3)}X`, confidence: 0.95 };
           }
           return null;
         } },
-    {"name": "datevalue_base", "symbols": ["slash_date_num", {"literal":"/"}, "slash_date_num", {"literal":"/"}, "digit", "digit", "digit", "digit"], "postprocess":  d => {
-          const first = d[0];
-          const second = d[2];
-          const year = d[4] + d[5] + d[6] + d[7];
-          return buildSlashDate(first, second, year);
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", (lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess":  d => {
+          const num = d[2].value;
+          if (num.length === 4 && num.endsWith('00')) {
+            return { type: 'date', edtf: `${num.substring(0, 3)}X`, confidence: 0.9 };
+          }
+          // Return reject to indicate this rule doesn't apply
+          return { __reject: true };
         } },
-    {"name": "datevalue_base", "symbols": ["slash_date_num", {"literal":"/"}, "slash_date_num", {"literal":"/"}, "digit", "digit"], "postprocess":  d => {
-          const first = d[0];
-          const second = d[2];
-          const year = d[4] + d[5];
-          return buildSlashDate(first, second, year);
+    {"name": "datevalue_base", "symbols": [(lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess":  d => {
+          const num = d[0].value;
+          if (num.length === 4) {
+            if (num.endsWith('00')) {
+              // Century interpretation: 1800s -> 18XX
+              return { type: 'date', edtf: `${num.substring(0, 2)}XX`, confidence: 0.98 };
+            }
+            // Regular decade: 1960s -> 196X
+            return { type: 'date', edtf: `${num.substring(0, 3)}X`, confidence: 0.95 };
+          }
+          // Two-digit decade: 60s
+          if (num.length === 2) {
+            const year = parseInt(num, 10);
+            const fullYear = year >= 30 ? 1900 + year : 2000 + year;
+            return { type: 'date', edtf: `${String(fullYear).substring(0, 3)}X`, confidence: 0.9 };
+          }
+          return null;
         } },
-    {"name": "datevalue_base$string$14", "symbols": [{"literal":"-"}, {"literal":"i"}, {"literal":"s"}, {"literal":"h"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["year_num", "_", "datevalue_base$string$14"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 })},
-    {"name": "datevalue_base$string$15", "symbols": [{"literal":"i"}, {"literal":"s"}, {"literal":"h"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "datevalue_base", "symbols": ["year_num", "datevalue_base$string$15"], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 })},
-    {"name": "datevalue_base", "symbols": ["year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[0]), confidence: 0.95 })},
-    {"name": "qualifier", "symbols": [{"literal":"?"}], "postprocess": () => '?'},
-    {"name": "qualifier", "symbols": [{"literal":"~"}], "postprocess": () => '~'},
-    {"name": "qualifier", "symbols": [{"literal":"≈"}], "postprocess": () => '~'},
-    {"name": "qualifier$string$1", "symbols": [{"literal":"c"}, {"literal":"i"}, {"literal":"r"}, {"literal":"c"}, {"literal":"a"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$1"], "postprocess": () => '~'},
-    {"name": "qualifier$string$2", "symbols": [{"literal":"c"}, {"literal":"i"}, {"literal":"r"}, {"literal":"c"}, {"literal":"a"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$2"], "postprocess": () => '~'},
-    {"name": "qualifier$string$3", "symbols": [{"literal":"c"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$3"], "postprocess": () => '~'},
-    {"name": "qualifier", "symbols": [{"literal":"c"}], "postprocess": () => '~'},
-    {"name": "qualifier$string$4", "symbols": [{"literal":"c"}, {"literal":"a"}, {"literal":"."}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$4"], "postprocess": () => '~'},
-    {"name": "qualifier$string$5", "symbols": [{"literal":"a"}, {"literal":"b"}, {"literal":"o"}, {"literal":"u"}, {"literal":"t"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$5"], "postprocess": () => '~'},
-    {"name": "qualifier$string$6", "symbols": [{"literal":"a"}, {"literal":"r"}, {"literal":"o"}, {"literal":"u"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$6"], "postprocess": () => '~'},
-    {"name": "qualifier$string$7", "symbols": [{"literal":"n"}, {"literal":"e"}, {"literal":"a"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$7"], "postprocess": () => '~'},
-    {"name": "qualifier$string$8", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"l"}, {"literal":"y"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$8"], "postprocess": () => '~'},
-    {"name": "qualifier$string$9", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$9"], "postprocess": () => '~'},
-    {"name": "qualifier$string$10", "symbols": [{"literal":"p"}, {"literal":"o"}, {"literal":"s"}, {"literal":"s"}, {"literal":"i"}, {"literal":"b"}, {"literal":"l"}, {"literal":"y"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$10"], "postprocess": () => '?'},
-    {"name": "qualifier$string$11", "symbols": [{"literal":"m"}, {"literal":"a"}, {"literal":"y"}, {"literal":"b"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$11"], "postprocess": () => '?'},
-    {"name": "qualifier$string$12", "symbols": [{"literal":"p"}, {"literal":"e"}, {"literal":"r"}, {"literal":"h"}, {"literal":"a"}, {"literal":"p"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$12"], "postprocess": () => '?'},
-    {"name": "qualifier$string$13", "symbols": [{"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"b"}, {"literal":"a"}, {"literal":"b"}, {"literal":"l"}, {"literal":"y"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$13"], "postprocess": () => '?'},
-    {"name": "qualifier$string$14", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "qualifier", "symbols": ["qualifier$string$14"], "postprocess": () => '?'},
-    {"name": "parenthetical_qualification$string$1", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}, {"literal":"/"}, {"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$1", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '%' })},
-    {"name": "parenthetical_qualification$string$2", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "parenthetical_qualification$string$3", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "parenthetical_qualification$string$4", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$2", "__", "parenthetical_qualification$string$3", "__", "parenthetical_qualification$string$4", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '%' })},
-    {"name": "parenthetical_qualification$string$5", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"t"}, {"literal":"a"}, {"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$5", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '?' })},
-    {"name": "parenthetical_qualification$string$6", "symbols": [{"literal":"a"}, {"literal":"p"}, {"literal":"p"}, {"literal":"r"}, {"literal":"o"}, {"literal":"x"}, {"literal":"i"}, {"literal":"m"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "parenthetical_qualification$string$6", "_", {"literal":")"}], "postprocess": () => ({ type: 'global', qual: '~' })},
-    {"name": "parenthetical_qualification", "symbols": [{"literal":"("}, "_", "partial_qual_list", "_", {"literal":")"}], "postprocess": d => ({ type: 'partial', quals: d[2] })},
-    {"name": "partial_qual_list", "symbols": ["partial_qual", "_", {"literal":","}, "_", "partial_qual_list"], "postprocess": d => ({ ...d[4], ...d[0] })},
-    {"name": "partial_qual_list", "symbols": ["partial_qual", "_", {"literal":","}, "_", "partial_qual"], "postprocess": d => ({ ...d[0], ...d[4] })},
-    {"name": "partial_qual_list", "symbols": ["partial_qual"], "postprocess": d => d[0]},
-    {"name": "partial_qual$subexpression$1", "symbols": [/[yY]/, /[eE]/, /[aA]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "partial_qual", "symbols": ["partial_qual$subexpression$1", "__", "qual_type"], "postprocess": d => ({ year: d[2] })},
-    {"name": "partial_qual$subexpression$2", "symbols": [/[mM]/, /[oO]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "partial_qual", "symbols": ["partial_qual$subexpression$2", "__", "qual_type"], "postprocess": d => ({ month: d[2] })},
-    {"name": "partial_qual$subexpression$3", "symbols": [/[dD]/, /[aA]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "partial_qual", "symbols": ["partial_qual$subexpression$3", "__", "qual_type"], "postprocess": d => ({ day: d[2] })},
-    {"name": "qual_type$subexpression$1", "symbols": [/[uU]/, /[nN]/, /[cC]/, /[eE]/, /[rR]/, /[tT]/, /[aA]/, /[iI]/, /[nN]/, {"literal":"/"}, /[aA]/, /[pP]/, /[pP]/, /[rR]/, /[oO]/, /[xX]/, /[iI]/, /[mM]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qual_type", "symbols": ["qual_type$subexpression$1"], "postprocess": () => '%'},
-    {"name": "qual_type$subexpression$2", "symbols": [/[uU]/, /[nN]/, /[cC]/, /[eE]/, /[rR]/, /[tT]/, /[aA]/, /[iI]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qual_type", "symbols": ["qual_type$subexpression$2"], "postprocess": () => '?'},
-    {"name": "qual_type$subexpression$3", "symbols": [/[aA]/, /[pP]/, /[pP]/, /[rR]/, /[oO]/, /[xX]/, /[iI]/, /[mM]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "qual_type", "symbols": ["qual_type$subexpression$3"], "postprocess": () => '~'},
-    {"name": "month_name$subexpression$1$subexpression$1", "symbols": [/[jJ]/, /[aA]/, /[nN]/, /[uU]/, /[aA]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$1"]},
-    {"name": "month_name$subexpression$1$subexpression$2", "symbols": [/[jJ]/, /[aA]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$2"]},
-    {"name": "month_name$subexpression$1$subexpression$3", "symbols": [/[fF]/, /[eE]/, /[bB]/, /[rR]/, /[uU]/, /[aA]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$3"]},
-    {"name": "month_name$subexpression$1$subexpression$4", "symbols": [/[fF]/, /[eE]/, /[bB]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$4"]},
-    {"name": "month_name$subexpression$1$subexpression$5", "symbols": [/[mM]/, /[aA]/, /[rR]/, /[cC]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$5"]},
-    {"name": "month_name$subexpression$1$subexpression$6", "symbols": [/[mM]/, /[aA]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$6"]},
-    {"name": "month_name$subexpression$1$subexpression$7", "symbols": [/[aA]/, /[pP]/, /[rR]/, /[iI]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$7"]},
-    {"name": "month_name$subexpression$1$subexpression$8", "symbols": [/[aA]/, /[pP]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$8"]},
-    {"name": "month_name$subexpression$1$subexpression$9", "symbols": [/[mM]/, /[aA]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$9"]},
-    {"name": "month_name$subexpression$1$subexpression$10", "symbols": [/[jJ]/, /[uU]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$10"]},
-    {"name": "month_name$subexpression$1$subexpression$11", "symbols": [/[jJ]/, /[uU]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$11"]},
-    {"name": "month_name$subexpression$1$subexpression$12", "symbols": [/[jJ]/, /[uU]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$12"]},
-    {"name": "month_name$subexpression$1$subexpression$13", "symbols": [/[jJ]/, /[uU]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$13"]},
-    {"name": "month_name$subexpression$1$subexpression$14", "symbols": [/[aA]/, /[uU]/, /[gG]/, /[uU]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$14"]},
-    {"name": "month_name$subexpression$1$subexpression$15", "symbols": [/[aA]/, /[uU]/, /[gG]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$15"]},
-    {"name": "month_name$subexpression$1$subexpression$16", "symbols": [/[sS]/, /[eE]/, /[pP]/, /[tT]/, /[eE]/, /[mM]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$16"]},
-    {"name": "month_name$subexpression$1$subexpression$17", "symbols": [/[sS]/, /[eE]/, /[pP]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$17"]},
-    {"name": "month_name$subexpression$1$subexpression$18", "symbols": [/[sS]/, /[eE]/, /[pP]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$18"]},
-    {"name": "month_name$subexpression$1$subexpression$19", "symbols": [/[oO]/, /[cC]/, /[tT]/, /[oO]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$19"]},
-    {"name": "month_name$subexpression$1$subexpression$20", "symbols": [/[oO]/, /[cC]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$20"]},
-    {"name": "month_name$subexpression$1$subexpression$21", "symbols": [/[nN]/, /[oO]/, /[vV]/, /[eE]/, /[mM]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$21"]},
-    {"name": "month_name$subexpression$1$subexpression$22", "symbols": [/[nN]/, /[oO]/, /[vV]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$22"]},
-    {"name": "month_name$subexpression$1$subexpression$23", "symbols": [/[dD]/, /[eE]/, /[cC]/, /[eE]/, /[mM]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$23"]},
-    {"name": "month_name$subexpression$1$subexpression$24", "symbols": [/[dD]/, /[eE]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "month_name$subexpression$1", "symbols": ["month_name$subexpression$1$subexpression$24"]},
-    {"name": "month_name", "symbols": ["month_name$subexpression$1"], "postprocess": d => d[0][0]},
-    {"name": "year_num", "symbols": ["digit", "digit", "digit", "digit"], "postprocess": d => d[0] + d[1] + d[2] + d[3]},
-    {"name": "year_num", "symbols": ["digit", "digit", "digit"], "postprocess": d => d[0] + d[1] + d[2]},
-    {"name": "year_num", "symbols": ["digit", "digit"], "postprocess": d => d[0] + d[1]},
-    {"name": "year_num", "symbols": ["digit"], "postprocess": d => d[0]},
-    {"name": "numeric_year", "symbols": ["digit", "digit", "digit", "digit"], "postprocess": d => d[0] + d[1] + d[2] + d[3]},
-    {"name": "numeric_year", "symbols": ["digit", "digit", "digit"], "postprocess": d => d[0] + d[1] + d[2]},
-    {"name": "numeric_year", "symbols": ["digit", "digit"], "postprocess": d => d[0] + d[1]},
-    {"name": "numeric_year", "symbols": ["digit"], "postprocess": d => d[0]},
-    {"name": "day_num", "symbols": ["digit", "digit"], "postprocess": d => parseInt(d[0] + d[1], 10)},
-    {"name": "day_num", "symbols": ["digit"], "postprocess": d => parseInt(d[0], 10)},
-    {"name": "ordinal_day$subexpression$1$subexpression$1", "symbols": [/[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$1", "symbols": ["ordinal_day$subexpression$1$subexpression$1"]},
-    {"name": "ordinal_day$subexpression$1$subexpression$2", "symbols": [/[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$1", "symbols": ["ordinal_day$subexpression$1$subexpression$2"]},
-    {"name": "ordinal_day$subexpression$1$subexpression$3", "symbols": [/[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$1", "symbols": ["ordinal_day$subexpression$1$subexpression$3"]},
-    {"name": "ordinal_day$subexpression$1$subexpression$4", "symbols": [/[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$1", "symbols": ["ordinal_day$subexpression$1$subexpression$4"]},
-    {"name": "ordinal_day", "symbols": ["digit", "digit", "ordinal_day$subexpression$1"], "postprocess": d => parseInt(d[0] + d[1], 10)},
-    {"name": "ordinal_day$subexpression$2$subexpression$1", "symbols": [/[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$2", "symbols": ["ordinal_day$subexpression$2$subexpression$1"]},
-    {"name": "ordinal_day$subexpression$2$subexpression$2", "symbols": [/[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$2", "symbols": ["ordinal_day$subexpression$2$subexpression$2"]},
-    {"name": "ordinal_day$subexpression$2$subexpression$3", "symbols": [/[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$2", "symbols": ["ordinal_day$subexpression$2$subexpression$3"]},
-    {"name": "ordinal_day$subexpression$2$subexpression$4", "symbols": [/[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_day$subexpression$2", "symbols": ["ordinal_day$subexpression$2$subexpression$4"]},
-    {"name": "ordinal_day", "symbols": ["digit", "ordinal_day$subexpression$2"], "postprocess": d => parseInt(d[0], 10)},
-    {"name": "ordinal_century$subexpression$1$subexpression$1", "symbols": [/[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$1", "symbols": ["ordinal_century$subexpression$1$subexpression$1"]},
-    {"name": "ordinal_century$subexpression$1$subexpression$2", "symbols": [/[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$1", "symbols": ["ordinal_century$subexpression$1$subexpression$2"]},
-    {"name": "ordinal_century$subexpression$1$subexpression$3", "symbols": [/[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$1", "symbols": ["ordinal_century$subexpression$1$subexpression$3"]},
-    {"name": "ordinal_century$subexpression$1$subexpression$4", "symbols": [/[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$1", "symbols": ["ordinal_century$subexpression$1$subexpression$4"]},
-    {"name": "ordinal_century", "symbols": ["digit", "digit", "ordinal_century$subexpression$1"], "postprocess": d => parseInt(d[0] + d[1], 10)},
-    {"name": "ordinal_century$subexpression$2$subexpression$1", "symbols": [/[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$2", "symbols": ["ordinal_century$subexpression$2$subexpression$1"]},
-    {"name": "ordinal_century$subexpression$2$subexpression$2", "symbols": [/[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$2", "symbols": ["ordinal_century$subexpression$2$subexpression$2"]},
-    {"name": "ordinal_century$subexpression$2$subexpression$3", "symbols": [/[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$2", "symbols": ["ordinal_century$subexpression$2$subexpression$3"]},
-    {"name": "ordinal_century$subexpression$2$subexpression$4", "symbols": [/[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "ordinal_century$subexpression$2", "symbols": ["ordinal_century$subexpression$2$subexpression$4"]},
-    {"name": "ordinal_century", "symbols": ["digit", "ordinal_century$subexpression$2"], "postprocess": d => parseInt(d[0], 10)},
-    {"name": "spelled_ordinal_century$subexpression$1", "symbols": [/[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$1"], "postprocess": () => 1},
-    {"name": "spelled_ordinal_century$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[cC]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$2"], "postprocess": () => 2},
-    {"name": "spelled_ordinal_century$subexpression$3", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$3"], "postprocess": () => 3},
-    {"name": "spelled_ordinal_century$subexpression$4", "symbols": [/[fF]/, /[oO]/, /[uU]/, /[rR]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$4"], "postprocess": () => 4},
-    {"name": "spelled_ordinal_century$subexpression$5", "symbols": [/[fF]/, /[iI]/, /[fF]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$5"], "postprocess": () => 5},
-    {"name": "spelled_ordinal_century$subexpression$6", "symbols": [/[sS]/, /[iI]/, /[xX]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$6"], "postprocess": () => 6},
-    {"name": "spelled_ordinal_century$subexpression$7", "symbols": [/[sS]/, /[eE]/, /[vV]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$7"], "postprocess": () => 7},
-    {"name": "spelled_ordinal_century$subexpression$8", "symbols": [/[eE]/, /[iI]/, /[gG]/, /[hH]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$8"], "postprocess": () => 8},
-    {"name": "spelled_ordinal_century$subexpression$9", "symbols": [/[nN]/, /[iI]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$9"], "postprocess": () => 9},
-    {"name": "spelled_ordinal_century$subexpression$10", "symbols": [/[tT]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$10"], "postprocess": () => 10},
-    {"name": "spelled_ordinal_century$subexpression$11", "symbols": [/[eE]/, /[lL]/, /[eE]/, /[vV]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$11"], "postprocess": () => 11},
-    {"name": "spelled_ordinal_century$subexpression$12", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[lL]/, /[fF]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$12"], "postprocess": () => 12},
-    {"name": "spelled_ordinal_century$subexpression$13", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$13"], "postprocess": () => 13},
-    {"name": "spelled_ordinal_century$subexpression$14", "symbols": [/[fF]/, /[oO]/, /[uU]/, /[rR]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$14"], "postprocess": () => 14},
-    {"name": "spelled_ordinal_century$subexpression$15", "symbols": [/[fF]/, /[iI]/, /[fF]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$15"], "postprocess": () => 15},
-    {"name": "spelled_ordinal_century$subexpression$16", "symbols": [/[sS]/, /[iI]/, /[xX]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$16"], "postprocess": () => 16},
-    {"name": "spelled_ordinal_century$subexpression$17", "symbols": [/[sS]/, /[eE]/, /[vV]/, /[eE]/, /[nN]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$17"], "postprocess": () => 17},
-    {"name": "spelled_ordinal_century$subexpression$18", "symbols": [/[eE]/, /[iI]/, /[gG]/, /[hH]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$18"], "postprocess": () => 18},
-    {"name": "spelled_ordinal_century$subexpression$19", "symbols": [/[nN]/, /[iI]/, /[nN]/, /[eE]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$19"], "postprocess": () => 19},
-    {"name": "spelled_ordinal_century$subexpression$20", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[nN]/, /[tT]/, /[iI]/, /[eE]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$20"], "postprocess": () => 20},
-    {"name": "spelled_ordinal_century$subexpression$21", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[nN]/, /[tT]/, /[yY]/, {"literal":"-"}, /[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_ordinal_century", "symbols": ["spelled_ordinal_century$subexpression$21"], "postprocess": () => 21},
-    {"name": "spelled_number_word$subexpression$1", "symbols": [/[eE]/, /[iI]/, /[gG]/, /[hH]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$1"], "postprocess": () => '18'},
-    {"name": "spelled_number_word$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[vV]/, /[eE]/, /[nN]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$2"], "postprocess": () => '17'},
-    {"name": "spelled_number_word$subexpression$3", "symbols": [/[sS]/, /[iI]/, /[xX]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$3"], "postprocess": () => '16'},
-    {"name": "spelled_number_word$subexpression$4", "symbols": [/[fF]/, /[iI]/, /[fF]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$4"], "postprocess": () => '15'},
-    {"name": "spelled_number_word$subexpression$5", "symbols": [/[fF]/, /[oO]/, /[uU]/, /[rR]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$5"], "postprocess": () => '14'},
-    {"name": "spelled_number_word$subexpression$6", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$6"], "postprocess": () => '13'},
-    {"name": "spelled_number_word$subexpression$7", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[lL]/, /[vV]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$7"], "postprocess": () => '12'},
-    {"name": "spelled_number_word$subexpression$8", "symbols": [/[eE]/, /[lL]/, /[eE]/, /[vV]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$8"], "postprocess": () => '11'},
-    {"name": "spelled_number_word$subexpression$9", "symbols": [/[nN]/, /[iI]/, /[nN]/, /[eE]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$9"], "postprocess": () => '19'},
-    {"name": "spelled_number_word$subexpression$10", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[nN]/, /[tT]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_number_word", "symbols": ["spelled_number_word$subexpression$10"], "postprocess": () => '20'},
-    {"name": "spelled_century$subexpression$1", "symbols": [/[nN]/, /[iI]/, /[nN]/, /[eE]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_century", "symbols": ["spelled_century$subexpression$1"], "postprocess": () => '18'},
-    {"name": "spelled_century$subexpression$2", "symbols": [/[eE]/, /[iI]/, /[gG]/, /[hH]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_century", "symbols": ["spelled_century$subexpression$2"], "postprocess": () => '17'},
-    {"name": "spelled_century$subexpression$3", "symbols": [/[sS]/, /[eE]/, /[vV]/, /[eE]/, /[nN]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_century", "symbols": ["spelled_century$subexpression$3"], "postprocess": () => '16'},
-    {"name": "spelled_century$subexpression$4", "symbols": [/[sS]/, /[iI]/, /[xX]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_century", "symbols": ["spelled_century$subexpression$4"], "postprocess": () => '15'},
-    {"name": "spelled_century$subexpression$5", "symbols": [/[fF]/, /[iI]/, /[fF]/, /[tT]/, /[eE]/, /[eE]/, /[nN]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_century", "symbols": ["spelled_century$subexpression$5"], "postprocess": () => '14'},
-    {"name": "spelled_century$subexpression$6", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[nN]/, /[tT]/, /[iI]/, /[eE]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_century", "symbols": ["spelled_century$subexpression$6"], "postprocess": () => '19'},
-    {"name": "spelled_century$subexpression$7", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[nN]/, /[tT]/, /[yY]/, {"literal":"-"}, /[fF]/, /[iI]/, /[rR]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_century", "symbols": ["spelled_century$subexpression$7"], "postprocess": () => '20'},
-    {"name": "spelled_decade$subexpression$1", "symbols": [/[sS]/, /[iI]/, /[xX]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$1"], "postprocess": () => '6'},
-    {"name": "spelled_decade$subexpression$2", "symbols": [/[fF]/, /[iI]/, /[fF]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$2"], "postprocess": () => '5'},
-    {"name": "spelled_decade$subexpression$3", "symbols": [/[fF]/, /[oO]/, /[rR]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$3"], "postprocess": () => '4'},
-    {"name": "spelled_decade$subexpression$4", "symbols": [/[tT]/, /[hH]/, /[iI]/, /[rR]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$4"], "postprocess": () => '3'},
-    {"name": "spelled_decade$subexpression$5", "symbols": [/[tT]/, /[wW]/, /[eE]/, /[nN]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$5"], "postprocess": () => '2'},
-    {"name": "spelled_decade$subexpression$6", "symbols": [/[tT]/, /[eE]/, /[nN]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$6"], "postprocess": () => '1'},
-    {"name": "spelled_decade$subexpression$7", "symbols": [/[sS]/, /[eE]/, /[vV]/, /[eE]/, /[nN]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$7"], "postprocess": () => '7'},
-    {"name": "spelled_decade$subexpression$8", "symbols": [/[eE]/, /[iI]/, /[gG]/, /[hH]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$8"], "postprocess": () => '8'},
-    {"name": "spelled_decade$subexpression$9", "symbols": [/[nN]/, /[iI]/, /[nN]/, /[eE]/, /[tT]/, /[iI]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "spelled_decade", "symbols": ["spelled_decade$subexpression$9"], "postprocess": () => '9'},
-    {"name": "slash_date_num", "symbols": ["digit", "digit"], "postprocess": d => d[0] + d[1]},
-    {"name": "slash_date_num", "symbols": ["digit"], "postprocess": d => d[0]},
-    {"name": "digit", "symbols": [/[0-9]/], "postprocess": id}
+    {"name": "datevalue_base", "symbols": [(lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess":  d => {
+          const num = d[0].value;
+          if (num.length === 4 && num.endsWith('00')) {
+            return { type: 'date', edtf: `${num.substring(0, 3)}X`, confidence: 0.9 };
+          }
+          // Return reject to indicate this rule doesn't apply
+          return { __reject: true };
+        } },
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", (lexer.has("apostrophe") ? {type: "apostrophe"} : apostrophe), (lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess": d => ({ type: 'date', edtf: `19${d[3].value.substring(0, 1)}X`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("apostrophe") ? {type: "apostrophe"} : apostrophe), (lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess": d => ({ type: 'date', edtf: `19${d[1].value.substring(0, 1)}X`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'date', edtf: `-${String(d[2] - 1).padStart(2, '0')}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'date', edtf: `-${String(d[0] - 1).padStart(2, '0')}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "spelled_ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'date', edtf: `-${String(d[2] - 1).padStart(2, '0')}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["spelled_ordinal_century", "__", "century_word", "__", "era_bce"], "postprocess": d => ({ type: 'date', edtf: `-${String(d[0] - 1).padStart(2, '0')}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "spelled_century", "__", (lexer.has("century") ? {type: "century"} : century), "__", "era_bce"], "postprocess": d => ({ type: 'date', edtf: `-${d[2]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["spelled_century", "__", (lexer.has("century") ? {type: "century"} : century), "__", "era_bce"], "postprocess": d => ({ type: 'date', edtf: `-${d[0]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "ordinal_century", "__", "century_word", "__", "era_ce"], "postprocess": d => ({ type: 'date', edtf: `${String((d[2] - 1) * 100).substring(0, 2)}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "century_word", "__", "era_ce"], "postprocess": d => ({ type: 'date', edtf: `${String((d[0] - 1) * 100).substring(0, 2)}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "spelled_century", "__", (lexer.has("century") ? {type: "century"} : century), "__", "era_ce"], "postprocess": d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["spelled_century", "__", (lexer.has("century") ? {type: "century"} : century), "__", "era_ce"], "postprocess": d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'date', edtf: `${String((d[2] - 1) * 100).substring(0, 2)}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["ordinal_century", "__", "century_word"], "postprocess": d => ({ type: 'date', edtf: `${String((d[0] - 1) * 100).substring(0, 2)}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "spelled_century", "__", (lexer.has("century") ? {type: "century"} : century)], "postprocess": d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["spelled_century", "__", (lexer.has("century") ? {type: "century"} : century)], "postprocess": d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "spelled_number_word", "__", (lexer.has("hundreds") ? {type: "hundreds"} : hundreds)], "postprocess": d => ({ type: 'date', edtf: `${d[2]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["spelled_number_word", "__", (lexer.has("hundreds") ? {type: "hundreds"} : hundreds)], "postprocess": d => ({ type: 'date', edtf: `${d[0]}XX`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "spelled_decade"], "postprocess": d => ({ type: 'date', edtf: `19${d[2]}X`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": ["spelled_decade"], "postprocess": d => ({ type: 'date', edtf: `19${d[0]}X`, confidence: 0.9 })},
+    {"name": "datevalue_base", "symbols": [(lexer.has("number") ? {type: "number"} : number), (lexer.has("slash") ? {type: "slash"} : slash), (lexer.has("number") ? {type: "number"} : number)], "postprocess":  d => {
+          const first = parseInt(d[0].value, 10);
+          const second = d[2].value;
+          // If second is 4 digits and first is 1-12, treat as MM/YYYY
+          if (second.length === 4 && first >= 1 && first <= 12) {
+            return { type: 'date', edtf: `${second}-${pad2(first)}`, confidence: 0.9 };
+          }
+          // If second is 2 digits and first is 1-12, treat as MM/YY
+          if (second.length === 2 && first >= 1 && first <= 12) {
+            return { type: 'date', edtf: `${twoDigitYear(second)}-${pad2(first)}`, confidence: 0.85 };
+          }
+          return null;
+        } },
+    {"name": "datevalue_base", "symbols": [(lexer.has("number") ? {type: "number"} : number), (lexer.has("slash") ? {type: "slash"} : slash), (lexer.has("number") ? {type: "number"} : number), (lexer.has("slash") ? {type: "slash"} : slash), (lexer.has("number") ? {type: "number"} : number)], "postprocess":  d => {
+          const first = d[0].value;
+          const second = d[2].value;
+          const third = d[4].value;
+          // Third part should be the year
+          const yearStr = third.length === 2 ? String(twoDigitYear(third)) : third;
+          return buildSlashDate(first, second, yearStr);
+        } },
+    {"name": "datevalue_base", "symbols": ["year_num", (lexer.has("ish") ? {type: "ish"} : ish)], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["year_num", "_", (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("ish") ? {type: "ish"} : ish)], "postprocess": d => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 })},
+    {"name": "datevalue_base", "symbols": ["year_num"], "postprocess": d => ({ type: 'date', edtf: pad4(d[0]), confidence: 0.95 })}
 ]
   , ParserStart: "main"
 }
