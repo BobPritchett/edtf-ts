@@ -40,7 +40,7 @@ import {
 function determineUnspecifiedLevel(
   yearStr: string,
   monthStr?: string,
-  dayStr?: string
+  _dayStr?: string
 ): EDTFLevel {
   const hasUnspecifiedYear = yearStr.includes('X');
 

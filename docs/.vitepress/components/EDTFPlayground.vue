@@ -17,6 +17,19 @@
       </button>
     </div>
 
+    <div class="playground-examples natural-examples">
+      <span class="examples-label">Natural:</span>
+      <button
+        v-for="example in naturalExamples"
+        :key="example.input"
+        @click="selectNaturalExample(example.input)"
+        class="example-btn"
+        :class="{ active: naturalInput === example.input }"
+      >
+        {{ example.label }}
+      </button>
+    </div>
+
     <div class="playground-inputs">
       <div class="input-column">
         <label for="edtf-input">EDTF Input</label>
@@ -887,6 +900,18 @@ const examples = [
   { label: 'Partial Qual', edtf: '?2004-06-~11' },
 ];
 
+const naturalExamples = [
+  { label: 'Jan 12, 1940', input: 'January 12, 1940' },
+  { label: 'circa 1950', input: 'circa 1950' },
+  { label: 'the 1960s', input: 'the 1960s' },
+  { label: 'early 1990s', input: 'early 1990s' },
+  { label: 'early-to-mid 1950s', input: 'early-to-mid 1950s' },
+  { label: 'mid-to-late 1980s', input: 'mid-to-late 1980s' },
+  { label: '1964 to 2008', input: 'from 1964 to 2008' },
+  { label: 'Spring 1985', input: 'Spring 1985' },
+  { label: '500 BC', input: '500 BC' },
+];
+
 // Age and Birthday section state
 const ageInput = ref('20 yo');
 const ageEdtfInput = ref('');
@@ -1394,6 +1419,11 @@ function selectExample(edtf: string) {
   onEdtfInput();
 }
 
+function selectNaturalExample(inputVal: string) {
+  naturalInput.value = inputVal;
+  onNaturalInput();
+}
+
 // Age and Birthday functions
 function selectAgeExample(inputVal: string) {
   ageInput.value = inputVal;
@@ -1499,6 +1529,18 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-bottom: 1rem;
+  align-items: center;
+}
+
+.playground-examples.natural-examples {
+  margin-bottom: 1.5rem;
+}
+
+.examples-label {
+  font-size: 0.75rem;
+  color: var(--vp-c-text-2);
+  font-weight: 500;
+  margin-right: 0.3rem;
 }
 
 .example-btn {
