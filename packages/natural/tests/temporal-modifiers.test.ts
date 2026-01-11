@@ -360,4 +360,163 @@ describe('Temporal Modifiers (Early/Mid/Late)', () => {
       expect(results[0].confidence).toBe(0.9);
     });
   });
+
+  describe('Combination Modifiers (Early-to-Mid, Mid-to-Late)', () => {
+    describe('Decade Combinations', () => {
+      it('should parse "early-to-mid 1950s" as 1950/1956', () => {
+        const results = parseNatural('early-to-mid 1950s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1950/1956');
+        expect(results[0].type).toBe('interval');
+      });
+
+      it('should parse "mid-to-late 1950s" as 1954/1959', () => {
+        const results = parseNatural('mid-to-late 1950s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1954/1959');
+      });
+
+      it('should parse "mid to late 1950s" (with spaces)', () => {
+        const results = parseNatural('mid to late 1950s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1954/1959');
+      });
+
+      it('should parse "early to mid 1990s" (with spaces)', () => {
+        const results = parseNatural('early to mid 1990s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1990/1996');
+      });
+
+      it('should parse "the early-to-mid 1980s"', () => {
+        const results = parseNatural('the early-to-mid 1980s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1980/1986');
+      });
+
+      it('should parse "the mid-to-late 1970s"', () => {
+        const results = parseNatural('the mid-to-late 1970s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1974/1979');
+      });
+    });
+
+    describe('Year Combinations', () => {
+      it('should parse "early-to-mid 1995" as Jan-Aug', () => {
+        const results = parseNatural('early-to-mid 1995');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1995-01/1995-08');
+      });
+
+      it('should parse "mid-to-late 1995" as May-Dec', () => {
+        const results = parseNatural('mid-to-late 1995');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1995-05/1995-12');
+      });
+
+      it('should parse "mid to late 2020" (with spaces)', () => {
+        const results = parseNatural('mid to late 2020');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('2020-05/2020-12');
+      });
+    });
+
+    describe('Month Combinations', () => {
+      it('should parse "early-to-mid March 2024" as 1st-20th', () => {
+        const results = parseNatural('early-to-mid March 2024');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('2024-03-01/2024-03-20');
+      });
+
+      it('should parse "mid-to-late March 2024" as 11th-31st', () => {
+        const results = parseNatural('mid-to-late March 2024');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('2024-03-11/2024-03-31');
+      });
+
+      it('should parse "mid to late February 2024" (leap year)', () => {
+        const results = parseNatural('mid to late February 2024');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('2024-02-11/2024-02-29');
+      });
+
+      it('should parse "early-to-mid April, 2020" (with comma)', () => {
+        const results = parseNatural('early-to-mid April, 2020');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('2020-04-01/2020-04-20');
+      });
+    });
+
+    describe('Century Combinations', () => {
+      it('should parse "early-to-mid 20th century" as 1901-1966', () => {
+        const results = parseNatural('early-to-mid 20th century');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1901/1966');
+      });
+
+      it('should parse "mid-to-late 20th century" as 1934-2000', () => {
+        const results = parseNatural('mid-to-late 20th century');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1934/2000');
+      });
+
+      it('should parse "the early-to-mid 19th century"', () => {
+        const results = parseNatural('the early-to-mid 19th century');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1801/1866');
+      });
+
+      it('should parse "early-to-mid 21st century CE"', () => {
+        const results = parseNatural('early-to-mid 21st century CE');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('2001/2066');
+      });
+
+      it('should parse "mid-to-late 5th century BCE"', () => {
+        const results = parseNatural('mid-to-late 5th century BCE');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('-0466/-0400');
+      });
+    });
+
+    describe('Spelled Decade Combinations', () => {
+      it('should parse "early-to-mid sixties"', () => {
+        const results = parseNatural('early-to-mid sixties');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1960/1966');
+      });
+
+      it('should parse "mid-to-late seventies"', () => {
+        const results = parseNatural('mid-to-late seventies');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1974/1979');
+      });
+
+      it('should parse "the early-to-mid fifties"', () => {
+        const results = parseNatural('the early-to-mid fifties');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1950/1956');
+      });
+    });
+
+    describe('Alternative Formats', () => {
+      it('should parse "early-mid 1990s" (no "to")', () => {
+        const results = parseNatural('early-mid 1990s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1990/1996');
+      });
+
+      it('should parse "mid-late 1990s" (no "to")', () => {
+        const results = parseNatural('mid-late 1990s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1994/1999');
+      });
+
+      it('should parse "middle to late 1980s" (using "middle")', () => {
+        const results = parseNatural('middle to late 1980s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1984/1989');
+      });
+    });
+  });
 });

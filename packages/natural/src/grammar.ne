@@ -184,6 +184,92 @@ function buildBCECenturyModifierInterval(centuryNum, modifier) {
   }
 }
 
+// Combination modifier intervals (early-to-mid, mid-to-late)
+// These combine the start of the first modifier with the end of the second
+
+// Month combination: combines day ranges
+function buildMonthCombinationInterval(year, month, combo) {
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+  const lastDay = getDaysInMonth(y, m);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 1, mid ends at 20
+      return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-20`;
+    case 'mid-to-late':
+      // mid starts at 11, late ends at lastDay
+      return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
+    default:
+      return `${pad4(y)}-${pad2(m)}`;
+  }
+}
+
+// Year combination: combines quarterly ranges
+function buildYearCombinationInterval(year, combo) {
+  const y = parseInt(year, 10);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 01, mid ends at 08
+      return `${pad4(y)}-01/${pad4(y)}-08`;
+    case 'mid-to-late':
+      // mid starts at 05, late ends at 12
+      return `${pad4(y)}-05/${pad4(y)}-12`;
+    default:
+      return pad4(y);
+  }
+}
+
+// Decade combination: combines year ranges using 4-3-3 rule
+function buildDecadeCombinationInterval(decadeStart, combo) {
+  const d = parseInt(decadeStart, 10);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 0, mid ends at 6
+      return `${d}/${d + 6}`;
+    case 'mid-to-late':
+      // mid starts at 4, late ends at 9
+      return `${d + 4}/${d + 9}`;
+    default:
+      return `${d}/${d + 9}`;
+  }
+}
+
+// Century combination: combines year ranges using thirds
+function buildCenturyCombinationInterval(centuryNum, combo) {
+  const c = parseInt(centuryNum, 10);
+  const centuryStart = (c - 1) * 100 + 1; // 20th century starts at 1901
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 01, mid ends at 65
+      return `${pad4(centuryStart)}/${pad4(centuryStart + 65)}`;
+    case 'mid-to-late':
+      // mid starts at 33, late ends at 99
+      return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 99)}`;
+    default:
+      return `${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
+// BCE Century combination intervals
+function buildBCECenturyCombinationInterval(centuryNum, combo) {
+  const c = parseInt(centuryNum, 10);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts further from 0, mid ends at 34
+      return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 34)}`;
+    case 'mid-to-late':
+      // mid starts at 66, late ends closer to 0
+      return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100)}`;
+    default:
+      return `-${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
 function bceToBCE(year) {
   return -(parseInt(year, 10) - 1);
 }
@@ -287,6 +373,21 @@ temporal_modifier_word ->
   | "mid"i {% () => 'mid' %}
   | "middle"i {% () => 'mid' %}
   | "late"i {% () => 'late' %}
+
+# Combination modifiers (early-to-mid, mid-to-late)
+# Supports various formats: "early-to-mid", "early to mid", "early-mid"
+combination_modifier ->
+    "early"i combo_sep "to"i combo_sep "mid"i {% () => 'early-to-mid' %}
+  | "early"i combo_sep "to"i combo_sep "middle"i {% () => 'early-to-mid' %}
+  | "early"i "-" "mid"i {% () => 'early-to-mid' %}
+  | "early"i "-" "middle"i {% () => 'early-to-mid' %}
+  | "mid"i combo_sep "to"i combo_sep "late"i {% () => 'mid-to-late' %}
+  | "middle"i combo_sep "to"i combo_sep "late"i {% () => 'mid-to-late' %}
+  | "mid"i "-" "late"i {% () => 'mid-to-late' %}
+  | "middle"i "-" "late"i {% () => 'mid-to-late' %}
+
+# Separator for combination modifiers (space or hyphen)
+combo_sep -> __ {% id %} | "-" {% id %}
 
 # Optional separator between modifier and date (space or hyphen)
 modifier_sep -> __ {% id %} | "-" {% id %}
@@ -407,6 +508,117 @@ temporal_modifier ->
         const decadeDigit = d[4];
         const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
         return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
+      } %}
+  # ==========================================
+  # Combination modifiers (early-to-mid, mid-to-late)
+  # ==========================================
+  # Early-to-mid/Mid-to-late + Month + Year: "early-to-mid March 2024"
+  | combination_modifier modifier_sep month_name __ year_num
+      {% d => {
+        const combo = d[0];
+        const month = months[d[2].toLowerCase()];
+        const year = d[4];
+        return { type: 'interval', edtf: buildMonthCombinationInterval(year, month, combo), confidence: 0.95 };
+      } %}
+  | combination_modifier modifier_sep month_name _ "," _ year_num
+      {% d => {
+        const combo = d[0];
+        const month = months[d[2].toLowerCase()];
+        const year = d[6];
+        return { type: 'interval', edtf: buildMonthCombinationInterval(year, month, combo), confidence: 0.95 };
+      } %}
+  # Early-to-mid/Mid-to-late + Year: "early-to-mid 1995"
+  | combination_modifier modifier_sep year_num
+      {% d => {
+        const combo = d[0];
+        const year = d[2];
+        return { type: 'interval', edtf: buildYearCombinationInterval(year, combo), confidence: 0.95 };
+      } %}
+  # Early-to-mid/Mid-to-late + Decade: "early-to-mid 1990s"
+  | combination_modifier modifier_sep digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const combo = d[0];
+        const decadeStart = parseInt(d[2] + d[3] + d[4] + '0', 10);
+        return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.95 };
+      } %}
+  # "the early-to-mid 1990s"
+  | "the"i __ combination_modifier __ digit digit digit "0" ("'" | null) "s"i
+      {% d => {
+        const combo = d[2];
+        const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+        return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.95 };
+      } %}
+  # Early-to-mid/Mid-to-late + Ordinal Century: "early-to-mid 20th century"
+  | combination_modifier modifier_sep ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const combo = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # "the early-to-mid 20th century"
+  | "the"i __ combination_modifier __ ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const combo = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # Early-to-mid/Mid-to-late + Ordinal Century + CE/AD
+  | combination_modifier modifier_sep ordinal_century __ ("century"i | "c"i ".") __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const combo = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # "the early-to-mid 20th century CE"
+  | "the"i __ combination_modifier __ ordinal_century __ ("century"i | "c"i ".") __ ("A"i "." _ "D"i "." | "C"i "." _ "E"i "." | "AD"i | "CE"i)
+      {% d => {
+        const combo = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # Early-to-mid/Mid-to-late + Ordinal Century + BCE/BC
+  | combination_modifier modifier_sep ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const combo = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildBCECenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # "the early-to-mid 5th century BCE"
+  | "the"i __ combination_modifier __ ordinal_century __ ("century"i | "c"i ".") __ ("B"i "." _ "C"i "." _ "E"i "." | "B"i "." _ "C"i "." | "BCE"i | "BC"i)
+      {% d => {
+        const combo = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildBCECenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # Spelled ordinal centuries: "early-to-mid twentieth century"
+  | combination_modifier modifier_sep spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const combo = d[0];
+        const centuryNum = d[2];
+        return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # "the early-to-mid twentieth century"
+  | "the"i __ combination_modifier __ spelled_ordinal_century __ ("century"i | "c"i ".")
+      {% d => {
+        const combo = d[2];
+        const centuryNum = d[4];
+        return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+      } %}
+  # Spelled decades: "early-to-mid sixties"
+  | combination_modifier modifier_sep spelled_decade
+      {% d => {
+        const combo = d[0];
+        const decadeDigit = d[2];
+        const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+        return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.9 };
+      } %}
+  # "the early-to-mid sixties"
+  | "the"i __ combination_modifier __ spelled_decade
+      {% d => {
+        const combo = d[2];
+        const decadeDigit = d[4];
+        const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+        return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.9 };
       } %}
 
 # ==========================================

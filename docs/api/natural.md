@@ -392,6 +392,23 @@ parseNatural('mid 1960s');               // '1964/1966' (interval)
 parseNatural('late 1960s');              // '1967/1969' (interval)
 ```
 
+#### Combination Modifiers (Early-to-Mid, Mid-to-Late)
+```typescript
+parseNatural('early-to-mid 1950s');      // '1950/1956' (interval)
+parseNatural('mid-to-late 1950s');       // '1954/1959' (interval)
+parseNatural('mid to late 1980s');       // '1984/1989' (interval)
+parseNatural('early-mid 1990s');         // '1990/1996' (interval)
+```
+
+Combination modifiers combine the start of the first modifier with the end of the second:
+- **early-to-mid**: early start (year 0) to mid end (year 6)
+- **mid-to-late**: mid start (year 4) to late end (year 9)
+
+Supported formats:
+- Hyphenated: `early-to-mid`, `mid-to-late`
+- With spaces: `early to mid`, `mid to late`
+- Short form: `early-mid`, `mid-late`
+
 #### Centuries
 ```typescript
 parseNatural('the 20th century');        // '19XX'
@@ -401,9 +418,16 @@ parseNatural('the twentieth century');   // '19XX'
 
 #### Early/Mid/Late Centuries
 ```typescript
-parseNatural('early 20th century');      // '1900/1933' (interval)
+parseNatural('early 20th century');      // '1901/1933' (interval)
 parseNatural('mid 20th century');        // '1934/1966' (interval)
-parseNatural('late 20th century');       // '1967/1999' (interval)
+parseNatural('late 20th century');       // '1967/2000' (interval)
+```
+
+#### Combination Century Modifiers
+```typescript
+parseNatural('early-to-mid 20th century');   // '1901/1966' (interval)
+parseNatural('mid-to-late 20th century');    // '1934/2000' (interval)
+parseNatural('mid to late 19th century');    // '1834/1900' (interval)
 ```
 
 ### Historical Dates

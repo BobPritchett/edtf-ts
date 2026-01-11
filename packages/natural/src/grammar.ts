@@ -185,6 +185,92 @@ function buildBCECenturyModifierInterval(centuryNum, modifier) {
   }
 }
 
+// Combination modifier intervals (early-to-mid, mid-to-late)
+// These combine the start of the first modifier with the end of the second
+
+// Month combination: combines day ranges
+function buildMonthCombinationInterval(year, month, combo) {
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+  const lastDay = getDaysInMonth(y, m);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 1, mid ends at 20
+      return `${pad4(y)}-${pad2(m)}-01/${pad4(y)}-${pad2(m)}-20`;
+    case 'mid-to-late':
+      // mid starts at 11, late ends at lastDay
+      return `${pad4(y)}-${pad2(m)}-11/${pad4(y)}-${pad2(m)}-${pad2(lastDay)}`;
+    default:
+      return `${pad4(y)}-${pad2(m)}`;
+  }
+}
+
+// Year combination: combines quarterly ranges
+function buildYearCombinationInterval(year, combo) {
+  const y = parseInt(year, 10);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 01, mid ends at 08
+      return `${pad4(y)}-01/${pad4(y)}-08`;
+    case 'mid-to-late':
+      // mid starts at 05, late ends at 12
+      return `${pad4(y)}-05/${pad4(y)}-12`;
+    default:
+      return pad4(y);
+  }
+}
+
+// Decade combination: combines year ranges using 4-3-3 rule
+function buildDecadeCombinationInterval(decadeStart, combo) {
+  const d = parseInt(decadeStart, 10);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 0, mid ends at 6
+      return `${d}/${d + 6}`;
+    case 'mid-to-late':
+      // mid starts at 4, late ends at 9
+      return `${d + 4}/${d + 9}`;
+    default:
+      return `${d}/${d + 9}`;
+  }
+}
+
+// Century combination: combines year ranges using thirds
+function buildCenturyCombinationInterval(centuryNum, combo) {
+  const c = parseInt(centuryNum, 10);
+  const centuryStart = (c - 1) * 100 + 1; // 20th century starts at 1901
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts at 01, mid ends at 65
+      return `${pad4(centuryStart)}/${pad4(centuryStart + 65)}`;
+    case 'mid-to-late':
+      // mid starts at 33, late ends at 99
+      return `${pad4(centuryStart + 33)}/${pad4(centuryStart + 99)}`;
+    default:
+      return `${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
+// BCE Century combination intervals
+function buildBCECenturyCombinationInterval(centuryNum, combo) {
+  const c = parseInt(centuryNum, 10);
+
+  switch (combo) {
+    case 'early-to-mid':
+      // early starts further from 0, mid ends at 34
+      return `-${pad4(c * 100 - 1)}/-${pad4((c - 1) * 100 + 34)}`;
+    case 'mid-to-late':
+      // mid starts at 66, late ends closer to 0
+      return `-${pad4((c - 1) * 100 + 66)}/-${pad4((c - 1) * 100)}`;
+    default:
+      return `-${String(c - 1).padStart(2, '0')}XX`;
+  }
+}
+
 function bceToBCE(year) {
   return -(parseInt(year, 10) - 1);
 }
@@ -284,6 +370,36 @@ var grammar = {
     {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$3"], "postprocess": () => 'mid'},
     {"name": "temporal_modifier_word$subexpression$4", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "temporal_modifier_word", "symbols": ["temporal_modifier_word$subexpression$4"], "postprocess": () => 'late'},
+    {"name": "combination_modifier$subexpression$1", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$2", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$3", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$1", "combo_sep", "combination_modifier$subexpression$2", "combo_sep", "combination_modifier$subexpression$3"], "postprocess": () => 'early-to-mid'},
+    {"name": "combination_modifier$subexpression$4", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$5", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$6", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$4", "combo_sep", "combination_modifier$subexpression$5", "combo_sep", "combination_modifier$subexpression$6"], "postprocess": () => 'early-to-mid'},
+    {"name": "combination_modifier$subexpression$7", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$8", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$7", {"literal":"-"}, "combination_modifier$subexpression$8"], "postprocess": () => 'early-to-mid'},
+    {"name": "combination_modifier$subexpression$9", "symbols": [/[eE]/, /[aA]/, /[rR]/, /[lL]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$10", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$9", {"literal":"-"}, "combination_modifier$subexpression$10"], "postprocess": () => 'early-to-mid'},
+    {"name": "combination_modifier$subexpression$11", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$12", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$13", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$11", "combo_sep", "combination_modifier$subexpression$12", "combo_sep", "combination_modifier$subexpression$13"], "postprocess": () => 'mid-to-late'},
+    {"name": "combination_modifier$subexpression$14", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$15", "symbols": [/[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$16", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$14", "combo_sep", "combination_modifier$subexpression$15", "combo_sep", "combination_modifier$subexpression$16"], "postprocess": () => 'mid-to-late'},
+    {"name": "combination_modifier$subexpression$17", "symbols": [/[mM]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$18", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$17", {"literal":"-"}, "combination_modifier$subexpression$18"], "postprocess": () => 'mid-to-late'},
+    {"name": "combination_modifier$subexpression$19", "symbols": [/[mM]/, /[iI]/, /[dD]/, /[dD]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier$subexpression$20", "symbols": [/[lL]/, /[aA]/, /[tT]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "combination_modifier", "symbols": ["combination_modifier$subexpression$19", {"literal":"-"}, "combination_modifier$subexpression$20"], "postprocess": () => 'mid-to-late'},
+    {"name": "combo_sep", "symbols": ["__"], "postprocess": id},
+    {"name": "combo_sep", "symbols": [{"literal":"-"}], "postprocess": id},
     {"name": "modifier_sep", "symbols": ["__"], "postprocess": id},
     {"name": "modifier_sep", "symbols": [{"literal":"-"}], "postprocess": id},
     {"name": "temporal_modifier", "symbols": ["temporal_modifier_word", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
@@ -459,6 +575,171 @@ var grammar = {
           const decadeDigit = d[4];
           const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
           return { type: 'interval', edtf: buildDecadeModifierInterval(decadeStart, modifier), confidence: 0.9 };
+        } },
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "month_name", "__", "year_num"], "postprocess":  d => {
+          const combo = d[0];
+          const month = months[d[2].toLowerCase()];
+          const year = d[4];
+          return { type: 'interval', edtf: buildMonthCombinationInterval(year, month, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "month_name", "_", {"literal":","}, "_", "year_num"], "postprocess":  d => {
+          const combo = d[0];
+          const month = months[d[2].toLowerCase()];
+          const year = d[6];
+          return { type: 'interval', edtf: buildMonthCombinationInterval(year, month, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "year_num"], "postprocess":  d => {
+          const combo = d[0];
+          const year = d[2];
+          return { type: 'interval', edtf: buildYearCombinationInterval(year, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$26", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier$subexpression$26", "symbols": []},
+    {"name": "temporal_modifier$subexpression$27", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$26", "temporal_modifier$subexpression$27"], "postprocess":  d => {
+          const combo = d[0];
+          const decadeStart = parseInt(d[2] + d[3] + d[4] + '0', 10);
+          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$28", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$29", "symbols": [{"literal":"'"}]},
+    {"name": "temporal_modifier$subexpression$29", "symbols": []},
+    {"name": "temporal_modifier$subexpression$30", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$28", "__", "combination_modifier", "__", "digit", "digit", "digit", {"literal":"0"}, "temporal_modifier$subexpression$29", "temporal_modifier$subexpression$30"], "postprocess":  d => {
+          const combo = d[2];
+          const decadeStart = parseInt(d[4] + d[5] + d[6] + '0', 10);
+          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$31$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$31", "symbols": ["temporal_modifier$subexpression$31$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$31$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$31", "symbols": ["temporal_modifier$subexpression$31$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$31"], "postprocess":  d => {
+          const combo = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$32", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$33$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$33", "symbols": ["temporal_modifier$subexpression$33$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$33$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$33", "symbols": ["temporal_modifier$subexpression$33$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$32", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier$subexpression$33"], "postprocess":  d => {
+          const combo = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$34$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$34", "symbols": ["temporal_modifier$subexpression$34$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$34$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$34", "symbols": ["temporal_modifier$subexpression$34$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$35$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$35$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$35$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$35$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$35$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$35$subexpression$4", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$35$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$5"]},
+    {"name": "temporal_modifier$subexpression$35$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$35", "symbols": ["temporal_modifier$subexpression$35$subexpression$6"]},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$34", "__", "temporal_modifier$subexpression$35"], "postprocess":  d => {
+          const combo = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$36", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$37$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$37", "symbols": ["temporal_modifier$subexpression$37$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$37$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$37", "symbols": ["temporal_modifier$subexpression$37$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$38$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$38$subexpression$2", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$38$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$38$subexpression$3", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$38$subexpression$4", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$3", {"literal":"."}, "_", "temporal_modifier$subexpression$38$subexpression$4", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$38$subexpression$5", "symbols": [/[aA]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$5"]},
+    {"name": "temporal_modifier$subexpression$38$subexpression$6", "symbols": [/[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$38", "symbols": ["temporal_modifier$subexpression$38$subexpression$6"]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$36", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier$subexpression$37", "__", "temporal_modifier$subexpression$38"], "postprocess":  d => {
+          const combo = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$39$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$39", "symbols": ["temporal_modifier$subexpression$39$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$39$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$39", "symbols": ["temporal_modifier$subexpression$39$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$40$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$40$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$40$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$40$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$40$subexpression$3", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$40$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$40$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$40$subexpression$5", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$40$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$6"]},
+    {"name": "temporal_modifier$subexpression$40$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$40", "symbols": ["temporal_modifier$subexpression$40$subexpression$7"]},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "ordinal_century", "__", "temporal_modifier$subexpression$39", "__", "temporal_modifier$subexpression$40"], "postprocess":  d => {
+          const combo = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildBCECenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$41", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$42$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$42", "symbols": ["temporal_modifier$subexpression$42$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$42$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$42", "symbols": ["temporal_modifier$subexpression$42$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$43$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$43$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$43$subexpression$3", "symbols": [/[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$1", {"literal":"."}, "_", "temporal_modifier$subexpression$43$subexpression$2", {"literal":"."}, "_", "temporal_modifier$subexpression$43$subexpression$3", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$43$subexpression$4", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$43$subexpression$5", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$4", {"literal":"."}, "_", "temporal_modifier$subexpression$43$subexpression$5", {"literal":"."}]},
+    {"name": "temporal_modifier$subexpression$43$subexpression$6", "symbols": [/[bB]/, /[cC]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$6"]},
+    {"name": "temporal_modifier$subexpression$43$subexpression$7", "symbols": [/[bB]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$43", "symbols": ["temporal_modifier$subexpression$43$subexpression$7"]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$41", "__", "combination_modifier", "__", "ordinal_century", "__", "temporal_modifier$subexpression$42", "__", "temporal_modifier$subexpression$43"], "postprocess":  d => {
+          const combo = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildBCECenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$44$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$44", "symbols": ["temporal_modifier$subexpression$44$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$44$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$44", "symbols": ["temporal_modifier$subexpression$44$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$44"], "postprocess":  d => {
+          const combo = d[0];
+          const centuryNum = d[2];
+          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier$subexpression$45", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$46$subexpression$1", "symbols": [/[cC]/, /[eE]/, /[nN]/, /[tT]/, /[uU]/, /[rR]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$46", "symbols": ["temporal_modifier$subexpression$46$subexpression$1"]},
+    {"name": "temporal_modifier$subexpression$46$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier$subexpression$46", "symbols": ["temporal_modifier$subexpression$46$subexpression$2", {"literal":"."}]},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$45", "__", "combination_modifier", "__", "spelled_ordinal_century", "__", "temporal_modifier$subexpression$46"], "postprocess":  d => {
+          const combo = d[2];
+          const centuryNum = d[4];
+          return { type: 'interval', edtf: buildCenturyCombinationInterval(centuryNum, combo), confidence: 0.95 };
+        } },
+    {"name": "temporal_modifier", "symbols": ["combination_modifier", "modifier_sep", "spelled_decade"], "postprocess":  d => {
+          const combo = d[0];
+          const decadeDigit = d[2];
+          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.9 };
+        } },
+    {"name": "temporal_modifier$subexpression$47", "symbols": [/[tT]/, /[hH]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "temporal_modifier", "symbols": ["temporal_modifier$subexpression$47", "__", "combination_modifier", "__", "spelled_decade"], "postprocess":  d => {
+          const combo = d[2];
+          const decadeDigit = d[4];
+          const decadeStart = 1900 + parseInt(decadeDigit, 10) * 10;
+          return { type: 'interval', edtf: buildDecadeCombinationInterval(decadeStart, combo), confidence: 0.9 };
         } },
     {"name": "interval$subexpression$1$subexpression$1", "symbols": [/[bB]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "interval$subexpression$1$subexpression$2", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
