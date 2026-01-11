@@ -462,9 +462,9 @@ interval ->
       {% d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 }) %}
   | datevalue __ "or" __ "after"
       {% d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 }) %}
-  | "from" __ datevalue __ "through" __ datevalue
+  | "from" __ datevalue __ ("through"i | "thru"i) __ datevalue
       {% d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 }) %}
-  | datevalue __ "through" __ datevalue
+  | datevalue __ ("through"i | "thru"i) __ datevalue
       {% d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 }) %}
   | "from" __ datevalue __ "until" __ datevalue
       {% d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 }) %}
@@ -662,7 +662,13 @@ datevalue ->
   | datevalue_base {% id %}
 
 datevalue_base ->
-    "sometime"i __ "in"i __ month_name __ year_num
+    "the"i __ "year"i __ year_num
+      {% d => ({ type: 'date', edtf: pad4(d[4]), confidence: 0.95 }) %}
+  | "year"i __ year_num
+      {% d => ({ type: 'date', edtf: pad4(d[2]), confidence: 0.95 }) %}
+  | "in"i __ year_num
+      {% d => ({ type: 'date', edtf: pad4(d[2]), confidence: 0.9 }) %}
+  | "sometime"i __ "in"i __ month_name __ year_num
       {% d => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[4].toLowerCase()]}-XX`, confidence: 0.9 }) %}
   | "some"i __ "day"i __ "in"i __ month_name __ year_num
       {% d => ({ type: 'date', edtf: `${pad4(d[8])}-${months[d[6].toLowerCase()]}-XX`, confidence: 0.9 }) %}

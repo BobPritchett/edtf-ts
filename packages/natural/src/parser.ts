@@ -170,29 +170,26 @@ export class ParseError extends Error {
  * - Remove common trailing words that don't affect date meaning
  */
 function normalizeInput(input: string): string {
-  return input
-    // Normalize dashes: en-dash (–), em-dash (—), non-breaking hyphen, minus sign to regular hyphen
-    .replace(/[–—‐−]/g, '-')
-    // Normalize apostrophes: Unicode apostrophe ('), right single quotation mark to ASCII apostrophe
-    .replace(/[\u2019\u2018]/g, "'")
-    // Normalize spaces: non-breaking space, thin space to regular space
-    .replace(/[\u00A0\u2009]/g, ' ')
-    // Normalize multiple spaces to single space
-    .replace(/\s+/g, ' ')
-    .trim()
-    // Remove common trailing decorative words
-    .replace(/\s+(era|period|epoch|age)$/i, '');
+  return (
+    input
+      // Normalize dashes: en-dash (–), em-dash (—), non-breaking hyphen, minus sign to regular hyphen
+      .replace(/[–—‐−]/g, '-')
+      // Normalize apostrophes: Unicode apostrophe ('), right single quotation mark to ASCII apostrophe
+      .replace(/[\u2019\u2018]/g, "'")
+      // Normalize spaces: non-breaking space, thin space to regular space
+      .replace(/[\u00A0\u2009]/g, ' ')
+      // Normalize multiple spaces to single space
+      .replace(/\s+/g, ' ')
+      .trim()
+      // Remove common trailing decorative words
+      // Note: "era" is kept when part of "Common Era" or "Before Common Era" but stripped otherwise (e.g., "1980s era")
+      .replace(/\s+(period|epoch|age)$/i, '')
+      .replace(/(?<!common)\s+era$/i, '')
+  );
 }
 
-export function parseNatural(
-  input: string,
-  options: ParseNaturalOptions = {}
-): ParseResult[] {
-  const {
-    locale = 'en-US',
-    returnAllResults = true,
-    minConfidence = 0,
-  } = options;
+export function parseNatural(input: string, options: ParseNaturalOptions = {}): ParseResult[] {
+  const { locale = 'en-US', returnAllResults = true, minConfidence = 0 } = options;
 
   if (!input || typeof input !== 'string') {
     throw new ParseError('Input must be a non-empty string', input);
@@ -207,15 +204,17 @@ export function parseNatural(
   const edtfResult = parseEDTF(normalized);
   if (edtfResult.success) {
     // Valid EDTF string - return it as-is with high confidence
-    return [{
-      edtf: edtfResult.value.edtf,
-      type: edtfResult.value.type.toLowerCase() as ParseResult['type'],
-      confidence: 1.0,
-      interpretation: `Valid EDTF: ${edtfResult.value.edtf}`,
-      parsed: edtfResult.value,
-      fuzzyDate: FuzzyDate.wrap(edtfResult.value),
-      ambiguous: false,
-    }];
+    return [
+      {
+        edtf: edtfResult.value.edtf,
+        type: edtfResult.value.type.toLowerCase() as ParseResult['type'],
+        confidence: 1.0,
+        interpretation: `Valid EDTF: ${edtfResult.value.edtf}`,
+        parsed: edtfResult.value,
+        fuzzyDate: FuzzyDate.wrap(edtfResult.value),
+        ambiguous: false,
+      },
+    ];
   }
 
   // Create parser with compiled grammar (imported at top of file)
@@ -225,11 +224,7 @@ export function parseNatural(
   try {
     parser.feed(normalized);
   } catch (error: any) {
-    throw new ParseError(
-      `Failed to parse input: ${error.message}`,
-      normalized,
-      error.offset
-    );
+    throw new ParseError(`Failed to parse input: ${error.message}`, normalized, error.offset);
   }
 
   // Get all parse results
@@ -338,10 +333,7 @@ function usesMDYFormat(locale: string): boolean {
 /**
  * Handle ambiguous numeric dates (MM/DD vs DD/MM)
  */
-function getNumericDateInterpretations(
-  result: any,
-  locale: string
-): ParseResult[] {
+function getNumericDateInterpretations(result: any, locale: string): ParseResult[] {
   const match = result.edtf.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) {
     return [enrichResult(result)];

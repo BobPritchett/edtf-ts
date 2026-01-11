@@ -31,12 +31,26 @@
         />
         <div class="input-status">
           <span v-if="result?.success" class="status-valid">✓ Valid EDTF</span>
-          <span v-else-if="result && !result.success" class="status-invalid">✗ {{ result.errors[0]?.code }}</span>
+          <span v-else-if="result && !result.success" class="status-invalid"
+            >✗ {{ result.errors[0]?.code }}</span
+          >
         </div>
       </div>
 
       <div class="input-column">
-        <label for="natural-input">Natural Language</label>
+        <div class="label-with-locale">
+          <label for="natural-input">Natural Language</label>
+          <div class="locale-input-wrapper">
+            <span class="locale-label">Parse Locale:</span>
+            <input
+              type="text"
+              v-model="naturalLocale"
+              class="locale-input"
+              placeholder="en-US"
+              @input="onNaturalInput"
+            />
+          </div>
+        </div>
         <input
           id="natural-input"
           v-model="naturalInput"
@@ -44,11 +58,22 @@
           placeholder="January 12, 1940..."
           @input="onNaturalInput"
           class="edtf-input-field"
-          :class="{ 'input-valid': naturalResult && naturalResult.length > 0, 'input-invalid': naturalError }"
+          :class="{
+            'input-valid': naturalResult && naturalResult.length > 0,
+            'input-invalid': naturalError,
+          }"
         />
         <div class="input-status">
-          <span v-if="naturalResult && naturalResult.length > 0" class="status-valid">
+          <span v-if="naturalResult && naturalResult.length === 1" class="status-valid">
             ✓ {{ naturalResult[0].edtf }} ({{ Math.round(naturalResult[0].confidence * 100) }}%)
+          </span>
+          <span
+            v-else-if="naturalResult && naturalResult.length > 1"
+            class="status-valid status-multiple"
+          >
+            ✓ [{{
+              naturalResult.map((r) => `${r.edtf} (${Math.round(r.confidence * 100)}%)`).join(', ')
+            }}]
           </span>
           <span v-else-if="naturalError" class="status-invalid">✗ No valid parse</span>
         </div>
@@ -56,10 +81,7 @@
     </div>
 
     <div class="format-options-section">
-      <button
-        class="format-options-toggle"
-        @click="formatOptionsExpanded = !formatOptionsExpanded"
-      >
+      <button class="format-options-toggle" @click="formatOptionsExpanded = !formatOptionsExpanded">
         <span class="toggle-icon">{{ formatOptionsExpanded ? '▼' : '▶' }}</span>
         FormatOptions
       </button>
@@ -69,25 +91,23 @@
           <!-- includeQualifications -->
           <div class="option-item">
             <label class="option-label">
-              <input
-                type="checkbox"
-                v-model="formatOptions.includeQualifications"
-              />
+              <input type="checkbox" v-model="formatOptions.includeQualifications" />
               <span class="option-name">Include Qualifications</span>
             </label>
-            <div class="option-description">Show uncertainty/approximation indicators (?, ~, %)</div>
+            <div class="option-description">
+              Show uncertainty/approximation indicators (?, ~, %)
+            </div>
           </div>
 
           <!-- showUnspecified -->
           <div class="option-item">
             <label class="option-label">
-              <input
-                type="checkbox"
-                v-model="formatOptions.showUnspecified"
-              />
+              <input type="checkbox" v-model="formatOptions.showUnspecified" />
               <span class="option-name">Show Unspecified</span>
             </label>
-            <div class="option-description">Display unspecified digits as 'X' or replace with ranges</div>
+            <div class="option-description">
+              Display unspecified digits as 'X' or replace with ranges
+            </div>
           </div>
 
           <!-- dateStyle -->
@@ -167,21 +187,47 @@
           <code class="row-value">{{ result.value.edtf }}</code>
         </div>
 
-        <div v-if="isDate && (result.value.year !== undefined || result.value.month !== undefined || result.value.day !== undefined)" class="result-row">
+        <div
+          v-if="
+            isDate &&
+            (result.value.year !== undefined ||
+              result.value.month !== undefined ||
+              result.value.day !== undefined)
+          "
+          class="result-row"
+        >
           <span class="row-label">Components</span>
-          <code v-if="result.value.year !== undefined" class="row-value">Year: {{ result.value.year }}</code>
-          <code v-if="result.value.month !== undefined" class="row-value">Month: {{ result.value.month }}</code>
-          <code v-if="result.value.day !== undefined" class="row-value">Day: {{ result.value.day }}</code>
+          <code v-if="result.value.year !== undefined" class="row-value"
+            >Year: {{ result.value.year }}</code
+          >
+          <code v-if="result.value.month !== undefined" class="row-value"
+            >Month: {{ result.value.month }}</code
+          >
+          <code v-if="result.value.day !== undefined" class="row-value"
+            >Day: {{ result.value.day }}</code
+          >
         </div>
 
         <div v-if="hasQualification" class="result-row">
           <span class="row-label">Qualifications</span>
-          <code v-if="result.value.qualification?.uncertain" class="row-value badge-uncertain">Uncertain</code>
-          <code v-if="result.value.qualification?.approximate" class="row-value badge-approx">Approximate</code>
-          <code v-if="result.value.qualification?.uncertainApproximate" class="row-value badge-both">Both</code>
-          <code v-if="result.value.yearQualification" class="row-value">Year: {{ formatQualification(result.value.yearQualification) }}</code>
-          <code v-if="result.value.monthQualification" class="row-value">Month: {{ formatQualification(result.value.monthQualification) }}</code>
-          <code v-if="result.value.dayQualification" class="row-value">Day: {{ formatQualification(result.value.dayQualification) }}</code>
+          <code v-if="result.value.qualification?.uncertain" class="row-value badge-uncertain"
+            >Uncertain</code
+          >
+          <code v-if="result.value.qualification?.approximate" class="row-value badge-approx"
+            >Approximate</code
+          >
+          <code v-if="result.value.qualification?.uncertainApproximate" class="row-value badge-both"
+            >Both</code
+          >
+          <code v-if="result.value.yearQualification" class="row-value"
+            >Year: {{ formatQualification(result.value.yearQualification) }}</code
+          >
+          <code v-if="result.value.monthQualification" class="row-value"
+            >Month: {{ formatQualification(result.value.monthQualification) }}</code
+          >
+          <code v-if="result.value.dayQualification" class="row-value"
+            >Day: {{ formatQualification(result.value.dayQualification) }}</code
+          >
         </div>
 
         <div class="result-row">
@@ -199,7 +245,8 @@
         <div v-if="fuzzyDate" class="result-section search-bounds-section">
           <h4>Search Bounds (Discovery)</h4>
           <p class="section-description">
-            Heuristic bounds expanded based on uncertainty/approximation qualifiers for search relevance.
+            Heuristic bounds expanded based on uncertainty/approximation qualifiers for search
+            relevance.
           </p>
           <div class="bounds-comparison">
             <div class="bounds-column">
@@ -221,11 +268,17 @@
                 Search {{ hasSearchPadding ? '(Expanded)' : '(Same)' }}
               </span>
               <div class="bounds-values-list">
-                <span class="bound-item" :class="{ 'bound-expanded': fuzzyDate.searchMinMs < fuzzyDate.minMs }">
+                <span
+                  class="bound-item"
+                  :class="{ 'bound-expanded': fuzzyDate.searchMinMs < fuzzyDate.minMs }"
+                >
                   <span class="bound-label">Min:</span>
                   <code>{{ formatDate(fuzzyDate.searchMin) }}</code>
                 </span>
-                <span class="bound-item" :class="{ 'bound-expanded': fuzzyDate.searchMaxMs > fuzzyDate.maxMs }">
+                <span
+                  class="bound-item"
+                  :class="{ 'bound-expanded': fuzzyDate.searchMaxMs > fuzzyDate.maxMs }"
+                >
                   <span class="bound-label">Max:</span>
                   <code>{{ formatDate(fuzzyDate.searchMax) }}</code>
                 </span>
@@ -234,7 +287,9 @@
           </div>
           <div v-if="hasSearchPadding" class="padding-info">
             <span class="padding-label">Padding applied:</span>
-            <code v-if="fuzzyDate.isApproximate && fuzzyDate.isUncertain" class="badge-both">±3 units (% = both)</code>
+            <code v-if="fuzzyDate.isApproximate && fuzzyDate.isUncertain" class="badge-both"
+              >±3 units (% = both)</code
+            >
             <code v-else-if="fuzzyDate.isApproximate" class="badge-approx">±2 units (~)</code>
             <code v-else-if="fuzzyDate.isUncertain" class="badge-uncertain">±1 unit (?)</code>
           </div>
@@ -263,13 +318,17 @@
             </div>
             <div class="result-item">
               <span class="label">Season Code:</span>
-              <span class="value">{{ result.value.season }} ({{ getSeasonName(result.value.season) }})</span>
+              <span class="value"
+                >{{ result.value.season }} ({{ getSeasonName(result.value.season) }})</span
+              >
             </div>
           </div>
         </div>
 
         <div v-if="isSetOrList" class="result-section">
-          <h4>{{ result.value.type === 'Set' ? 'Set Members (one of)' : 'List Members (all of)' }}</h4>
+          <h4>
+            {{ result.value.type === 'Set' ? 'Set Members (one of)' : 'List Members (all of)' }}
+          </h4>
           <ul class="value-list">
             <li v-for="(val, idx) in result.value.values" :key="idx">
               {{ val.edtf }}
@@ -279,14 +338,19 @@
 
         <div class="result-section">
           <h4>JSON Output</h4>
-          <pre class="json-output"><code>{{ JSON.stringify(result.value.toJSON(), null, 2) }}</code></pre>
+          <pre
+            class="json-output"
+          ><code>{{ JSON.stringify(result.value.toJSON(), null, 2) }}</code></pre>
         </div>
       </div>
 
       <!-- Second EDTF input for comparison -->
       <div class="comparison-section">
         <h3>Compare with Another EDTF</h3>
-        <p class="comparison-description">Enter a second EDTF value to compare temporal relationships using Allen's interval algebra.</p>
+        <p class="comparison-description">
+          Enter a second EDTF value to compare temporal relationships using Allen's interval
+          algebra.
+        </p>
 
         <div class="playground-inputs">
           <div class="input-column">
@@ -298,11 +362,16 @@
               placeholder="1990, 2000-05, [1995,1998]..."
               @input="onEdtfInput2"
               class="edtf-input-field"
-              :class="{ 'input-valid': result2?.success, 'input-invalid': result2 && !result2.success }"
+              :class="{
+                'input-valid': result2?.success,
+                'input-invalid': result2 && !result2.success,
+              }"
             />
             <div class="input-status">
               <span v-if="result2?.success" class="status-valid">✓ Valid EDTF</span>
-              <span v-else-if="result2 && !result2.success" class="status-invalid">✗ {{ result2.errors[0]?.code }}</span>
+              <span v-else-if="result2 && !result2.success" class="status-invalid"
+                >✗ {{ result2.errors[0]?.code }}</span
+              >
             </div>
           </div>
 
@@ -315,11 +384,26 @@
               placeholder="December 1995..."
               @input="onNaturalInput2"
               class="edtf-input-field"
-              :class="{ 'input-valid': naturalResult2 && naturalResult2.length > 0, 'input-invalid': naturalError2 }"
+              :class="{
+                'input-valid': naturalResult2 && naturalResult2.length > 0,
+                'input-invalid': naturalError2,
+              }"
             />
             <div class="input-status">
-              <span v-if="naturalResult2 && naturalResult2.length > 0" class="status-valid">
-                ✓ {{ naturalResult2[0].edtf }} ({{ Math.round(naturalResult2[0].confidence * 100) }}%)
+              <span v-if="naturalResult2 && naturalResult2.length === 1" class="status-valid">
+                ✓ {{ naturalResult2[0].edtf }} ({{
+                  Math.round(naturalResult2[0].confidence * 100)
+                }}%)
+              </span>
+              <span
+                v-else-if="naturalResult2 && naturalResult2.length > 1"
+                class="status-valid status-multiple"
+              >
+                ✓ [{{
+                  naturalResult2
+                    .map((r) => `${r.edtf} (${Math.round(r.confidence * 100)}%)`)
+                    .join(', ')
+                }}]
               </span>
               <span v-else-if="naturalError2" class="status-invalid">✗ No valid parse</span>
             </div>
@@ -333,7 +417,8 @@
             <div class="comparison-header-left">
               <h4>Allen Relation Results</h4>
               <p class="comparison-note">
-                Comparing <code class="inline-code">{{ result.value.edtf }}</code> to <code class="inline-code">{{ result2.value.edtf }}</code>
+                Comparing <code class="inline-code">{{ result.value.edtf }}</code> to
+                <code class="inline-code">{{ result2.value.edtf }}</code>
               </p>
             </div>
             <div class="comparison-header-right">
@@ -341,7 +426,7 @@
               <div class="score-value-inline" :class="getScoreClass(overlapScore)">
                 {{ formatScore(overlapScore) }}
               </div>
-              <div class="score-sublabel">Overlap Score<br>(Jaccard Index)</div>
+              <div class="score-sublabel">Overlap Score<br />(Jaccard Index)</div>
             </div>
           </div>
 
@@ -362,18 +447,22 @@
                   </td>
                   <td class="col-start">
                     <div class="bound-pair">
-                      <span class="bound-name">sMin=</span><code>{{ formatBound(comparisonBounds.a.display.sMin) }}</code>
+                      <span class="bound-name">sMin=</span
+                      ><code>{{ formatBound(comparisonBounds.a.display.sMin) }}</code>
                     </div>
                     <div class="bound-pair">
-                      <span class="bound-name">sMax=</span><code>{{ formatBound(comparisonBounds.a.display.sMax) }}</code>
+                      <span class="bound-name">sMax=</span
+                      ><code>{{ formatBound(comparisonBounds.a.display.sMax) }}</code>
                     </div>
                   </td>
                   <td class="col-end">
                     <div class="bound-pair">
-                      <span class="bound-name">eMin=</span><code>{{ formatBound(comparisonBounds.a.display.eMin) }}</code>
+                      <span class="bound-name">eMin=</span
+                      ><code>{{ formatBound(comparisonBounds.a.display.eMin) }}</code>
                     </div>
                     <div class="bound-pair">
-                      <span class="bound-name">eMax=</span><code>{{ formatBound(comparisonBounds.a.display.eMax) }}</code>
+                      <span class="bound-name">eMax=</span
+                      ><code>{{ formatBound(comparisonBounds.a.display.eMax) }}</code>
                     </div>
                     <span v-if="comparisonBounds.a.display.isConvexHull" class="convex-hull-note">
                       (convex hull of {{ comparisonBounds.a.display.memberCount }} members)
@@ -386,18 +475,22 @@
                   </td>
                   <td class="col-start">
                     <div class="bound-pair">
-                      <span class="bound-name">sMin=</span><code>{{ formatBound(comparisonBounds.b.display.sMin) }}</code>
+                      <span class="bound-name">sMin=</span
+                      ><code>{{ formatBound(comparisonBounds.b.display.sMin) }}</code>
                     </div>
                     <div class="bound-pair">
-                      <span class="bound-name">sMax=</span><code>{{ formatBound(comparisonBounds.b.display.sMax) }}</code>
+                      <span class="bound-name">sMax=</span
+                      ><code>{{ formatBound(comparisonBounds.b.display.sMax) }}</code>
                     </div>
                   </td>
                   <td class="col-end">
                     <div class="bound-pair">
-                      <span class="bound-name">eMin=</span><code>{{ formatBound(comparisonBounds.b.display.eMin) }}</code>
+                      <span class="bound-name">eMin=</span
+                      ><code>{{ formatBound(comparisonBounds.b.display.eMin) }}</code>
                     </div>
                     <div class="bound-pair">
-                      <span class="bound-name">eMax=</span><code>{{ formatBound(comparisonBounds.b.display.eMax) }}</code>
+                      <span class="bound-name">eMax=</span
+                      ><code>{{ formatBound(comparisonBounds.b.display.eMax) }}</code>
                     </div>
                     <span v-if="comparisonBounds.b.display.isConvexHull" class="convex-hull-note">
                       (convex hull of {{ comparisonBounds.b.display.memberCount }} members)
@@ -485,7 +578,10 @@
                 <span class="relation-name">duringOrEqual</span>
                 <span class="relation-value">{{ comparisonResult.duringOrEqual }}</span>
               </div>
-              <div class="relation-item" :class="getRelationClass(comparisonResult.containsOrEqual)">
+              <div
+                class="relation-item"
+                :class="getRelationClass(comparisonResult.containsOrEqual)"
+              >
                 <span class="relation-name">containsOrEqual</span>
                 <span class="relation-value">{{ comparisonResult.containsOrEqual }}</span>
               </div>
@@ -495,10 +591,18 @@
           <div class="legend">
             <h5>Legend</h5>
             <div class="legend-items">
-              <span class="legend-item truth-yes"><span class="legend-badge">YES</span> Definitely true</span>
-              <span class="legend-item truth-no"><span class="legend-badge">NO</span> Definitely false</span>
-              <span class="legend-item truth-maybe"><span class="legend-badge">MAYBE</span> Could be true</span>
-              <span class="legend-item truth-unknown"><span class="legend-badge">UNKNOWN</span> Cannot determine</span>
+              <span class="legend-item truth-yes"
+                ><span class="legend-badge">YES</span> Definitely true</span
+              >
+              <span class="legend-item truth-no"
+                ><span class="legend-badge">NO</span> Definitely false</span
+              >
+              <span class="legend-item truth-maybe"
+                ><span class="legend-badge">MAYBE</span> Could be true</span
+              >
+              <span class="legend-item truth-unknown"
+                ><span class="legend-badge">UNKNOWN</span> Cannot determine</span
+              >
             </div>
           </div>
         </div>
@@ -521,8 +625,13 @@
     <!-- Age and Birthdate Section -->
     <div class="age-birthday-section">
       <h2>Age and Birthdate</h2>
-      <p>Parse age expressions and birthdates into EDTF intervals, then render them as human-readable strings.</p>
-      <p class="current-date-note">All calculations use today's date: <strong>{{ formattedCurrentDate }}</strong></p>
+      <p>
+        Parse age expressions and birthdates into EDTF intervals, then render them as human-readable
+        strings.
+      </p>
+      <p class="current-date-note">
+        All calculations use today's date: <strong>{{ formattedCurrentDate }}</strong>
+      </p>
 
       <div class="age-examples">
         <button
@@ -576,10 +685,7 @@
 
       <!-- Age Format Options -->
       <div class="format-options-section">
-        <button
-          class="format-options-toggle"
-          @click="ageOptionsExpanded = !ageOptionsExpanded"
-        >
+        <button class="format-options-toggle" @click="ageOptionsExpanded = !ageOptionsExpanded">
           <span class="toggle-icon">{{ ageOptionsExpanded ? '▼' : '▶' }}</span>
           Rendering Options
         </button>
@@ -680,8 +786,8 @@
           <code class="row-value">{{ formatAgeRange(ageRenderResult.ageRange) }}</code>
           <span class="row-label">Birthday Known</span>
           <code class="row-value">
-            Month: {{ ageRenderResult.birthdayKnown.month ? 'Yes' : 'No' }},
-            Day: {{ ageRenderResult.birthdayKnown.day ? 'Yes' : 'No' }}
+            Month: {{ ageRenderResult.birthdayKnown.month ? 'Yes' : 'No' }}, Day:
+            {{ ageRenderResult.birthdayKnown.day ? 'Yes' : 'No' }}
           </code>
         </div>
         <div v-if="ageRenderResult.qualifier" class="result-row">
@@ -726,7 +832,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { parse, isEDTFDate, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList, FuzzyDate } from '@edtf-ts/core';
+import {
+  parse,
+  isEDTFDate,
+  isEDTFInterval,
+  isEDTFSeason,
+  isEDTFSet,
+  isEDTFList,
+  FuzzyDate,
+} from '@edtf-ts/core';
 import { formatHuman } from '@edtf-ts/core';
 import type { FormatOptions, IFuzzyDate } from '@edtf-ts/core';
 
@@ -735,6 +849,7 @@ const result = ref<any>(null);
 const naturalInput = ref('');
 const naturalResult = ref<any>(null);
 const naturalError = ref<string | null>(null);
+const naturalLocale = ref(typeof navigator !== 'undefined' ? navigator.language : 'en-US');
 
 // Second EDTF input for comparison
 const input2 = ref('1990');
@@ -816,12 +931,36 @@ const ageVariations = computed(() => {
   if (!ageEdtfInput.value) return {};
   try {
     return {
-      vocabLong: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'vocabulary', ageLength: 'long', currentDate: currentDate.value }),
-      vocabMedium: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'vocabulary', ageLength: 'medium', currentDate: currentDate.value }),
-      vocabShort: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'vocabulary', ageLength: 'short', currentDate: currentDate.value }),
-      numericLong: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'numeric', ageLength: 'long', currentDate: currentDate.value }),
-      numericMedium: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'numeric', ageLength: 'medium', currentDate: currentDate.value }),
-      numericShort: renderAgeBirthdaySync(ageEdtfInput.value, { ageStyle: 'numeric', ageLength: 'short', currentDate: currentDate.value }),
+      vocabLong: renderAgeBirthdaySync(ageEdtfInput.value, {
+        ageStyle: 'vocabulary',
+        ageLength: 'long',
+        currentDate: currentDate.value,
+      }),
+      vocabMedium: renderAgeBirthdaySync(ageEdtfInput.value, {
+        ageStyle: 'vocabulary',
+        ageLength: 'medium',
+        currentDate: currentDate.value,
+      }),
+      vocabShort: renderAgeBirthdaySync(ageEdtfInput.value, {
+        ageStyle: 'vocabulary',
+        ageLength: 'short',
+        currentDate: currentDate.value,
+      }),
+      numericLong: renderAgeBirthdaySync(ageEdtfInput.value, {
+        ageStyle: 'numeric',
+        ageLength: 'long',
+        currentDate: currentDate.value,
+      }),
+      numericMedium: renderAgeBirthdaySync(ageEdtfInput.value, {
+        ageStyle: 'numeric',
+        ageLength: 'medium',
+        currentDate: currentDate.value,
+      }),
+      numericShort: renderAgeBirthdaySync(ageEdtfInput.value, {
+        ageStyle: 'numeric',
+        ageLength: 'short',
+        currentDate: currentDate.value,
+      }),
     };
   } catch {
     return {};
@@ -843,7 +982,9 @@ function renderAgeBirthdaySync(edtf: string, options: any): string {
 const isDate = computed(() => result.value?.success && isEDTFDate(result.value.value));
 const isInterval = computed(() => result.value?.success && isEDTFInterval(result.value.value));
 const isSeason = computed(() => result.value?.success && isEDTFSeason(result.value.value));
-const isSetOrList = computed(() => result.value?.success && (isEDTFSet(result.value.value) || isEDTFList(result.value.value)));
+const isSetOrList = computed(
+  () => result.value?.success && (isEDTFSet(result.value.value) || isEDTFList(result.value.value))
+);
 
 // FuzzyDate wrapper for search bounds and overlap scoring
 const fuzzyDate = computed<IFuzzyDate | null>(() => {
@@ -881,7 +1022,9 @@ const overlapScore = computed(() => {
 const hasQualification = computed(() => {
   if (!isDate.value) return false;
   const val = result.value.value;
-  return val.qualification || val.yearQualification || val.monthQualification || val.dayQualification;
+  return (
+    val.qualification || val.yearQualification || val.monthQualification || val.dayQualification
+  );
 });
 
 const hasPartialQualification = computed(() => {
@@ -903,14 +1046,18 @@ let isUpdatingFromEdtf = false;
 let isUpdatingFromNatural = false;
 
 // Watch for format options changes and update natural language output
-watch(formatOptions, () => {
-  if (result.value?.success && !isUpdatingFromNatural) {
-    isUpdatingFromEdtf = true;
-    naturalInput.value = formattedEDTF.value;
-    parseNaturalInput();
-    isUpdatingFromEdtf = false;
-  }
-}, { deep: true });
+watch(
+  formatOptions,
+  () => {
+    if (result.value?.success && !isUpdatingFromNatural) {
+      isUpdatingFromEdtf = true;
+      naturalInput.value = formattedEDTF.value;
+      parseNaturalInput();
+      isUpdatingFromEdtf = false;
+    }
+  },
+  { deep: true }
+);
 
 // Watch for changes in first result and trigger comparison
 watch(result, () => {
@@ -952,7 +1099,9 @@ async function onNaturalInput() {
     // Dynamic import for natural language parsing
     const { parseNatural } = await import('@edtf-ts/natural');
     naturalError.value = null;
-    naturalResult.value = parseNatural(naturalInput.value);
+    naturalResult.value = parseNatural(naturalInput.value, {
+      locale: naturalLocale.value || undefined,
+    });
 
     // Update EDTF input with best parse result
     if (naturalResult.value && naturalResult.value.length > 0) {
@@ -978,7 +1127,9 @@ async function parseNaturalInput() {
     // Dynamic import for natural language parsing
     const { parseNatural } = await import('@edtf-ts/natural');
     naturalError.value = null;
-    naturalResult.value = parseNatural(naturalInput.value);
+    naturalResult.value = parseNatural(naturalInput.value, {
+      locale: naturalLocale.value || undefined,
+    });
   } catch (error: any) {
     naturalError.value = error.message || 'Failed to parse natural language input';
     naturalResult.value = null;
@@ -1016,13 +1167,27 @@ function formatQualification(qual: any): string {
 
 function getSeasonName(code: number): string {
   const seasons: Record<number, string> = {
-    21: 'Spring', 22: 'Summer', 23: 'Autumn', 24: 'Winter',
-    25: 'Spring (Southern)', 26: 'Summer (Southern)',
-    27: 'Autumn (Southern)', 28: 'Winter (Southern)',
-    29: 'Q1', 30: 'Q2', 31: 'Q3', 32: 'Q4',
-    33: 'Quarter 1', 34: 'Quarter 2', 35: 'Quarter 3', 36: 'Quarter 4',
-    37: 'Quadrimester 1', 38: 'Quadrimester 2', 39: 'Quadrimester 3',
-    40: 'Semestral 1', 41: 'Semestral 2',
+    21: 'Spring',
+    22: 'Summer',
+    23: 'Autumn',
+    24: 'Winter',
+    25: 'Spring (Southern)',
+    26: 'Summer (Southern)',
+    27: 'Autumn (Southern)',
+    28: 'Winter (Southern)',
+    29: 'Q1',
+    30: 'Q2',
+    31: 'Q3',
+    32: 'Q4',
+    33: 'Quarter 1',
+    34: 'Quarter 2',
+    35: 'Quarter 3',
+    36: 'Quarter 4',
+    37: 'Quadrimester 1',
+    38: 'Quadrimester 2',
+    39: 'Quadrimester 3',
+    40: 'Semestral 1',
+    41: 'Semestral 2',
   };
   return seasons[code] || `Season ${code}`;
 }
@@ -1128,13 +1293,13 @@ async function performComparison() {
         members: normA.members,
         listMode: normA.listMode,
         // For display: show first member if single, or convex hull bounds if multiple
-        display: normA.members.length === 1 ? normA.members[0] : computeConvexHull(normA.members)
+        display: normA.members.length === 1 ? normA.members[0] : computeConvexHull(normA.members),
       },
       b: {
         members: normB.members,
         listMode: normB.listMode,
-        display: normB.members.length === 1 ? normB.members[0] : computeConvexHull(normB.members)
-      }
+        display: normB.members.length === 1 ? normB.members[0] : computeConvexHull(normB.members),
+      },
     };
 
     // Evaluate all Allen relations
@@ -1158,8 +1323,12 @@ async function performComparison() {
       intersects: compareModule.intersects(result.value.value, result2.value.value),
       disjoint: compareModule.disjoint(result.value.value, result2.value.value),
       touches: compareModule.touches(result.value.value, result2.value.value),
-      duringOrEqual: compareModule.duringOrEqual ? compareModule.duringOrEqual(result.value.value, result2.value.value) : 'UNKNOWN',
-      containsOrEqual: compareModule.containsOrEqual ? compareModule.containsOrEqual(result.value.value, result2.value.value) : 'UNKNOWN',
+      duringOrEqual: compareModule.duringOrEqual
+        ? compareModule.duringOrEqual(result.value.value, result2.value.value)
+        : 'UNKNOWN',
+      containsOrEqual: compareModule.containsOrEqual
+        ? compareModule.containsOrEqual(result.value.value, result2.value.value)
+        : 'UNKNOWN',
     };
   } catch (error: any) {
     console.error('Comparison error:', error);
@@ -1169,24 +1338,24 @@ async function performComparison() {
 
 function computeConvexHull(members: any[]): any {
   // Compute the convex hull (min of all sMin, max of all sMax, etc.)
-  const validMembers = members.filter(m => m);
+  const validMembers = members.filter((m) => m);
   if (validMembers.length === 0) return null;
 
-  const sMinValues = validMembers.map(m => m.sMin).filter(v => v !== null);
-  const sMaxValues = validMembers.map(m => m.sMax).filter(v => v !== null);
-  const eMinValues = validMembers.map(m => m.eMin).filter(v => v !== null);
-  const eMaxValues = validMembers.map(m => m.eMax).filter(v => v !== null);
+  const sMinValues = validMembers.map((m) => m.sMin).filter((v) => v !== null);
+  const sMaxValues = validMembers.map((m) => m.sMax).filter((v) => v !== null);
+  const eMinValues = validMembers.map((m) => m.eMin).filter((v) => v !== null);
+  const eMaxValues = validMembers.map((m) => m.eMax).filter((v) => v !== null);
 
   return {
-    sMin: sMinValues.length > 0 ? sMinValues.reduce((a, b) => a < b ? a : b) : null,
-    sMax: sMaxValues.length > 0 ? sMaxValues.reduce((a, b) => a > b ? a : b) : null,
-    eMin: eMinValues.length > 0 ? eMinValues.reduce((a, b) => a < b ? a : b) : null,
-    eMax: eMaxValues.length > 0 ? eMaxValues.reduce((a, b) => a > b ? a : b) : null,
+    sMin: sMinValues.length > 0 ? sMinValues.reduce((a, b) => (a < b ? a : b)) : null,
+    sMax: sMaxValues.length > 0 ? sMaxValues.reduce((a, b) => (a > b ? a : b)) : null,
+    eMin: eMinValues.length > 0 ? eMinValues.reduce((a, b) => (a < b ? a : b)) : null,
+    eMax: eMaxValues.length > 0 ? eMaxValues.reduce((a, b) => (a > b ? a : b)) : null,
     startKind: validMembers[0].startKind,
     endKind: validMembers[0].endKind,
     precision: 'mixed',
     isConvexHull: true,
-    memberCount: validMembers.length
+    memberCount: validMembers.length,
   };
 }
 
@@ -1287,11 +1456,15 @@ function formatAgeRange(range: [number, number | null]): string {
 }
 
 // Watch age format options changes
-watch(ageFormatOptions, () => {
-  if (ageEdtfInput.value) {
-    onAgeEdtfInput();
-  }
-}, { deep: true });
+watch(
+  ageFormatOptions,
+  () => {
+    if (ageEdtfInput.value) {
+      onAgeEdtfInput();
+    }
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   onEdtfInput();
@@ -1369,6 +1542,46 @@ onMounted(() => {
   color: var(--vp-c-text-1);
 }
 
+.label-with-locale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  gap: 0.5rem;
+}
+
+.label-with-locale label {
+  margin-bottom: 0;
+}
+
+.locale-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.locale-label {
+  font-size: 0.75rem;
+  color: var(--vp-c-text-2);
+  white-space: nowrap;
+}
+
+.locale-input {
+  width: 70px;
+  padding: 0rem 0.4rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 3px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  font-size: 0.75rem;
+  font-family: var(--vp-font-family-mono);
+}
+
+.locale-input:focus {
+  outline: none;
+  border-color: var(--vp-c-brand);
+}
+
 .input-status {
   margin-top: 0.35rem;
   min-height: 1.2rem;
@@ -1383,6 +1596,11 @@ onMounted(() => {
 .status-invalid {
   color: var(--vp-c-red);
   font-weight: 500;
+}
+
+.status-multiple {
+  font-size: 0.75rem;
+  word-break: break-word;
 }
 
 .input-valid {
@@ -1748,7 +1966,7 @@ onMounted(() => {
   color: var(--vp-c-text-1);
 }
 
-.option-label input[type="checkbox"] {
+.option-label input[type='checkbox'] {
   width: 1rem;
   height: 1rem;
   cursor: pointer;
