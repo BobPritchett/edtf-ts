@@ -60,7 +60,8 @@
       "Bash(pnpm add:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npm view:*)"
     ]
   }
 }
