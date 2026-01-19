@@ -1,4 +1,4 @@
-# @edtf-ts/natural
+﻿# @edtf-ts/natural
 
 [![npm version](https://img.shields.io/npm/v/@edtf-ts/natural.svg)](https://www.npmjs.com/package/@edtf-ts/natural)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -19,12 +19,12 @@ yarn add @edtf-ts/natural @edtf-ts/core
 
 ## Features
 
-- 🗣️ **Natural Language Parsing** - Parse human-readable date expressions
-- 🌍 **Locale Support** - US and EU date format handling
-- 🎯 **Confidence Scoring** - Automatic confidence assessment for each interpretation
-- 🔀 **Ambiguity Handling** - Returns multiple interpretations for ambiguous inputs
-- 📦 **Zero Config** - Works out of the box with sensible defaults
-- 🔧 **Powered by Nearley** - Uses Earley parser for handling ambiguous grammars
+- **Natural Language Parsing** - Parse human-readable date expressions
+- **Locale Support** - US and EU date format handling
+- **Confidence Scoring** - Automatic confidence assessment for each interpretation
+- **Ambiguity Handling** - Returns multiple interpretations for ambiguous inputs
+- **Zero Config** - Works out of the box with sensible defaults
+- **Powered by Nearley** - Uses Earley parser for handling ambiguous grammars
 
 ## Quick Start
 
@@ -261,10 +261,10 @@ The natural language parser supports **bidirectional conversion** - you can pars
 
 ```typescript
 import { parse } from '@edtf-ts/core';
-import { formatHuman } from '@edtf-ts/utils';
+import { formatHuman } from '@edtf-ts/core';
 import { parseNatural } from '@edtf-ts/natural';
 
-// Parse EDTF → Format to natural language → Parse back to EDTF
+// Parse EDTF -> Format to natural language -> Parse back to EDTF
 const edtf = '1985/..';
 const result = parse(edtf);
 
@@ -317,14 +317,14 @@ This round-trip capability makes @edtf-ts/natural ideal for building user interf
 
 This package is in active development. The grammar currently supports:
 
-- ✅ Complete dates (various formats)
-- ✅ Partial dates (month/year, year only)
-- ✅ Uncertain and approximate qualifiers
-- ✅ Basic intervals
-- ✅ Seasons
-- ✅ Decades and centuries (partial)
-- ✅ Sets and lists (basic)
-- 🚧 All 200+ patterns from the specification (iterative refinement)
+- Supported: Complete dates (various formats)
+- Supported: Partial dates (month/year, year only)
+- Supported: Uncertain and approximate qualifiers
+- Supported: Basic intervals
+- Supported: Seasons
+- Supported: Decades and centuries (partial)
+- Supported: Sets and lists (basic)
+- Planned: All 200+ patterns from the specification (iterative refinement)
 
 See the [parser specification](../../tools/research/parser-and-formats-spec.md) for the complete list of planned formats.
 
@@ -351,3 +351,6 @@ MIT Copyright 2025 Bob Pritchett
 - [EDTF Specification](https://www.loc.gov/standards/datetime/)
 - [Nearley Documentation](https://nearley.js.org/)
 - [Natural Language Parser Research](../../tools/research/parser-and-formats-spec.md)
+
+
+

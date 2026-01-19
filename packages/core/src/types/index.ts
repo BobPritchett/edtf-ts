@@ -6,7 +6,7 @@
 /**
  * Precision level for a date or datetime.
  */
-export type Precision = 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second';
+export type Precision = 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second' | 'subyear';
 
 /**
  * EDTF conformance level.

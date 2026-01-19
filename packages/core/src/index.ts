@@ -4,7 +4,7 @@
  * with comprehensive temporal reasoning capabilities.
  */
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.4.1';
 
 // ============================================================
 // CORE (formerly @edtf-ts/core)

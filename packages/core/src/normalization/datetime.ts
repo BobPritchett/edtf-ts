@@ -26,7 +26,7 @@ export function normalizeDateTime(datetime: EDTFDateTime): Member {
   // Determine time precision
   let precision: Precision;
   if (second !== undefined) {
-    precision = 'minute'; // We treat seconds as minute precision for simplicity
+    precision = 'second';
   } else if (minute !== undefined) {
     precision = 'minute';
   } else {
