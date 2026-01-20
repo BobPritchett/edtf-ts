@@ -259,6 +259,14 @@ function buildDecadeModifierInterval(decadeStart, modifier) {
   }
 }
 
+function normalizeDecadeStart(edtf) {
+  return /^\d{3}X$/.test(edtf) ? `${edtf.slice(0, 3)}0` : edtf;
+}
+
+function normalizeDecadeEnd(edtf) {
+  return /^\d{3}X$/.test(edtf) ? `${edtf.slice(0, 3)}9` : edtf;
+}
+
 function buildCenturyModifierInterval(centuryNum, modifier) {
   const c = parseInt(centuryNum, 10);
   const centuryStart = (c - 1) * 100 + 1;
@@ -796,9 +804,15 @@ interval ->
   | %from __ temporal_modifier_interval_value __ interval_connector __ datevalue
       {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 }) %}
   | datevalue __ interval_connector __ temporal_modifier_interval_value
-      {% d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+      {% d => {
+        if (!d[0] || !d[0].edtf) return { __reject: true };
+        return { type: 'interval', edtf: normalizeDecadeStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 };
+      } %}
   | %from __ datevalue __ interval_connector __ temporal_modifier_interval_value
-      {% d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+      {% d => {
+        if (!d[2] || !d[2].edtf) return { __reject: true };
+        return { type: 'interval', edtf: normalizeDecadeStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 };
+      } %}
   | %between __ temporal_modifier_interval_value __ %and __ temporal_modifier_interval_value
       {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
   | qualified_temporal_modifier_interval_value __ interval_connector __ temporal_modifier_interval_value
@@ -810,7 +824,10 @@ interval ->
   | temporal_modifier_interval_value __ interval_connector __ qualified_temporal_modifier_interval_value
       {% d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
   | datevalue __ interval_connector __ qualified_temporal_modifier_interval_value
-      {% d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 }) %}
+      {% d => {
+        if (!d[0] || !d[0].edtf) return { __reject: true };
+        return { type: 'interval', edtf: normalizeDecadeStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 };
+      } %}
   | %from __ qualified_temporal_modifier_interval_value __ interval_connector __ temporal_modifier_interval_value
       {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
   | %from __ qualified_temporal_modifier_interval_value __ interval_connector __ qualified_temporal_modifier_interval_value
@@ -820,7 +837,10 @@ interval ->
   | %from __ temporal_modifier_interval_value __ interval_connector __ qualified_temporal_modifier_interval_value
       {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
   | %from __ datevalue __ interval_connector __ qualified_temporal_modifier_interval_value
-      {% d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
+      {% d => {
+        if (!d[2] || !d[2].edtf) return { __reject: true };
+        return { type: 'interval', edtf: normalizeDecadeStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 };
+      } %}
   | %between __ qualified_temporal_modifier_interval_value __ %and __ temporal_modifier_interval_value
       {% d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 }) %}
   | %between __ qualified_temporal_modifier_interval_value __ %and __ qualified_temporal_modifier_interval_value
@@ -873,11 +893,32 @@ interval ->
       {% d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 }) %}
   # Standard intervals
   | %from __ datevalue __ interval_connector __ datevalue
-      {% d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 }) %}
+      {% d => {
+        if (!d[2] || !d[2].edtf || !d[6] || !d[6].edtf) return { __reject: true };
+        return {
+          type: 'interval',
+          edtf: `${normalizeDecadeStart(d[2].edtf)}/${normalizeDecadeEnd(d[6].edtf)}`,
+          confidence: 0.95,
+        };
+      } %}
   | datevalue __ interval_connector __ datevalue
-      {% d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 }) %}
+      {% d => {
+        if (!d[0] || !d[0].edtf || !d[4] || !d[4].edtf) return { __reject: true };
+        return {
+          type: 'interval',
+          edtf: `${normalizeDecadeStart(d[0].edtf)}/${normalizeDecadeEnd(d[4].edtf)}`,
+          confidence: 0.95,
+        };
+      } %}
   | datevalue _ %dash _ datevalue
-      {% d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 }) %}
+      {% d => {
+        if (!d[0] || !d[0].edtf || !d[4] || !d[4].edtf) return { __reject: true };
+        return {
+          type: 'interval',
+          edtf: `${normalizeDecadeStart(d[0].edtf)}/${normalizeDecadeEnd(d[4].edtf)}`,
+          confidence: 0.95,
+        };
+      } %}
   | %between __ datevalue __ %and __ datevalue
       {% d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 }) %}
   # Unknown/open endpoints

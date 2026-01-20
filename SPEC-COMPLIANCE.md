@@ -4,7 +4,7 @@ Based on [https://www.loc.gov/standards/datetime/](https://www.loc.gov/standards
 
 ## Overall Status
 
-- **Parsing**: 53/64 examples (82.8%) ✅
+- **Parsing**: 64/64 examples (100%) ✅
 - **Formatting**: 27/27 examples (100%) ✅
 
 ## Level 0 - ISO 8601 Profile
@@ -42,9 +42,9 @@ All Level 0 values format sensibly with appropriate human-readable output.
 | `Y170000002` | ✅ | Long year (positive) |
 | `Y-170000002` | ✅ | Long year (negative) |
 | `2001-21` | ✅ | Season |
-| `1984?` | ⚠️ | Uncertain year (parsed as Level 2) |
-| `2004-06~` | ⚠️ | Approximate (parsed as Level 2) |
-| `2004-06-11%` | ⚠️ | Uncertain & approximate (parsed as Level 2) |
+| `1984?` | ✅ | Uncertain year |
+| `2004-06~` | ✅ | Approximate |
+| `2004-06-11%` | ✅ | Uncertain & approximate |
 | `201X` | ✅ | Unspecified decade |
 | `20XX` | ✅ | Unspecified century |
 | `2004-XX` | ✅ | Unspecified month |
@@ -62,9 +62,9 @@ All Level 0 values format sensibly with appropriate human-readable output.
 | `/1985-04-12` | ✅ | Unknown start (complete date) |
 | `/1985-04` | ✅ | Unknown start (year-month) |
 | `/1985` | ✅ | Unknown start (year) |
-| `-1985` | ⚠️ | Negative year (parsed as Level 0) |
+| `-1985` | ✅ | Negative year |
 
-**Level 1 Score: 24/24 (100%)** - All parse successfully, though some have level detection issues
+**Level 1 Score: 24/24 (100%)** ✅
 
 ### Formatting
 
@@ -90,8 +90,8 @@ All Level 0 values format sensibly with appropriate human-readable output.
 |---------|--------|-------|
 | `Y-17E7` | ✅ | Exponential year |
 | `1950S2` | ✅ | Significant digits (year) |
-| `Y171010000S3` | ❌ | Significant digits (long year) - not implemented |
-| `Y3388E2S3` | ❌ | Significant digits (exponential year) - not implemented |
+| `Y171010000S3` | ✅ | Significant digits (long year) |
+| `Y3388E2S3` | ✅ | Significant digits (exponential year) |
 | `2001-34` | ✅ | Extended season |
 | `[1667,1668,1670..1672]` | ✅ | Set with range |
 | `[..1760-12-03]` | ✅ | Set with earlier |
@@ -102,21 +102,21 @@ All Level 0 values format sensibly with appropriate human-readable output.
 | `{1667,1668,1670..1672}` | ✅ | List with range |
 | `{1960,1961-12}` | ✅ | List with mixed precision |
 | `{..1984}` | ✅ | List with earlier |
-| `2004-06-11%` | ⚠️ | Level 1 vs Level 2 confusion |
+| `2004-06-11%` | ✅ | Level 1 qualifier (by spec) |
 | `2004-06-~11` | ✅ | Approximate day |
 | `2004?-06-11` | ✅ | Uncertain year |
 | `?2004-06-~11` | ✅ | Uncertain year, approximate day |
 | `2004-%06-11` | ✅ | Approximate month |
-| `156X-12-25` | ⚠️ | Unspecified decade with month/day (parsed as Level 1) |
-| `15XX-12-25` | ⚠️ | Unspecified century with month/day (parsed as Level 1) |
-| `XXXX-12-XX` | ⚠️ | Completely unspecified year (parsed as Level 1) |
-| `1XXX-XX` | ⚠️ | Partial year unspecified (parsed as Level 1) |
-| `1XXX-12` | ⚠️ | Partial year with month (parsed as Level 1) |
-| `1984-1X` | ⚠️ | Partial unspecified month (parsed as Level 1) |
+| `156X-12-25` | ✅ | Unspecified decade with month/day |
+| `15XX-12-25` | ✅ | Unspecified century with month/day |
+| `XXXX-12-XX` | ✅ | Completely unspecified year |
+| `1XXX-XX` | ✅ | Partial year unspecified |
+| `1XXX-12` | ✅ | Partial year with month |
+| `1984-1X` | ✅ | Partial unspecified month |
 | `2004-06-~01/2004-06-~20` | ✅ | Partial qualification interval |
-| `2004-06-XX/2004-07-03` | ⚠️ | Interval with unspecified (parsed as Level 1) |
+| `2004-06-XX/2004-07-03` | ✅ | Interval with unspecified day |
 
-**Level 2 Score: 25/27 (92.6%)** - Most parse successfully, some level detection issues
+**Level 2 Score: 27/27 (100%)** ✅
 
 ### Formatting
 
@@ -136,9 +136,7 @@ All Level 0 values format sensibly with appropriate human-readable output.
 
 ### Parsing Issues
 
-1. ~~**DateTime timezone offset** (`-04` format)~~ ✅ **FIXED** (2025-12-31)
-2. **Significant digits with long/exponential years** - Not yet implemented
-3. **Level detection** - Some Level 2 patterns with unspecified digits detected as Level 1
+None currently tracked.
 
 ### Formatting Issues
 

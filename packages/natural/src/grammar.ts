@@ -261,6 +261,14 @@ function buildDecadeModifierInterval(decadeStart, modifier) {
   }
 }
 
+function normalizeDecadeStart(edtf) {
+  return /^\d{3}X$/.test(edtf) ? `${edtf.slice(0, 3)}0` : edtf;
+}
+
+function normalizeDecadeEnd(edtf) {
+  return /^\d{3}X$/.test(edtf) ? `${edtf.slice(0, 3)}9` : edtf;
+}
+
 function buildCenturyModifierInterval(centuryNum, modifier) {
   const c = parseInt(centuryNum, 10);
   const centuryStart = (c - 1) * 100 + 1;
@@ -624,19 +632,31 @@ var grammar = {
     {"name": "interval", "symbols": ["temporal_modifier_interval_value", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess":  d => {
+          if (!d[0] || !d[0].edtf) return { __reject: true };
+          return { type: 'interval', edtf: normalizeDecadeStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 };
+        } },
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess":  d => {
+          if (!d[2] || !d[2].edtf) return { __reject: true };
+          return { type: 'interval', edtf: normalizeDecadeStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 };
+        } },
     {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": ["qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + d[4].edtf, confidence: 0.95 })},
     {"name": "interval", "symbols": ["temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[0].edtf + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess":  d => {
+          if (!d[0] || !d[0].edtf) return { __reject: true };
+          return { type: 'interval', edtf: normalizeDecadeStart(d[0].edtf) + '/' + getIntervalEnd(d[4].edtf), confidence: 0.95 };
+        } },
     {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "qualified_temporal_modifier_interval_value", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + d[6].edtf, confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "temporal_modifier_interval_value", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
-    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: d[2].edtf + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "qualified_temporal_modifier_interval_value"], "postprocess":  d => {
+          if (!d[2] || !d[2].edtf) return { __reject: true };
+          return { type: 'interval', edtf: normalizeDecadeStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 };
+        } },
     {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "qualified_temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "qualified_temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "temporal_modifier_interval_value", "__", (lexer.has("and") ? {type: "and"} : and), "__", "qualified_temporal_modifier_interval_value"], "postprocess": d => ({ type: 'interval', edtf: getIntervalStart(d[2].edtf) + '/' + getIntervalEnd(d[6].edtf), confidence: 0.95 })},
@@ -664,9 +684,30 @@ var grammar = {
     {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", (lexer.has("after") ? {type: "after"} : after)], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
     {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", (lexer.has("later") ? {type: "later"} : later)], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
     {"name": "interval", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", (lexer.has("after") ? {type: "after"} : after)], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/..`, confidence: 0.95 })},
-    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
-    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
-    {"name": "interval", "symbols": ["datevalue", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[0].edtf}/${d[4].edtf}`, confidence: 0.95 })},
+    {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", "interval_connector", "__", "datevalue"], "postprocess":  d => {
+          if (!d[2] || !d[2].edtf || !d[6] || !d[6].edtf) return { __reject: true };
+          return {
+            type: 'interval',
+            edtf: `${normalizeDecadeStart(d[2].edtf)}/${normalizeDecadeEnd(d[6].edtf)}`,
+            confidence: 0.95,
+          };
+        } },
+    {"name": "interval", "symbols": ["datevalue", "__", "interval_connector", "__", "datevalue"], "postprocess":  d => {
+          if (!d[0] || !d[0].edtf || !d[4] || !d[4].edtf) return { __reject: true };
+          return {
+            type: 'interval',
+            edtf: `${normalizeDecadeStart(d[0].edtf)}/${normalizeDecadeEnd(d[4].edtf)}`,
+            confidence: 0.95,
+          };
+        } },
+    {"name": "interval", "symbols": ["datevalue", "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", "datevalue"], "postprocess":  d => {
+          if (!d[0] || !d[0].edtf || !d[4] || !d[4].edtf) return { __reject: true };
+          return {
+            type: 'interval',
+            edtf: `${normalizeDecadeStart(d[0].edtf)}/${normalizeDecadeEnd(d[4].edtf)}`,
+            confidence: 0.95,
+          };
+        } },
     {"name": "interval", "symbols": [(lexer.has("between") ? {type: "between"} : between), "__", "datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "datevalue"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/${d[6].edtf}`, confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", (lexer.has("to") ? {type: "to"} : to), "__", "interval_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/`, confidence: 0.95 })},
     {"name": "interval", "symbols": [(lexer.has("from") ? {type: "from"} : from), "__", "datevalue", "__", (lexer.has("to") ? {type: "to"} : to), "__", "open_endpoint"], "postprocess": d => ({ type: 'interval', edtf: `${d[2].edtf}/..`, confidence: 0.95 })},
