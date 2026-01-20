@@ -1,6 +1,6 @@
 {
   "name": "@edtf-ts/natural",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Natural language to EDTF parser with locale support",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -10,12 +10,13 @@ export type BoundKind = 'closed' | 'open' | 'unknown';
 /**
  * Precision level of a temporal value.
  *
- * - `minute`, `hour`, `day`, `month`, `year`: Standard precision levels
+ * - `second`, `minute`, `hour`, `day`, `month`, `year`: Standard precision levels
  * - `subyear`: Seasons and other sub-year groupings
  * - `mixed`: Different precisions for start and end (intervals)
  * - `unknown`: Precision cannot be determined
  */
 export type Precision =
+  | 'second'
   | 'minute'
   | 'hour'
   | 'day'

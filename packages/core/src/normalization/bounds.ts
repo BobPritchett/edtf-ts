@@ -24,14 +24,16 @@ export function parseYearWithUnspecified(year: number | string): { min: number; 
   }
 
   const yearStr = String(year);
+  const isNegative = yearStr.startsWith('-');
+  const unsignedYearStr = isNegative ? yearStr.slice(1) : yearStr;
 
   // Count X's from right
   let min = 0;
   let max = 0;
   let multiplier = 1;
 
-  for (let i = yearStr.length - 1; i >= 0; i--) {
-    const char = yearStr[i];
+  for (let i = unsignedYearStr.length - 1; i >= 0; i--) {
+    const char = unsignedYearStr[i];
 
     if (char === 'X' || char === 'x') {
       // X digit: min = 0, max = 9
@@ -50,7 +52,7 @@ export function parseYearWithUnspecified(year: number | string): { min: number; 
   }
 
   // Handle negative years (leading minus)
-  if (yearStr.startsWith('-')) {
+  if (isNegative) {
     // For negative years, min and max are swapped
     return { min: -max, max: -min };
   }

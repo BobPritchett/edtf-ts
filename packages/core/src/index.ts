@@ -4,7 +4,7 @@
  * with comprehensive temporal reasoning capabilities.
  */
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.4.2';
 
 // ============================================================
 // CORE (formerly @edtf-ts/core)
@@ -157,24 +157,13 @@ export {
 // ============================================================
 
 // Formatters
-export {
-  formatHuman,
-  formatISO,
-  formatRange,
-  type FormatOptions,
-} from './formatters.js';
+export { formatHuman, formatISO, formatRange, type FormatOptions } from './formatters.js';
 
 // Validators
 export { isInRange, isCompletelyInRange } from './validators.js';
 
 // Comparators
-export {
-  compare,
-  sort,
-  earliest,
-  latest,
-  type ComparisonMode,
-} from './comparators.js';
+export { compare, sort, earliest, latest, type ComparisonMode } from './comparators.js';
 
 // Age/Birthday constants and utilities
 export * from './age-constants.js';

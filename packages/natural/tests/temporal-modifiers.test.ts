@@ -529,6 +529,20 @@ describe('Temporal Modifiers (Early/Mid/Late)', () => {
         expect(results[0].type).toBe('interval');
       });
 
+      it('should parse "1970s to mid 1980s"', () => {
+        const results = parseNatural('1970s to mid 1980s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1970/1986');
+        expect(results[0].type).toBe('interval');
+      });
+
+      it('should parse "1980s to 1990s"', () => {
+        const results = parseNatural('1980s to 1990s');
+        expect(results).toHaveLength(1);
+        expect(results[0].edtf).toBe('1980/1999');
+        expect(results[0].type).toBe('interval');
+      });
+
       it('should parse "early-to-mid 1980s to late 1990s"', () => {
         const results = parseNatural('early-to-mid 1980s to late 1990s');
         expect(results).toHaveLength(1);

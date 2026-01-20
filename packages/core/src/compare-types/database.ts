@@ -57,7 +57,7 @@ export interface DbColumns {
 
   /**
    * Precision rank for sorting (higher = more precise).
-   * minute=6, hour=5, day=4, month=3, year=2, subyear=1, mixed=0, unknown=0
+   * second=7, minute=6, hour=5, day=4, month=3, year=2, subyear=1, mixed=0, unknown=0
    */
   precision_rank: number;
 

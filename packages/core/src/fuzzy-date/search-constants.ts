@@ -47,14 +47,18 @@ export const UNCERTAIN_APPROXIMATE_MULTIPLIER = 3n;
  */
 export function getUnitForPrecision(precision: Precision): bigint {
   switch (precision) {
+    case 'second':
+    case 'minute':
+    case 'hour':
+      return ONE_DAY_MS;
     case 'day':
       return ONE_DAY_MS;
     case 'month':
       return ONE_MONTH_MS;
+    case 'subyear':
+      return ONE_MONTH_MS;
     case 'year':
     default:
-      // For hour/minute/second precision, use day as the unit
-      // (these are typically exact and don't need search padding)
       return ONE_YEAR_MS;
   }
 }

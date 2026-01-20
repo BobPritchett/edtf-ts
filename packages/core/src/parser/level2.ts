@@ -15,6 +15,8 @@ import {
   daysInMonth,
 } from '../core-utils/date-helpers.js';
 import { DATE_MIN_MS, DATE_MAX_MS } from '../types/index.js';
+import { parseLevel1Date, parseSeason } from './level1.js';
+import { DEFAULT_SEASON_MAPPINGS } from '../normalization/season.js';
 
 /**
  * Parse EDTF Level 2 strings
@@ -436,63 +438,44 @@ function parseList(input: string): ParseResult<EDTFList> {
  * Helper to parse a single value in a set/list
  */
 function parseSetValue(value: string): ParseResult<EDTFDate | EDTFSeason> {
-  // Try season first
-  if (/^\d{4}-[234]\d/.test(value)) {
+  // Seasons with Level 1 qualifiers (21-24 with optional ?/~/%)
+  if (/^\d{4}-2[1-4][?~%]?$/.test(value)) {
+    return parseSeason(value);
+  }
+
+  // Extended seasons without qualifiers (21-41)
+  if (/^\d{4}-[234]\d$/.test(value)) {
     return parseExtendedSeason(value);
   }
-  // Try regular date (reuse from Level 1, but simplified for this implementation)
-  const match = value.match(/^(-?\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
-  if (!match) {
-    return {
-      success: false,
-      errors: [{ code: 'INVALID_SET_VALUE', message: `Invalid value in set: ${value}` }]
-    };
+
+  // Exponential year notation
+  if (/^Y-?\d+E\d+/.test(value)) {
+    return parseExponentialYear(value);
   }
 
-  const year = parseInt(match[1]!, 10);
-  const month = match[2] ? parseInt(match[2], 10) : undefined;
-  const day = match[3] ? parseInt(match[3], 10) : undefined;
+  // Extended year with significant digits
+  if (/^Y-?\d{5,}S\d+/.test(value)) {
+    return parseExtendedYearSignificantDigits(value);
+  }
 
-  // Pre-calculate bounds
-  const minMonth = month ?? 1;
-  const maxMonth = month ?? 12;
-  const minDay = day ?? 1;
-  const maxDay = day ?? daysInMonth(year, maxMonth);
-  const minMsValue = calculateEpochMs(year, minMonth, minDay, 0, 0, 0, 0);
-  const maxMsValue = calculateEpochMs(year, maxMonth, maxDay, 23, 59, 59, 999);
+  // Significant digits (4-digit year)
+  if (/^\d{4}S\d$/.test(value)) {
+    return parseSignificantDigits(value);
+  }
 
-  const edtfDate: EDTFDate = {
-    type: 'Date',
-    level: 2,
-    edtf: value,
-    precision: day ? 'day' : month ? 'month' : 'year',
-    year,
-    ...(month !== undefined && { month }),
-    ...(day !== undefined && { day }),
-    get min() {
-      return dateFromMs(minMsValue);
-    },
-    get max() {
-      return dateFromMs(maxMsValue);
-    },
-    get minMs() {
-      return minMsValue;
-    },
-    get maxMs() {
-      return maxMsValue;
-    },
-    toJSON() {
-      const result: any = { type: this.type, year: this.year };
-      if (this.month !== undefined) result.month = this.month;
-      if (this.day !== undefined) result.day = this.day;
-      return result;
-    },
-    toString() {
-      return this.edtf;
-    }
-  };
+  // Partial qualifications (Level 2)
+  const hasPartialQualification =
+    /^[?~%]/.test(value) ||
+    /-[?~%]\d{2}/.test(value) ||
+    /\d{4}[?~%]-/.test(value) ||
+    /\d{2}[?~%]-/.test(value);
 
-  return { success: true, value: edtfDate, level: 2 };
+  if (hasPartialQualification) {
+    return parsePartialQualification(value);
+  }
+
+  // Fall back to Level 1 date parsing (handles unspecified digits and trailing qualifiers)
+  return parseLevel1Date(value);
 }
 
 /**
@@ -861,9 +844,19 @@ function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
     };
   }
 
-  // For extended seasons, use full year bounds (simplified - could be refined per season type)
-  const minMsValue = yearStartMs(year);
-  const maxMsValue = yearEndMs(year);
+  const mapping = DEFAULT_SEASON_MAPPINGS[season];
+  if (!mapping) {
+    return {
+      success: false,
+      errors: [{ code: 'INVALID_SEASON', message: `Unknown season code: ${season}` }]
+    };
+  }
+
+  const startYear = year;
+  const endYear = mapping.endMonth >= mapping.startMonth ? year : year + 1;
+  const startMsValue = calculateEpochMs(startYear, mapping.startMonth, 1, 0, 0, 0, 0);
+  const endDay = daysInMonth(endYear, mapping.endMonth);
+  const endMsValue = calculateEpochMs(endYear, mapping.endMonth, endDay, 23, 59, 59, 999);
 
   const edtfSeason: EDTFSeason = {
     type: 'Season',
@@ -873,16 +866,16 @@ function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
     year,
     season,
     get min() {
-      return dateFromMs(minMsValue);
+      return dateFromMs(startMsValue);
     },
     get max() {
-      return dateFromMs(maxMsValue);
+      return dateFromMs(endMsValue);
     },
     get minMs() {
-      return minMsValue;
+      return startMsValue;
     },
     get maxMs() {
-      return maxMsValue;
+      return endMsValue;
     },
     toJSON() {
       return {
