@@ -2,6 +2,7 @@ import nearley from 'nearley';
 import { parse as parseEDTF, FuzzyDate } from '@edtf-ts/core';
 import type { EDTFBase, IFuzzyDate } from '@edtf-ts/core';
 import grammar from './grammar.js';
+import { setReferenceDate } from './reference-date.js';
 
 /**
  * Result from parsing natural language date input
@@ -33,6 +34,19 @@ export interface ParseNaturalOptions {
   returnAllResults?: boolean;
   /** Minimum confidence threshold (0-1, default: 0) */
   minConfidence?: number;
+  /**
+   * Reference date for resolving inputs that depend on "now", such as
+   * two-digit years (e.g. "01/12/25"), which use a sliding window of
+   * referenceDate's year + 20 to choose between centuries.
+   *
+   * Interpreted in the runtime's local time zone, matching the UX
+   * expectation that "today" means the user's today.
+   *
+   * Defaults to the current system date at call time, which preserves
+   * existing behavior but makes output time-dependent; pass a fixed date
+   * for reproducible results (e.g. in tests or batch reprocessing).
+   */
+  referenceDate?: Date;
 }
 
 /**
@@ -189,7 +203,7 @@ function normalizeInput(input: string): string {
 }
 
 export function parseNatural(input: string, options: ParseNaturalOptions = {}): ParseResult[] {
-  const { locale = 'en-US', returnAllResults = true, minConfidence = 0 } = options;
+  const { locale = 'en-US', returnAllResults = true, minConfidence = 0, referenceDate } = options;
 
   if (!input || typeof input !== 'string') {
     throw new ParseError('Input must be a non-empty string', input);
@@ -230,15 +244,24 @@ export function parseNatural(input: string, options: ParseNaturalOptions = {}): 
   // Create parser with compiled grammar (imported at top of file)
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
 
-  // Parse the input
+  // Grammar postprocessors read the reference date from module state (they
+  // have no per-parse parameter channel); parsing is synchronous, so this
+  // cannot leak across callers. Always reset in the finally block.
+  setReferenceDate(referenceDate ?? null);
+  let results: any[];
   try {
-    parser.feed(normalized);
-  } catch (error: any) {
-    throw new ParseError(`Failed to parse input: ${error.message}`, normalized, error.offset);
-  }
+    // Parse the input
+    try {
+      parser.feed(normalized);
+    } catch (error: any) {
+      throw new ParseError(`Failed to parse input: ${error.message}`, normalized, error.offset);
+    }
 
-  // Get all parse results
-  const results = parser.results;
+    // Get all parse results
+    results = parser.results;
+  } finally {
+    setReferenceDate(null);
+  }
 
   if (!results || results.length === 0) {
     throw new ParseError('No valid parse found for input', normalized);

@@ -21,7 +21,13 @@ export { LIFE_STAGES, type LifeStage } from './age-constants.js';
  * Options for rendering age and birthday from EDTF.
  */
 export interface RenderAgeBirthdayOptions {
-  /** Reference date for age calculation (defaults to current date) */
+  /**
+   * Reference date for age calculation (defaults to the current system date
+   * at call time). Date components are read in the runtime's local time
+   * zone — appropriate for UX, where "today" means the user's today. For
+   * server-side use on behalf of a user in another time zone, construct and
+   * pass a Date representing that user's current date.
+   */
   currentDate?: Date;
   /** Locale for month/day formatting (default: 'en-US') */
   locale?: string;
@@ -59,7 +65,8 @@ export interface RenderAgeBirthdayResult {
  * Calculate the age range from an EDTF birthdate expression.
  *
  * @param edtf - EDTF string or parsed object
- * @param currentDate - Reference date for age calculation
+ * @param currentDate - Reference date for age calculation (date components
+ *   are read in the runtime's local time zone)
  * @returns [minAge, maxAge] where maxAge is null for open-ended intervals
  *
  * @example

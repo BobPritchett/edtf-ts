@@ -1,8 +1,10 @@
 import moo from "moo";
+import { getReferenceYear } from "./reference-date.js";
 // Generated automatically by nearley, version 2.20.1
 // http://github.com/Hardmath123/nearley
 var grammar_export = (function() {
 function id(x) { return x[0]; }
+
 
 
 
@@ -208,9 +210,11 @@ const southernSeasons = { 'spring': '29', 'summer': '30', 'autumn': '31', 'fall'
 function pad2(n) { return String(n).padStart(2, '0'); }
 function pad4(n) { return String(n).padStart(4, '0'); }
 
+// Resolves a two-digit year against the reference year (the caller's
+// referenceDate option, falling back to the current system date).
 function twoDigitYear(yy) {
   const year = parseInt(yy, 10);
-  const currentYear = new Date().getFullYear();
+  const currentYear = getReferenceYear();
   const futureWindow = 20;
   const maxFutureYear = currentYear + futureWindow;
   const currentCentury = Math.floor(currentYear / 100) * 100;

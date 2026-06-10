@@ -199,6 +199,7 @@ interface ParseNaturalOptions {
   locale?: string;              // Default: 'en-US'
   returnAllResults?: boolean;   // Default: true
   minConfidence?: number;       // Default: 0
+  referenceDate?: Date;         // Default: current system date
 }
 ```
 
@@ -253,6 +254,30 @@ Minimum confidence threshold. Filters out results below this score.
 const results = parseNatural('02/03/2020', { minConfidence: 0.5 });
 // Only returns results with confidence >= 0.5
 // Might return just [{ edtf: '2020-02-03', confidence: 0.6 }]
+```
+
+#### referenceDate
+```typescript
+referenceDate?: Date  // Default: current system date at call time
+```
+
+Reference date for resolving inputs that depend on "now" — currently
+two-digit years, which use a sliding window of the reference year +20 to
+choose between centuries. Interpreted in the runtime's local time zone, so
+"today" means the user's today.
+
+Omit it for interactive UX (the default matches what a user typing "01/12/25"
+means *today*). Pass a fixed date when you need reproducible output — in
+tests, or when re-parsing stored input long after it was entered.
+
+```typescript
+// With reference year 2026, the window is 1946-2046
+parseNatural('01/12/50', { referenceDate: new Date(2026, 0, 15) });
+// [{ edtf: '1950-01-12', ... }, ...]  (2050 is beyond the +20 window)
+
+// With reference year 2090, the window is 2010-2110
+parseNatural('01/12/50', { referenceDate: new Date(2090, 0, 15) });
+// [{ edtf: '2050-01-12', ... }, ...]
 ```
 
 ### ParseError

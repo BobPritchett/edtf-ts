@@ -96,19 +96,21 @@ describe('Complete Dates', () => {
   });
 
   describe('Two-Digit Years (Sliding Window: -80/+20)', () => {
-    // The sliding window convention uses current year +20 as the pivot.
-    // Years within the +20 future window use the current century.
+    // The sliding window convention uses the reference year +20 as the pivot.
+    // Years within the +20 future window use the reference century.
     // Years beyond +20 fall back to the previous century.
     //
-    // Example with current year 2026:
+    // Tests pin referenceDate so expectations stay valid regardless of when
+    // the suite runs. With reference year 2026:
     //   Window: 1946 - 2046
     //   25 → 2025 (within +20)
     //   40 → 2040 (within +20)
     //   50 → 1950 (beyond +20)
     //   99 → 1999 (beyond +20)
+    const referenceDate = new Date(2026, 0, 15);
 
     it('should interpret 25 as 2025 (within +20 future window)', () => {
-      const results = parseNatural('01/12/25');
+      const results = parseNatural('01/12/25', { referenceDate });
       expect(results.length).toBeGreaterThanOrEqual(1);
 
       const result = results.find((r) => r.edtf.startsWith('2025'));
@@ -116,16 +118,16 @@ describe('Complete Dates', () => {
     });
 
     it('should interpret 40 as 2040 (within +20 future window)', () => {
-      const results = parseNatural('01/12/40');
+      const results = parseNatural('01/12/40', { referenceDate });
       expect(results.length).toBeGreaterThanOrEqual(1);
 
-      // With sliding window (current year + 20), 40 is within the future window
+      // With sliding window (reference year + 20), 40 is within the future window
       const result = results.find((r) => r.edtf.startsWith('2040'));
       expect(result).toBeDefined();
     });
 
     it('should interpret 50 as 1950 (beyond +20, previous century)', () => {
-      const results = parseNatural('01/12/50');
+      const results = parseNatural('01/12/50', { referenceDate });
       expect(results.length).toBeGreaterThanOrEqual(1);
 
       // 50 is beyond the +20 window, falls to previous century
@@ -134,11 +136,40 @@ describe('Complete Dates', () => {
     });
 
     it('should interpret 99 as 1999 (beyond +20, previous century)', () => {
-      const results = parseNatural('01/12/99');
+      const results = parseNatural('01/12/99', { referenceDate });
       expect(results.length).toBeGreaterThanOrEqual(1);
 
       const result = results.find((r) => r.edtf.startsWith('1999'));
       expect(result).toBeDefined();
+    });
+
+    it('should resolve the same input differently under a different referenceDate', () => {
+      // With reference year 2090 the window is 2010-2110, so 50 → 2050
+      const futureRef = new Date(2090, 0, 15);
+      const results = parseNatural('01/12/50', { referenceDate: futureRef });
+      expect(results.length).toBeGreaterThanOrEqual(1);
+
+      const result = results.find((r) => r.edtf.startsWith('2050'));
+      expect(result).toBeDefined();
+      expect(results.find((r) => r.edtf.startsWith('1950'))).toBeUndefined();
+    });
+
+    it('should fall back to the system clock when referenceDate is omitted', () => {
+      // 01/12/05 → 2005 for any system year between 2005 and 2085, so this
+      // assertion is stable for the realistic lifetime of this suite.
+      const results = parseNatural('01/12/05');
+      expect(results.length).toBeGreaterThanOrEqual(1);
+
+      const result = results.find((r) => r.edtf.startsWith('2005'));
+      expect(result).toBeDefined();
+    });
+
+    it('should not leak referenceDate into subsequent parses', () => {
+      // A parse with an exotic reference date...
+      parseNatural('01/12/50', { referenceDate: new Date(2090, 0, 15) });
+      // ...must not affect a following parse that pins its own reference.
+      const results = parseNatural('01/12/50', { referenceDate: new Date(2026, 0, 15) });
+      expect(results.find((r) => r.edtf.startsWith('1950'))).toBeDefined();
     });
   });
 });

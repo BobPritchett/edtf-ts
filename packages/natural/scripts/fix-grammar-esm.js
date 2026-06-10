@@ -14,12 +14,21 @@ let content = readFileSync(grammarPath, 'utf-8');
 // The Nearley grammar is wrapped in an IIFE
 // We need to assign the result to a variable and export it
 
-// Add moo import at the top (ESM style)
-content = 'import moo from "moo";\n' + content;
+// Add moo and reference-date imports at the top (ESM style)
+content =
+  'import moo from "moo";\n' +
+  'import { getReferenceYear } from "./reference-date.js";\n' +
+  content;
 
 // Remove the require statement for moo (replaced with import above)
 content = content.replace(
   /const moo = require\("moo"\);?\n?/g,
+  ''
+);
+
+// Remove the require statement for reference-date (replaced with import above)
+content = content.replace(
+  /const \{ getReferenceYear \} = require\("\.\/reference-date\.js"\);?\n?/g,
   ''
 );
 

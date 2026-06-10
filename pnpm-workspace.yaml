@@ -1,3 +1,6 @@
 packages:
   - 'packages/*'
   - 'docs'
+# Allow esbuild's postinstall script (installs its platform binary, needed by tsup/vitest)
+allowBuilds:
+  esbuild: true

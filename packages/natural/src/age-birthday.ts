@@ -43,7 +43,13 @@ const AGE_INDICATOR_PATTERN = createAgeIndicatorPattern();
  * Options for parsing age and birthday expressions.
  */
 export interface ParseAgeBirthdayOptions {
-  /** Reference date for age calculation (defaults to current date) */
+  /**
+   * Reference date for age calculation (defaults to the current system date
+   * at call time). Date components are read in the runtime's local time
+   * zone — appropriate for UX, where "today" means the user's today. For
+   * server-side use on behalf of a user in another time zone, construct and
+   * pass a Date representing that user's current date.
+   */
   currentDate?: Date;
   /** If true, allows bare numbers like "35" to be interpreted as ages */
   contextIsAgeField?: boolean;
@@ -506,7 +512,7 @@ export function parseAgeBirthday(
   const birthMarker = extractBirthMarker(normalized);
   if (birthMarker) {
     try {
-      const results = parseNatural(birthMarker.remainder, { locale });
+      const results = parseNatural(birthMarker.remainder, { locale, referenceDate: currentDate });
       if (results.length > 0) {
         const best = results[0]!;
         return {
