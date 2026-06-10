@@ -43,7 +43,6 @@ describe('Interval Improvements', () => {
   describe('Year intervals with shared era marker', () => {
     it('should parse "50 - 40 BC"', () => {
       const results = parseNatural('50 - 40 BC');
-      console.log('Results for "50 - 40 BC":', results.map(r => ({ edtf: r.edtf, type: r.type, confidence: r.confidence })));
       expect(results.length).toBeGreaterThan(0);
       // The first result should be the correct one (highest confidence)
       expect(results[0]!.edtf).toBe('-0049/-0039');
@@ -53,7 +52,6 @@ describe('Interval Improvements', () => {
 
     it('should parse "50 to 40 BC"', () => {
       const results = parseNatural('50 to 40 BC');
-      console.log('Results for "50 to 40 BC":', results.map(r => ({ edtf: r.edtf, type: r.type, confidence: r.confidence })));
       expect(results.length).toBeGreaterThan(0);
       const match = results.find(r => r.edtf === '-0049/-0039' && r.type === 'interval');
       expect(match).toBeDefined();
@@ -61,7 +59,6 @@ describe('Interval Improvements', () => {
 
     it('should parse "100 - 50 BCE"', () => {
       const results = parseNatural('100 - 50 BCE');
-      console.log('Results for "100 - 50 BCE":', results.map(r => ({ edtf: r.edtf, type: r.type, confidence: r.confidence })));
       expect(results.length).toBeGreaterThan(0);
       const match = results.find(r => r.edtf === '-0099/-0049' && r.type === 'interval');
       expect(match).toBeDefined();

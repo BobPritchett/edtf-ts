@@ -235,7 +235,7 @@ parse('2004-06-~11')
 ### Medium Priority
 
 1. ~~**Implement timezone offset `-04` format**~~ ✅ **COMPLETED** - Level 0 now at 100%
-2. **Implement significant digits for long/exponential years** - Complete Level 2 support
+2. ~~**Implement significant digits for long/exponential years**~~ ✅ **COMPLETED** - `Y171010000S3` and `Y3388E2S3` parse (see Level 2 table)
 
 ### Low Priority
 
@@ -246,10 +246,10 @@ parse('2004-06-~11')
 
 EDTF-TS has **excellent specification compliance**:
 
-- ✅ **82.8% parsing compliance** - 53/64 examples from official spec parse correctly
+- ✅ **100% parsing compliance** - 64/64 examples from the official spec parse correctly
 - ✅ **100% Level 0 compliance** - All ISO 8601 profile features working
 - ✅ **100% formatting compliance** - All 27 formatting tests pass
-- ✅ All examples parse successfully (or fail expectedly for unimplemented features)
+- ✅ All examples parse successfully
 - ✅ All examples format to sensible human-readable output
 - ✅ Critical features (Sets, Lists, Intervals, Qualifications, Unspecified) work correctly
 - ✅ Recent fixes for Set range expansion, formatting, and timezone offsets significantly improve usability

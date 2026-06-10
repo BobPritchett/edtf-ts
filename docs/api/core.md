@@ -1,11 +1,11 @@
-# @edtf-ts
+# @edtf-ts/core
 
-Core EDTF parsing, comparison, and formatting. This is the main package that includes all functionality previously split across @edtf-ts/core, @edtf-ts/compare, and @edtf-ts/utils.
+Core EDTF parsing, comparison, and formatting.
 
 ## Installation
 
 ```bash
-pnpm add @edtf-ts
+pnpm add @edtf-ts/core
 ```
 
 ## parse()

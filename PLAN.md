@@ -1,5 +1,11 @@
 # Grammar Refactoring Plan: Natural Language to EDTF Parser
 
+> **Status (2026-06-10): Historical design document — partially implemented.**
+> Phase 1 (Moo lexer adoption) is complete and the compiled grammar is now
+> ~900 lines, so the "current state" figures below describe the pre-refactor
+> grammar and are out of date. Kept for reference; the remaining phases are
+> not currently scheduled.
+
 ## Executive Summary
 
 This plan outlines a comprehensive refactoring of `packages/natural/src/grammar.ne` to eliminate the combinatorial explosion that has made the grammar unmaintainable. The current grammar has **328+ alternatives across 44 rules** generating **2,096 lines** of compiled output. We will reduce this to approximately **60-80 alternatives across 25-30 rules** using composition over enumeration, while preserving all 600+ test cases.

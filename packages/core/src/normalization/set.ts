@@ -34,7 +34,7 @@ export function normalizeSet(set: EDTFSet): Shape {
       return normalizeSeason(value);
     }
 
-    throw new Error(`Unknown set value type: ${(value as any).type}`);
+    throw new Error(`Unknown set value type: ${JSON.stringify(value)}`);
   });
 
   return {

@@ -247,7 +247,6 @@ describe('EDTF Formatting Compliance', () => {
       const result = parse('[2025-01..2026-11]');
       if (result.success) {
         const formatted = formatHuman(result.value);
-        console.log('Formatted [2025-01..2026-11]:', formatted);
         expect(formatted).toContain('One of');
         expect(formatted).toContain('2025');
         expect(formatted).toContain('2026');
@@ -260,7 +259,6 @@ describe('EDTF Formatting Compliance', () => {
       const result = parse('2004-02-01/2005-02');
       if (result.success) {
         const formatted = formatHuman(result.value);
-        console.log('Formatted 2004-02-01/2005-02:', formatted);
         expect(formatted).toContain('2004');
         expect(formatted).toContain('2005');
         expect(formatted).toContain('to');
@@ -271,7 +269,6 @@ describe('EDTF Formatting Compliance', () => {
       const result = parse('-0100'); // 101 BC
       if (result.success) {
         const formatted = formatHuman(result.value);
-        console.log('Formatted -0100:', formatted);
         expect(formatted).toMatch(/BC|BCE/);
       }
     });

@@ -3,7 +3,7 @@
  *
  * This module contains vocabulary and mappings used by both:
  * - @edtf-ts/natural (parsing natural language to EDTF)
- * - @edtf-ts/utils (rendering EDTF to human-readable strings)
+ * - @edtf-ts/core's age-birthday module (rendering EDTF to human-readable strings)
  */
 
 /**

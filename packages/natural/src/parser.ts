@@ -4,6 +4,11 @@ import type { EDTFBase, IFuzzyDate } from '@edtf-ts/core';
 import grammar from './grammar.js';
 import { setReferenceDate } from './reference-date.js';
 
+// Compile the grammar table once at module load. The Grammar object is
+// immutable during parsing and safe to share; each parse still needs its
+// own Parser instance below, since nearley parsers are single-use.
+const compiledGrammar = nearley.Grammar.fromCompiled(grammar);
+
 /**
  * Result from parsing natural language date input
  */
@@ -241,8 +246,8 @@ export function parseNatural(input: string, options: ParseNaturalOptions = {}): 
     ];
   }
 
-  // Create parser with compiled grammar (imported at top of file)
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  // Create a fresh single-use parser over the shared compiled grammar
+  const parser = new nearley.Parser(compiledGrammar);
 
   // Grammar postprocessors read the reference date from module state (they
   // have no per-parse parameter channel); parsing is synchronous, so this

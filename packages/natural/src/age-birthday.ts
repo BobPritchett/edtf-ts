@@ -67,7 +67,7 @@ export interface ParseAgeBirthdayResult {
   type: 'date' | 'interval';
   /**
    * Confidence score (0-1).
-   * See CONFIDENCE_SCORES in @edtf-ts/utils for guidelines.
+   * See CONFIDENCE_SCORES in @edtf-ts/core for guidelines.
    */
   confidence: number;
   /** Human-readable interpretation */

@@ -34,7 +34,7 @@ export function normalizeList(list: EDTFList): Shape {
       return normalizeSeason(value);
     }
 
-    throw new Error(`Unknown list value type: ${(value as any).type}`);
+    throw new Error(`Unknown list value type: ${JSON.stringify(value)}`);
   });
 
   return {
