@@ -37,8 +37,8 @@ describe('Level 0 - Complete Date', () => {
   });
 
   it('should handle leap years correctly', () => {
-    expect(isValid('2000-02-29')).toBe(true);  // 2000 is a leap year
-    expect(isValid('2004-02-29')).toBe(true);  // 2004 is a leap year
+    expect(isValid('2000-02-29')).toBe(true); // 2000 is a leap year
+    expect(isValid('2004-02-29')).toBe(true); // 2004 is a leap year
     expect(isValid('1900-02-29')).toBe(false); // 1900 is not a leap year
     expect(isValid('2001-02-29')).toBe(false); // 2001 is not a leap year
   });
@@ -65,7 +65,7 @@ describe('Level 0 - Complete Date', () => {
         type: 'Date',
         year: 1985,
         month: 4,
-        day: 12
+        day: 12,
       });
     }
   });
@@ -125,7 +125,7 @@ describe('Level 0 - Year and Month', () => {
       expect(json).toEqual({
         type: 'Date',
         year: 1985,
-        month: 4
+        month: 4,
       });
       expect(json).not.toHaveProperty('day');
     }
@@ -182,7 +182,7 @@ describe('Level 0 - Year Only', () => {
       const json = result.value.toJSON();
       expect(json).toEqual({
         type: 'Date',
-        year: 1985
+        year: 1985,
       });
       expect(json).not.toHaveProperty('month');
       expect(json).not.toHaveProperty('day');
@@ -273,7 +273,7 @@ describe('Level 0 - DateTime', () => {
         hour: 23,
         minute: 20,
         second: 30,
-        timezone: 'Z'
+        timezone: 'Z',
       });
     }
   });
@@ -320,13 +320,8 @@ describe('Level 0 - Intervals', () => {
     }
   });
 
-  it('should parse datetime interval', () => {
-    const result = parse('1985-04-12T23:20:30Z/1986-05-13T01:30:45Z');
-    expect(result.success).toBe(true);
-    if (result.success && isEDTFInterval(result.value)) {
-      expect(isEDTFDateTime(result.value.start)).toBe(true);
-      expect(isEDTFDateTime(result.value.end)).toBe(true);
-    }
+  it('rejects datetime intervals outside the EDTF profile', () => {
+    expect(parse('2004-02-01T00:00:00/2004-02-02T00:00:00').success).toBe(false);
   });
 
   it('should validate intervals correctly', () => {

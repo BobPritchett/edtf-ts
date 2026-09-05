@@ -4,14 +4,7 @@
 
 import { DATE_MIN_MS, DATE_MAX_MS } from '../types/index.js';
 
-// Milliseconds per unit
-const MS_PER_SECOND = 1000n;
-const MS_PER_MINUTE = 60n * MS_PER_SECOND;
-const MS_PER_HOUR = 60n * MS_PER_MINUTE;
-const MS_PER_DAY = 24n * MS_PER_HOUR;
-
-// Average milliseconds per year (accounting for leap years: 365.2425 days)
-const MS_PER_YEAR = 31556952000n; // 365.2425 * 24 * 60 * 60 * 1000
+import { dateToEpochMs } from '../normalization/epoch.js';
 
 /**
  * Check if a year is within JavaScript Date range (~±270,000 years).
@@ -34,19 +27,7 @@ export function calculateEpochMs(
   second: number = 0,
   millisecond: number = 0
 ): bigint {
-  // For years within normal range, use Date for precision
-  if (isYearInDateRange(year)) {
-    return BigInt(Date.UTC(year, month - 1, day, hour, minute, second, millisecond));
-  }
-
-  // For extended years, calculate from epoch
-  // Use a reference year for month/day calculations
-  const referenceYear = 2000;
-  const referenceMs = BigInt(Date.UTC(referenceYear, month - 1, day, hour, minute, second, millisecond));
-
-  // Calculate year difference and adjust
-  const yearDiff = BigInt(year - referenceYear);
-  return referenceMs + (yearDiff * MS_PER_YEAR);
+  return dateToEpochMs({ year, month, day, hour, minute, second, millisecond });
 }
 
 /**

@@ -11,7 +11,9 @@
 
 import type { EDTFDate } from '../types/index.js';
 import type { Member, Precision, Qualifiers } from '../compare-types/index.js';
-import { boundsForYear, boundsForMonth, boundsForDay } from './bounds.js';
+import { possibleDateBounds } from '../calendar.js';
+import { dateToEpochMs } from './epoch.js';
+import { getDaysInMonth } from '../compare-utils/calendar.js';
 
 /**
  * Normalize an EDTFDate to a Member.
@@ -27,7 +29,15 @@ import { boundsForYear, boundsForMonth, boundsForDay } from './bounds.js';
  * - "1985-04-XX" → 1985-04-01 to 1985-04-30
  */
 export function normalizeDate(date: EDTFDate): Member {
-  const { year, month, day, qualification, yearQualification, monthQualification, dayQualification } = date;
+  const {
+    year,
+    month,
+    day,
+    qualification,
+    yearQualification,
+    monthQualification,
+    dayQualification,
+  } = date;
 
   // Determine precision
   let precision: Precision;
@@ -39,19 +49,36 @@ export function normalizeDate(date: EDTFDate): Member {
     precision = 'year';
   }
 
-  // Calculate bounds based on precision
-  let bounds: { sMin: bigint; sMax: bigint; eMin: bigint; eMax: bigint };
-
-  if (day !== undefined && month !== undefined) {
-    // Day precision
-    bounds = boundsForDay(year, month, day);
-  } else if (month !== undefined) {
-    // Month precision
-    bounds = boundsForMonth(year, month);
-  } else {
-    // Year precision
-    bounds = boundsForYear(year);
-  }
+  const possibilities = possibleDateBounds(year, month, day)!;
+  const { first, last } = possibilities;
+  const end = (d: typeof first) =>
+    dateToEpochMs({
+      year: d.year,
+      month: d.month!,
+      day: d.day!,
+      hour: 23,
+      minute: 59,
+      second: 59,
+      millisecond: 999,
+    });
+  const start = (d: typeof first) => dateToEpochMs({ year: d.year, month: d.month!, day: d.day! });
+  const bounds = {
+    sMin: possibilities.minMs,
+    sMax: start({
+      ...last,
+      ...(day === undefined ? { day: 1 } : {}),
+      ...(month === undefined ? { month: 1 } : {}),
+    }),
+    eMin: end({
+      ...first,
+      ...(month === undefined
+        ? { month: 12, day: 31 }
+        : day === undefined
+          ? { day: getDaysInMonth(first.year, first.month!) }
+          : {}),
+    }),
+    eMax: possibilities.maxMs,
+  };
 
   // Extract qualifiers
   const qualifiers: Qualifiers = {};

@@ -156,7 +156,7 @@ describe('EDTF Formatting Compliance', () => {
         expect(formatted).toContain('1667');
         expect(formatted).toContain('1668');
         expect(formatted).toContain('1670');
-        expect(formatted).toContain('1671');
+        expect(formatted).toContain('1670 through 1672');
         expect(formatted).toContain('1672');
       }
     });

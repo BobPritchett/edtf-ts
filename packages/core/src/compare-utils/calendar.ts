@@ -82,26 +82,18 @@ export function daysSinceEpoch(year: number, month: number, day: number): bigint
     throw new Error(`Invalid day: ${day} for ${year}-${month}`);
   }
 
-  // Adjust year and month for algorithm (March = month 0)
-  let y = year;
-  let m = month;
-
-  if (m <= 2) {
-    y -= 1;
-    m += 12;
+  // Integer arithmetic keeps long-year bounds exact, including negative era division.
+  let y = BigInt(year),
+    m = BigInt(month);
+  if (m <= 2n) {
+    y--;
+    m += 12n;
   }
-
-  // Calculate era (400-year cycles) - use Math.floor for integer division
-  const era = Math.floor((y >= 0 ? y : y - 399) / 400);
-  const yoe = y - era * 400; // year of era (0-399)
-  const doy = Math.floor((153 * (m - 3) + 2) / 5) + day - 1; // day of year
-  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy; // day of era
-
-  const daysSince0000 = BigInt(era) * 146_097n + BigInt(doe) - 719_468n;
-
-  // Unix epoch is 1970-01-01, which is 719162 days after 0000-03-01
-  // Total offset from 0000-03-01 to 1970-01-01 is 719162 + 306 = 719468
-  return daysSince0000;
+  const era = y / 400n - (y % 400n < 0n ? 1n : 0n);
+  const yoe = y - era * 400n;
+  const doy = (153n * (m - 3n) + 2n) / 5n + BigInt(day) - 1n;
+  const doe = yoe * 365n + yoe / 4n - yoe / 100n + doy;
+  return era * 146097n + doe - 719468n;
 }
 
 /**
@@ -136,10 +128,7 @@ export function astronomicalToHistorical(year: number): {
  * @param year Historical year (positive integer)
  * @param era 'BC' or 'AD'
  */
-export function historicalToAstronomical(
-  year: number,
-  era: 'BC' | 'AD'
-): number {
+export function historicalToAstronomical(year: number, era: 'BC' | 'AD'): number {
   if (era === 'AD') {
     return year;
   }

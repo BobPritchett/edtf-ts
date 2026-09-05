@@ -4,7 +4,11 @@
 
 Modern TypeScript implementation of [Extended Date/Time Format (EDTF)](https://www.loc.gov/standards/datetime/) and tools to parse and render dates in friendly human language.
 
-Try the **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playground)** now.
+Try the **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playground)**. Its top-level locale chooser defaults to your browser’s locale; select a regional preset or a custom locale to test parsing and rendering across the page.
+
+Known days survive unknown months (`1870-XX-12` → “12th of unknown month, 1870”), and month-to-season intervals parse across all three languages. See the [tested compatibility review](docs/guide/compatibility-review.md) for the supplied examples, edtfy comparisons, and intentional semantic differences.
+
+Check **Show all locales** beside the Natural Language label for one compact row per other locale preset: localized text on the right, preferred back-parsed EDTF on the left. Green checks mark matches after compacting adjacent exact years; red crosses identify differences or parse failures. Hover over `(+n)` results to inspect alternatives. Consecutive years render as concise ranges in all three languages, and Spanish/French open intervals round-trip too.
 
 ## Why EDTF?
 
@@ -21,12 +25,12 @@ Yet most software still insists on **rigid ISO 8601 dates**, forcing humans to p
 ## Features
 
 - **FuzzyDate API** - Temporal-inspired, method-based interface with IDE autocomplete
-- **Full EDTF Level 0, 1, 2 support** - Complete spec compliance
+- **EDTF Levels 0, 1, and 2** - Strict profile validation with a source-linked conformance corpus
 - **TypeScript-first** - Complete type safety with discriminated unions
 - **Allen's interval algebra** - 13 temporal relations with four-valued logic
 - **Age & birthday support** - Parse natural language ages/birthdays to EDTF and render them back
-- **Natural language parsing** - Convert human-readable dates to EDTF
-- **Human-readable formatting** - i18n-ready output with customizable options
+- **Natural language parsing** - English, Spanish, and French dates, boundaries, ages, and birthdays
+- **Human-readable formatting** - Complete English, Spanish, and French phrases with regional date ordering
 - **Tree-shakeable** - Import only what you need
 - **Zero runtime dependencies** - Lightweight core package
 - **BigInt support** - Handle extreme historical dates beyond JavaScript Date limits
@@ -129,14 +133,14 @@ Parse natural language age and birthday expressions into EDTF:
 import { parseAgeBirthday } from '@edtf-ts/natural';
 
 // Parse age expressions
-parseAgeBirthday('20 yo', { currentDate: new Date('2025-06-01') });
+parseAgeBirthday('20 yo', { currentDate: new Date(2025, 5, 1) });
 // { edtf: '?2004-?06-?02/?2005-?06-?01', type: 'interval', ageRange: [20, 20] }
 
-parseAgeBirthday('early 30s', { currentDate: new Date('2025-06-01') });
+parseAgeBirthday('early 30s', { currentDate: new Date(2025, 5, 1) });
 // { edtf: '?1991-?06-?02/?1995-?06-?01', type: 'interval', ageRange: [30, 33] }
 
 // Age with known birthday
-parseAgeBirthday('20 y/o, birthday 3/15', { currentDate: new Date('2025-06-01') });
+parseAgeBirthday('20 y/o, birthday 3/15', { currentDate: new Date(2025, 5, 1) });
 // { edtf: '2005-03-15', type: 'date', birthdayKnown: { month: 3, day: 15 } }
 
 // Birthday only (age unknown)
@@ -144,12 +148,12 @@ parseAgeBirthday('March 15th birthday');
 // { edtf: 'XXXX-03-15', type: 'date', birthdayKnown: { month: 3, day: 15 } }
 
 // Life stage vocabulary
-parseAgeBirthday('teenager', { currentDate: new Date('2025-06-01') });
+parseAgeBirthday('teenager', { currentDate: new Date(2025, 5, 1) });
 // { edtf: '?2005-?06-?02/?2012-?06-?01', type: 'interval', ageRange: [13, 19] }
 
 // Birth date marker (delegates to natural date parsing)
 parseAgeBirthday('born circa 1950');
-// { edtf: '1950~', type: 'date', interpretation: 'Birth date: circa 1950' }
+// { edtf: '1950~', type: 'date', interpretation: 'Birth date: 1950 (approximate)' }
 ```
 
 #### Age & Birthday Rendering
@@ -160,24 +164,24 @@ Convert EDTF birthdates to human-readable ages and birthday strings:
 import { renderAgeBirthday } from '@edtf-ts/core';
 
 // Exact birthdate
-renderAgeBirthday('2005-03-15', { currentDate: new Date('2025-06-01') });
+renderAgeBirthday('2005-03-15', { currentDate: new Date(2025, 5, 1) });
 // { age: '20 years old', birthday: 'March 15th', formatted: '20 years old, birthday March 15th' }
 
 // Short form for compact display
-renderAgeBirthday('2005-03-15', { currentDate: new Date('2025-06-01'), ageLength: 'short' });
+renderAgeBirthday('2005-03-15', { currentDate: new Date(2025, 5, 1), ageLength: 'short' });
 // { age: '20yo', birthday: 'March 15th', formatted: '20yo, birthday March 15th' }
 
-// Uncertain birth year range with known birthday
-renderAgeBirthday('?2002-03-15/?2005-03-15', { currentDate: new Date('2025-06-01') });
+// Possible birth dates with the same known birthday
+renderAgeBirthday('[2002-03-15,2003-03-15,2004-03-15,2005-03-15]', { currentDate: new Date(2025, 5, 1) });
 // { age: 'early 20s', birthday: 'March 15th', formatted: 'early 20s, birthday March 15th' }
 
 // Only year known (birthday unknown)
-renderAgeBirthday('2005', { currentDate: new Date('2025-06-01') });
+renderAgeBirthday('2005', { currentDate: new Date(2025, 5, 1) });
 // { age: '19–20 years old', birthday: null, formatted: '19–20 years old' }
 
 // Open-ended: "born no later than 1960"
-renderAgeBirthday('../1960', { currentDate: new Date('2025-06-01') });
-// { age: '65+ years old', birthday: null, formatted: '65+ years old' }
+renderAgeBirthday('[..1960]', { currentDate: new Date(2025, 5, 1) });
+// { age: '64+ years old', birthday: null, formatted: '64+ years old' }
 ```
 
 #### Functional API (Also Available)
@@ -257,18 +261,42 @@ parseNatural('in 3 weeks'); // ❌ Relative durations not supported
 parseNatural('ASAP'); // ❌ Not a date expression
 ```
 
+### English, Spanish, and French
+
+Pass the same locale to parsing and rendering:
+
+```typescript
+import { parseNatural, parseAgeBirthday } from '@edtf-ts/natural';
+import { formatHuman } from '@edtf-ts/core';
+
+const date = parseNatural('12 de marzo de 1870', { locale: 'es-ES' })[0];
+date.edtf; // '1870-03-12'
+formatHuman(date.parsed, { locale: 'es-ES' }); // '12 de marzo de 1870'
+parseNatural('avant 1870', { locale: 'fr-FR' })[0].edtf; // '[..1869]'
+parseAgeBirthday('20 ans, anniversaire le 15 mars', {
+  locale: 'fr-FR', currentDate: new Date(2025, 5, 1),
+}).edtf; // '2005-03-15'
+```
+
+The API defaults to `en-US`. Regional locales select the language and numeric-order preference from `Intl` data. Optional `language` and `dateOrder` overrides separate syntax from numeric ordering; unsupported parsing languages raise an error. For smaller bundles, use `@edtf-ts/natural/en`, `/es`, or `/fr`.
+
+The playground uses the browser’s locale instead, with one override for both date inputs, comparisons, localized output, and the age/birthday section. Selecting **Browser default** resets it; reloading also clears the override. See the [playground instructions](docs/playground.md), [tested language examples](docs/guide/language-examples.md), and [migration guide](docs/guide/semantics-migration.md).
+
 ## Real History Is Full of Uncertainty
 
 Think about how people actually describe dates:
 
-- "Shakespeare was born **in late April 1564**." → `1564-04~` or `1564-04-20/1564-04-26`
-- "The photo was taken **sometime in the 1930s**." → `193X`
+- "Shakespeare was born **in late April 1564**." → `1564-04-21/1564-04-30`
+- "The photo was taken **the 1930s**." → `193X`
 - "**Probably 1918**" → `1918?`
-- "**No earlier than 1870**" → `../1870`
+- "**No earlier than 1870**" → `[1870..]`
 
 ISO 8601 can't express this without lying or guessing. EDTF can.
 
 ## Documentation
+
+- [Semantics and multilingual migration](docs/guide/semantics-migration.md)
+- [Tested English, Spanish, and French examples](docs/guide/language-examples.md)
 
 Full documentation is available at **[bobpritchett.github.io/edtf-ts](https://bobpritchett.github.io/edtf-ts/)**
 
@@ -299,9 +327,9 @@ Full documentation is available at **[bobpritchett.github.io/edtf-ts](https://bo
 
 - Component-level qualification: `?2004-06`, `2004-~06`, `2004-06-~11`
 - Partial unspecified: `156X-12-25`, `15XX-12-25`
-- Multiple dates: `1985-04-12, 1985-05, 1985`
+- Multiple dates: `[1985-04-12,1985-05,1985]`
 - Sets/Lists: `[1985,1990,1995]`, `{1985-04,1985-05}`
-- Extended seasons: `1985-25` (Winter, Northern), `1985-40` (Winter, Southern)
+- Extended seasons: `1985-25` (Spring, Northern), `1985-29` (Spring, Southern), `1985-40` (first semester)
 
 ## Truth Values in Comparison
 

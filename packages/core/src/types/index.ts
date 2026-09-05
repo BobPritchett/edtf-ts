@@ -199,14 +199,14 @@ export interface EDTFSeason extends EDTFBase {
 
 /**
  * EDTF Interval object (Level 0 and 1).
- * Represents a time interval between two dates or datetimes.
+ * Represents a date-only EDTF interval.
  */
 export interface EDTFInterval extends EDTFBase {
   type: 'Interval';
   /** Interval start (null for unknown) */
-  start: EDTFDate | EDTFDateTime | EDTFSeason | null;
+  start: EDTFDate | EDTFSeason | null;
   /** Interval end (null for unknown) */
-  end: EDTFDate | EDTFDateTime | EDTFSeason | null;
+  end: EDTFDate | EDTFSeason | null;
   /** True if interval has open start (..) */
   openStart?: boolean;
   /** True if interval has open end (..) */

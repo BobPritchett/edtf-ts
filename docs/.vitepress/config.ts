@@ -55,13 +55,14 @@ export default defineConfig({
             { text: 'Parsing', link: '/guide/parsing' },
             { text: 'Formatting', link: '/guide/formatting' },
             { text: 'Comparison', link: '/guide/comparison' },
+            { text: 'Semantics & Language Migration', link: '/guide/semantics-migration' },
+            { text: 'Tested Language Examples', link: '/guide/language-examples' },
+            { text: 'Compatibility Review', link: '/guide/compatibility-review' },
           ],
         },
         {
           text: 'Advanced',
-          items: [
-            { text: 'Search & Discovery', link: '/guide/search-and-discovery' },
-          ],
+          items: [{ text: 'Search & Discovery', link: '/guide/search-and-discovery' }],
         },
       ],
       '/api/': [
@@ -74,9 +75,7 @@ export default defineConfig({
         },
         {
           text: 'FuzzyDate API',
-          items: [
-            { text: 'FuzzyDate (Recommended)', link: '/specs/fuzzy-date-api' },
-          ],
+          items: [{ text: 'FuzzyDate (Recommended)', link: '/specs/fuzzy-date-api' }],
         },
         {
           text: 'Core Types (Functional)',
@@ -102,9 +101,7 @@ export default defineConfig({
       '/specs/': [
         {
           text: 'Specifications',
-          items: [
-            { text: 'FuzzyDate API', link: '/specs/fuzzy-date-api' },
-          ],
+          items: [{ text: 'FuzzyDate API', link: '/specs/fuzzy-date-api' }],
         },
       ],
       '/examples/': [

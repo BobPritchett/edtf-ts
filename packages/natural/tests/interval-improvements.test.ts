@@ -33,9 +33,8 @@ describe('Interval Improvements', () => {
 
     it('should parse "December - January 2024" (cross-year)', () => {
       const results = parseNatural('December - January 2024');
-      expect(results).toHaveLength(1);
-      // Both months get the same year (2024)
-      expect(results[0].edtf).toBe('2024-12/2024-01');
+      expect(results.map((r) => r.edtf)).toEqual(['2023-12/2024-01', '2024-12/2025-01']);
+      expect(results.every((r) => r.ambiguous)).toBe(true);
       expect(results[0].type).toBe('interval');
     });
   });
@@ -53,49 +52,49 @@ describe('Interval Improvements', () => {
     it('should parse "50 to 40 BC"', () => {
       const results = parseNatural('50 to 40 BC');
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find(r => r.edtf === '-0049/-0039' && r.type === 'interval');
+      const match = results.find((r) => r.edtf === '-0049/-0039' && r.type === 'interval');
       expect(match).toBeDefined();
     });
 
     it('should parse "100 - 50 BCE"', () => {
       const results = parseNatural('100 - 50 BCE');
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find(r => r.edtf === '-0099/-0049' && r.type === 'interval');
+      const match = results.find((r) => r.edtf === '-0099/-0049' && r.type === 'interval');
       expect(match).toBeDefined();
     });
 
     it('should parse "50 to 40 BCE"', () => {
       const results = parseNatural('50 to 40 BCE');
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find(r => r.edtf === '-0049/-0039' && r.type === 'interval');
+      const match = results.find((r) => r.edtf === '-0049/-0039' && r.type === 'interval');
       expect(match).toBeDefined();
     });
 
     it('should parse "100 - 200 AD"', () => {
       const results = parseNatural('100 - 200 AD');
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find(r => r.edtf === '0100/0200' && r.type === 'interval');
+      const match = results.find((r) => r.edtf === '0100/0200' && r.type === 'interval');
       expect(match).toBeDefined();
     });
 
     it('should parse "100 to 200 AD"', () => {
       const results = parseNatural('100 to 200 AD');
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find(r => r.edtf === '0100/0200' && r.type === 'interval');
+      const match = results.find((r) => r.edtf === '0100/0200' && r.type === 'interval');
       expect(match).toBeDefined();
     });
 
     it('should parse "100 - 200 CE"', () => {
       const results = parseNatural('100 - 200 CE');
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find(r => r.edtf === '0100/0200' && r.type === 'interval');
+      const match = results.find((r) => r.edtf === '0100/0200' && r.type === 'interval');
       expect(match).toBeDefined();
     });
 
     it('should parse "100 to 200 CE"', () => {
       const results = parseNatural('100 to 200 CE');
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find(r => r.edtf === '0100/0200' && r.type === 'interval');
+      const match = results.find((r) => r.edtf === '0100/0200' && r.type === 'interval');
       expect(match).toBeDefined();
     });
   });

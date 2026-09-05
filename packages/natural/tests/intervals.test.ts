@@ -122,20 +122,20 @@ describe('Intervals', () => {
     it('should parse "before 1930"', () => {
       const results = parseNatural('before 1930');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('../1930');
-      expect(results[0].type).toBe('interval');
+      expect(results[0].edtf).toBe('[..1929]');
+      expect(results[0].type).toBe('set');
     });
 
     it('should parse "earlier than 1930"', () => {
       const results = parseNatural('earlier than 1930');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('../1930');
+      expect(results[0].edtf).toBe('[..1929]');
     });
 
     it('should parse "prior to 1930"', () => {
       const results = parseNatural('prior to 1930');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('../1930');
+      expect(results[0].edtf).toBe('[..1929]');
     });
 
     it('should parse "until 1930"', () => {
@@ -147,13 +147,13 @@ describe('Intervals', () => {
     it('should parse "after 1930"', () => {
       const results = parseNatural('after 1930');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('1930/..');
+      expect(results[0].edtf).toBe('[1931..]');
     });
 
     it('should parse "later than 1930"', () => {
       const results = parseNatural('later than 1930');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('1930/..');
+      expect(results[0].edtf).toBe('[1931..]');
     });
 
     it('should parse "since 1930"', () => {
@@ -171,7 +171,7 @@ describe('Intervals', () => {
     it('should parse "1930 or later"', () => {
       const results = parseNatural('1930 or later');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('1930/..');
+      expect(results[0].edtf).toBe('[1930..]');
     });
 
     it('should parse "1930 and after"', () => {

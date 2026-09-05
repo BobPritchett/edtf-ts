@@ -1,8 +1,18 @@
+import { collectionYearGroups } from './collections.js';
+import { formatLocalized, calendarDateObject } from './localized-format.js';
 /**
  * Formatting utilities for EDTF dates
  */
 
-import type { EDTFBase, EDTFDate, EDTFDateTime, EDTFInterval, EDTFSeason, EDTFSet, EDTFList } from './types/index.js';
+import type {
+  EDTFBase,
+  EDTFDate,
+  EDTFDateTime,
+  EDTFInterval,
+  EDTFSeason,
+  EDTFSet,
+  EDTFList,
+} from './types/index.js';
 
 /**
  * Options for formatting EDTF dates as human-readable strings.
@@ -59,6 +69,8 @@ export interface FormatOptions {
  * ```
  */
 export function formatHuman(value: EDTFBase, options: FormatOptions = {}): string {
+  const language = new Intl.Locale(options.locale ?? 'en-US').language;
+  if (language === 'es' || language === 'fr') return formatLocalized(value, options, language);
   switch (value.type) {
     case 'Date':
       return formatDateHuman(value as EDTFDate, options);
@@ -81,6 +93,7 @@ export function formatHuman(value: EDTFBase, options: FormatOptions = {}): strin
  * Format a year with unspecified digits (e.g., "18XX" -> "1800s")
  */
 function formatUnspecifiedYear(year: string): string {
+  if (year === 'XXXX') return 'unknown year';
   // Match patterns like 18XX, 19XX, 1XXX, etc.
   if (year.endsWith('XX')) {
     const prefix = year.slice(0, -2);
@@ -197,7 +210,7 @@ function formatEra(
   options: { era?: 'long' | 'short' | 'narrow'; eraNotation?: 'bc-ad' | 'bce-ce' }
 ): string {
   const { era = 'short', eraNotation = 'bc-ad' } = options;
-  const isBC = year < 0;
+  const isBC = year <= 0;
 
   if (era === 'long') {
     if (isBC) {
@@ -227,7 +240,7 @@ function formatEra(
  * Historical: No year 0, 1 BC follows 1 AD
  */
 function astronomicalToHistoricalYear(year: number): number {
-  if (year < 0) {
+  if (year <= 0) {
     return Math.abs(year) + 1;
   }
   return year;
@@ -240,7 +253,7 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
     locale,
     era = 'short',
     eraDisplay = 'auto',
-    eraNotation = 'bc-ad'
+    eraNotation = 'bc-ad',
   } = options;
 
   let result = '';
@@ -249,24 +262,24 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   const day = date.day;
 
   // Determine if we should show the era marker
-  const isNegativeYear = typeof year === 'number' && year < 0;
+  const isNegativeYear = typeof year === 'number' && year <= 0;
   const shouldShowEra = eraDisplay === 'always' || (eraDisplay === 'auto' && isNegativeYear);
 
   // Check for extended year features (exponential, significant digits)
   const hasExponential = date.exponential !== undefined;
-  const hasSigDigits = date.significantDigitsYear !== undefined || date.significantDigits !== undefined;
+  const hasSigDigits =
+    date.significantDigitsYear !== undefined || date.significantDigits !== undefined;
   const isExtendedYear = typeof year === 'number' && (Math.abs(year) > 9999 || hasExponential);
 
   // For BC/BCE dates, convert from astronomical to historical year numbering
-  const displayYear = typeof year === 'number' && isNegativeYear
-    ? astronomicalToHistoricalYear(year)
-    : year;
+  const displayYear =
+    typeof year === 'number' && isNegativeYear ? astronomicalToHistoricalYear(year) : year;
 
   // Handle unspecified digits in year (e.g., "18XX", "19XX")
   let yearStr: string;
   if (typeof displayYear === 'string') {
     yearStr = formatUnspecifiedYear(displayYear);
-  } else if (isExtendedYear) {
+  } else if (isExtendedYear && !/^Y-?\d{5,}[?~%]?$/.test(date.edtf)) {
     // Format large/extended years with readable notation
     yearStr = formatLargeNumber(displayYear as number);
   } else {
@@ -277,35 +290,66 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
   const sigDigits = date.significantDigitsYear ?? date.significantDigits;
   let sigDigitsSuffix = '';
   if (hasSigDigits && typeof year === 'number' && sigDigits !== undefined) {
-    sigDigitsSuffix = ' ' + formatSignificantDigits(year, sigDigits);
+    const description = formatSignificantDigits(year, sigDigits);
+    if (description) sigDigitsSuffix = ' ' + description;
   }
 
-  // Check for unspecified components
-  if (day === 'XX' && month === 'XX' && typeof year === 'number') {
+  // Retain a known day even when its month is unspecified.
+  const ordinal = (n: number) =>
+    n +
+    (n % 100 >= 11 && n % 100 <= 13
+      ? 'th'
+      : (({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'));
+  if (month === 'XX' && typeof day === 'number') {
+    result = `${ordinal(day)} of unknown month, ${year === 'XXXX' ? 'unknown year' : yearStr}`;
+  } else if (year === 'XXXX' && typeof month === 'number') {
+    const monthStr = getMonthName(month, locale, dateStyle === 'medium' ? 'short' : 'long');
+    result =
+      typeof day === 'number'
+        ? `${monthStr} ${day}, unknown year`
+        : day === 'XX'
+          ? `some day in ${monthStr} unknown year`
+          : `${monthStr}, unknown year`;
+  } else if (day === 'XX' && month === 'XX') {
     // Both month and day unspecified (e.g., "2020-XX-XX")
     result = `sometime in ${yearStr}`;
   } else if (day === 'XX' && month && typeof month === 'number' && typeof year === 'number') {
     // Unspecified day (e.g., "1872-01-XX")
-    const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+    const monthStyle =
+      dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
     const monthStr = getMonthName(month, locale, monthStyle);
     result = `some day in ${monthStr} ${yearStr}`;
-  } else if (month === 'XX' && typeof year === 'number') {
+  } else if (month === 'XX') {
     // Unspecified month (e.g., "1999-XX")
     result = `some month in ${yearStr}`;
-  } else if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'string') {
+  } else if (
+    day &&
+    month &&
+    typeof day === 'number' &&
+    typeof month === 'number' &&
+    typeof year === 'string'
+  ) {
     // Unspecified year with specific month/day (e.g., "156X-12-25")
-    const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+    const monthStyle =
+      dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
     const monthStr = getMonthName(month, locale, monthStyle);
     result = `${monthStr} ${day} in the ${yearStr}`;
-  } else if (day && month && typeof day === 'number' && typeof month === 'number' && typeof year === 'number') {
+  } else if (
+    day &&
+    month &&
+    typeof day === 'number' &&
+    typeof month === 'number' &&
+    typeof year === 'number'
+  ) {
     // Full date (only if year is numeric)
     // For BC dates, we can't use Intl.DateTimeFormat (doesn't support negative years)
     if (isNegativeYear) {
-      const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+      const monthStyle =
+        dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
       const monthStr = getMonthName(month, locale, monthStyle);
       result = `${monthStr} ${day}, ${yearStr}`;
     } else {
-      const d = new Date(Date.UTC(year, month - 1, day));
+      const d = calendarDateObject(year, month, day);
       const formatter = new Intl.DateTimeFormat(locale, {
         year: 'numeric',
         month: dateStyle === 'short' ? '2-digit' : dateStyle === 'medium' ? 'short' : 'long',
@@ -316,13 +360,17 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
     }
   } else if (month && typeof month === 'number' && typeof year === 'number') {
     // Year and month (only if year is numeric)
-    const monthStyle = dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
+    const monthStyle =
+      dateStyle === 'short' ? 'numeric' : dateStyle === 'medium' ? 'short' : 'long';
     const monthStr = getMonthName(month, locale, monthStyle);
     result = `${monthStr} ${yearStr}`;
   } else {
     // Year only
     result = yearStr;
   }
+
+  if (typeof month === 'string' && month !== 'XX') result += ` (month ${month})`;
+  if (typeof day === 'string' && day !== 'XX') result += ` (day ${day})`;
 
   // Add era marker if needed
   if (shouldShowEra && typeof year === 'number') {
@@ -344,7 +392,8 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
     if (date.qualification?.uncertainApproximate) quals.push('uncertain/approximate');
 
     // Check if all individual qualifications are the same (Level 1 style trailing qualification)
-    const hasIndividualQuals = date.yearQualification || date.monthQualification || date.dayQualification;
+    const hasIndividualQuals =
+      date.yearQualification || date.monthQualification || date.dayQualification;
     if (hasIndividualQuals && !date.qualification) {
       const allSame =
         JSON.stringify(date.yearQualification) === JSON.stringify(date.monthQualification) &&
@@ -363,7 +412,8 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
         if (date.yearQualification?.uncertainApproximate) parts.push('year uncertain/approximate');
         if (date.monthQualification?.uncertain) parts.push('month uncertain');
         if (date.monthQualification?.approximate) parts.push('month approximate');
-        if (date.monthQualification?.uncertainApproximate) parts.push('month uncertain/approximate');
+        if (date.monthQualification?.uncertainApproximate)
+          parts.push('month uncertain/approximate');
         if (date.dayQualification?.uncertain) parts.push('day uncertain');
         if (date.dayQualification?.approximate) parts.push('day approximate');
         if (date.dayQualification?.uncertainApproximate) parts.push('day uncertain/approximate');
@@ -382,14 +432,8 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
 function formatDateTimeHuman(datetime: EDTFDateTime, options: FormatOptions): string {
   const { dateStyle, locale } = options;
 
-  const d = new Date(Date.UTC(
-    datetime.year,
-    datetime.month - 1,
-    datetime.day,
-    datetime.hour,
-    datetime.minute,
-    datetime.second
-  ));
+  const d = calendarDateObject(datetime.year, datetime.month, datetime.day);
+  d.setUTCHours(datetime.hour, datetime.minute, datetime.second);
 
   const formatter = new Intl.DateTimeFormat(locale, {
     year: 'numeric',
@@ -414,14 +458,14 @@ function formatIntervalHuman(interval: EDTFInterval, options: FormatOptions): st
   const startStr = interval.start
     ? formatHuman(interval.start, options)
     : interval.openStart
-    ? 'open start'
-    : 'unknown';
+      ? 'open start'
+      : 'unknown';
 
   const endStr = interval.end
     ? formatHuman(interval.end, options)
     : interval.openEnd
-    ? 'open end'
-    : 'unknown';
+      ? 'open end'
+      : 'unknown';
 
   let result = `${startStr} to ${endStr}`;
 
@@ -470,10 +514,11 @@ function formatSeasonHuman(season: EDTFSeason, options: FormatOptions): string {
 
   let result = `${seasonNames[season.season] || `Season ${season.season}`} ${season.year}`;
 
-  if (options.includeQualifications && season.qualification) {
+  if (options.includeQualifications !== false && season.qualification) {
     const quals: string[] = [];
     if (season.qualification.uncertain) quals.push('uncertain');
     if (season.qualification.approximate) quals.push('approximate');
+    if (season.qualification.uncertainApproximate) quals.push('uncertain/approximate');
     if (quals.length > 0) {
       result += ` (${quals.join(', ')})`;
     }
@@ -483,7 +528,11 @@ function formatSeasonHuman(season: EDTFSeason, options: FormatOptions): string {
 }
 
 function formatSetHuman(set: EDTFSet, options: FormatOptions): string {
-  const values = set.values.map(v => formatHuman(v, options));
+  const values = collectionYearGroups(set).map(({ first, last }) =>
+    last
+      ? formatHuman(first, options) + ' through ' + formatHuman(last, options)
+      : formatHuman(first, options)
+  );
 
   let result = 'One of: ';
   if (set.earlier) result = 'Earlier or one of: ';
@@ -496,7 +545,11 @@ function formatSetHuman(set: EDTFSet, options: FormatOptions): string {
 }
 
 function formatListHuman(list: EDTFList, options: FormatOptions): string {
-  const values = list.values.map(v => formatHuman(v, options));
+  const values = collectionYearGroups(list).map(({ first, last }) =>
+    last
+      ? formatHuman(first, options) + ' through ' + formatHuman(last, options)
+      : formatHuman(first, options)
+  );
 
   let result = 'All of: ';
   if (list.earlier) result = 'Earlier and all of: ';

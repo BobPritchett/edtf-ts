@@ -1,3 +1,4 @@
+import { possibleDateBounds } from '../calendar.js';
 import type {
   ParseResult,
   EDTFDate,
@@ -21,10 +22,7 @@ import {
  * Determine the correct EDTF level for unspecified digit patterns.
  *
  * Level 1 unspecified (fully unspecified at component boundaries):
- * - XXXX (year only)
  * - 201X, 20XX (partial year, no month/day)
- * - XXXX-XX (year and month)
- * - XXXX-XX-XX (year, month, and day)
  * - 1985-XX (specific year, unspecified month)
  * - 1985-04-XX (specific year and month, unspecified day)
  * - 1985-XX-XX (specific year, unspecified month and day)
@@ -37,45 +35,15 @@ import {
  * - XXXX-12-XX (fully unspecified year with specific month)
  * - 1984-1X (partial unspecified month)
  */
-function determineUnspecifiedLevel(
-  yearStr: string,
-  monthStr?: string,
-  _dayStr?: string
-): EDTFLevel {
-  const hasUnspecifiedYear = yearStr.includes('X');
-
-  // If no month component, it's Level 1 (year-only patterns like XXXX, 201X, 20XX)
-  if (!monthStr) {
+function determineUnspecifiedLevel(year: string, month?: string, day?: string): EDTFLevel {
+  if (!month) return /^\d{2}(?:\dX|XX)$/.test(year) ? 1 : 2;
+  if (!/^\d{4}$/.test(year)) return 2;
+  if (
+    (month === 'XX' && (day === undefined || day === 'XX')) ||
+    (/^\d{2}$/.test(month) && day === 'XX')
+  )
     return 1;
-  }
-
-  // Level 1: Fully specified year with any unspecified month/day (1985-XX, 1985-04-XX, 1985-XX-XX)
-  if (!hasUnspecifiedYear) {
-    // Check for partial unspecified month (1984-1X) which is Level 2
-    if (monthStr.includes('X') && monthStr !== 'XX') {
-      return 2;
-    }
-    // Otherwise it's Level 1 (1985-XX, 1985-04-XX, 1985-XX-XX)
-    return 1;
-  }
-
-  // Level 1: Fully unspecified year (XXXX) with fully unspecified month (XX)
-  // e.g., XXXX-XX, XXXX-XX-XX
-  if (yearStr === 'XXXX' && monthStr === 'XX') {
-    return 1;
-  }
-
-  // Level 2: Partial unspecified year with any month (156X-12, 15XX-12, 1XXX-12, 1XXX-XX)
-  if (hasUnspecifiedYear && yearStr !== 'XXXX') {
-    return 2;
-  }
-
-  // Level 2: Fully unspecified year (XXXX) with specific month (XXXX-12, XXXX-12-XX)
-  if (yearStr === 'XXXX' && monthStr && monthStr !== 'XX') {
-    return 2;
-  }
-
-  return 1;
+  return 2;
 }
 
 /**
@@ -92,7 +60,7 @@ export function parseLevel1(input: string): ParseResult {
   }
 
   // Try to parse as season (format: YYYY-2X where X is 0-9, but will validate 1-4)
-  if (/^\d{4}-2\d/.test(input)) {
+  if (/^-?\d{4}-2[1-4][?~%]?$/.test(input)) {
     return parseSeason(input);
   }
 
@@ -136,6 +104,13 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
   const extendedYearMatch = dateStr.match(/^Y(-?\d{5,})$/);
   if (extendedYearMatch) {
     const year = parseInt(extendedYearMatch[1]!, 10);
+    if (!Number.isSafeInteger(year))
+      return {
+        success: false,
+        errors: [
+          { code: 'YEAR_OUT_OF_RANGE', message: 'Year must be representable as a safe integer' },
+        ],
+      };
     const minMsValue = yearStartMs(year);
     const maxMsValue = yearEndMs(year);
     const isClamped = needsClamping(minMsValue) || needsClamping(maxMsValue);
@@ -282,7 +257,17 @@ export function parseLevel1Date(input: string): ParseResult<EDTFDate> {
   }
 
   // Pre-calculate bounds for closure
-  const boundsResult = calculateBounds(year, month, day);
+  const boundsResult = possibleDateBounds(year, month, day);
+  if (!boundsResult)
+    return {
+      success: false,
+      errors: [
+        {
+          code: 'INVALID_DATE',
+          message: 'No valid calendar date matches the unspecified components',
+        },
+      ],
+    };
 
   // Determine the correct level for unspecified patterns
   const level = hasUnspecified ? determineUnspecifiedLevel(yearStr, monthStr, dayStr) : 1;
@@ -487,7 +472,7 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
 
   // Validate interval order (if both endpoints are known and not open)
   if (start && end && !openStart && !openEnd) {
-    if (start.min > end.max) {
+    if (start.minMs > end.maxMs) {
       return {
         success: false,
         errors: [
@@ -561,73 +546,6 @@ function parseLevel1Interval(input: string): ParseResult<EDTFInterval> {
  * Calculate min and max bounds as bigint milliseconds.
  * Handles unspecified digits (X) by expanding to min/max values.
  */
-function calculateBounds(
-  year: number | string,
-  month?: number | string,
-  day?: number | string
-): { minMs: bigint; maxMs: bigint } {
-  // Calculate minimum values
-  let minYear: number;
-  if (typeof year === 'string') {
-    minYear = parseInt(year.replace(/X/g, '0'), 10);
-  } else {
-    minYear = year;
-  }
-
-  let minMonth: number;
-  if (month === undefined || month === 'XX') {
-    minMonth = 1;
-  } else if (typeof month === 'string') {
-    const m = parseInt(month.replace(/X/g, '0'), 10);
-    minMonth = m === 0 ? 1 : m;
-  } else {
-    minMonth = month;
-  }
-
-  let minDay: number;
-  if (day === undefined || day === 'XX') {
-    minDay = 1;
-  } else if (typeof day === 'string') {
-    const d = parseInt(day.replace(/X/g, '0'), 10);
-    minDay = d === 0 ? 1 : d;
-  } else {
-    minDay = day;
-  }
-
-  // Calculate maximum values
-  let maxYear: number;
-  if (typeof year === 'string') {
-    maxYear = parseInt(year.replace(/X/g, '9'), 10);
-  } else {
-    maxYear = year;
-  }
-
-  let maxMonth: number;
-  if (month === undefined || month === 'XX') {
-    maxMonth = 12;
-  } else if (typeof month === 'string') {
-    const m = parseInt(month.replace(/X/g, '9'), 10);
-    maxMonth = Math.min(m, 12);
-  } else {
-    maxMonth = month;
-  }
-
-  let maxDay: number;
-  if (day === undefined || day === 'XX') {
-    maxDay = daysInMonth(maxYear, maxMonth);
-  } else if (typeof day === 'string') {
-    const d = parseInt(day.replace(/X/g, '9'), 10);
-    maxDay = Math.min(d, daysInMonth(maxYear, maxMonth));
-  } else {
-    maxDay = day;
-  }
-
-  return {
-    minMs: calculateEpochMs(minYear, minMonth, minDay, 0, 0, 0, 0),
-    maxMs: calculateEpochMs(maxYear, maxMonth, maxDay, 23, 59, 59, 999),
-  };
-}
-
 /**
  * Calculate season bounds as bigint milliseconds.
  * Seasons map approximately to months:

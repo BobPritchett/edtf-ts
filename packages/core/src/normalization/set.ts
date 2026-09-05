@@ -37,6 +37,34 @@ export function normalizeSet(set: EDTFSet): Shape {
     throw new Error(`Unknown set value type: ${JSON.stringify(value)}`);
   });
 
+  for (const direction of ['earlier', 'later'] as const) {
+    if (!set[direction]) continue;
+    const anchor = direction === 'earlier' ? values[0]! : values[values.length - 1]!;
+    if (
+      isEDTFDate(anchor) &&
+      typeof anchor.year === 'number' &&
+      (anchor.month === undefined || typeof anchor.month === 'number') &&
+      (anchor.day === undefined || typeof anchor.day === 'number')
+    ) {
+      members.push({
+        ...normalizeDate(anchor),
+        calendarRange: {
+          direction,
+          anchor: { year: anchor.year, month: anchor.month, day: anchor.day },
+        },
+      });
+    } else {
+      members.push({
+        sMin: null,
+        sMax: null,
+        eMin: null,
+        eMax: null,
+        startKind: 'unknown',
+        endKind: 'unknown',
+        precision: anchor.precision,
+      });
+    }
+  }
   return {
     members,
     listMode: 'oneOf',

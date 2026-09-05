@@ -151,7 +151,10 @@ export const FuzzyDate = {
    * ```
    */
   compare: (a: IFuzzyDate, b: IFuzzyDate, mode: ComparisonMode = 'min'): number => {
-    return compare(a.inner, b.inner, mode);
+    const result = compare(a.inner, b.inner, mode);
+    if (result === 'UNKNOWN')
+      throw new Error('Cannot sort floating dates together with absolute timestamps');
+    return result;
   },
 
   /**

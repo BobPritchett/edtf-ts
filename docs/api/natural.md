@@ -2,6 +2,8 @@
 
 Natural language date parsing for EDTF. Convert human-readable date expressions into Extended Date/Time Format.
 
+See the [semantics and multilingual migration guide](/guide/semantics-migration) and [tested language examples](/guide/language-examples).
+
 ## Installation
 
 ```bash
@@ -79,10 +81,11 @@ Parse natural language date input into EDTF format.
 ```typescript
 interface ParseResult {
   edtf: string;           // The EDTF string representation
-  type: 'date' | 'interval' | 'season' | 'set' | 'list';
+  type: 'date' | 'datetime' | 'interval' | 'season' | 'set' | 'list';
   confidence: number;     // Confidence score (0-1)
   interpretation: string; // Human-readable interpretation
-  parsed?: EDTFBase;      // Parsed EDTF object (if valid)
+  parsed: EDTFBase;      // Validated EDTF object
+  fuzzyDate: IFuzzyDate; // Required wrapper
   ambiguous?: boolean;    // Whether this result is ambiguous
 }
 ```
@@ -102,7 +105,7 @@ parseNatural('circa 1950')[0].edtf;    // '1950~'
 
 #### type
 ```typescript
-type: 'date' | 'interval' | 'season' | 'set' | 'list'
+type: 'date' | 'datetime' | 'interval' | 'season' | 'set' | 'list'
 ```
 
 The type of EDTF value produced.
@@ -160,7 +163,7 @@ parseNatural('the 1960s')[0].interpretation;
 
 #### parsed
 ```typescript
-parsed?: EDTFBase
+parsed: EDTFBase
 ```
 
 The parsed and validated EDTF object. Only present if the generated EDTF string is valid.
@@ -197,6 +200,8 @@ unambiguous[0].ambiguous;  // false (or undefined)
 ```typescript
 interface ParseNaturalOptions {
   locale?: string;              // Default: 'en-US'
+  language?: 'en' | 'es' | 'fr';
+  dateOrder?: 'MDY' | 'DMY' | 'YMD';
   returnAllResults?: boolean;   // Default: true
   minConfidence?: number;       // Default: 0
   referenceDate?: Date;         // Default: current system date
@@ -394,8 +399,8 @@ parseNatural('between Jan 1, 1985 and Dec 31, 1990');
 
 #### Open-Ended Intervals
 ```typescript
-parseNatural('before 1950');             // '../1950'
-parseNatural('after 1950');              // '1950/..'
+parseNatural('before 1950');             // '[..1949]'
+parseNatural('after 1950');              // '[1951..]'
 parseNatural('since 1950');              // '1950/..'
 parseNatural('until 1950');              // '../1950'
 ```
@@ -499,7 +504,7 @@ parseNatural('Jan 1985, Feb 1985');      // '[1985-01,1985-02]'
 ```
 
 ::: tip
-The grammar is extensible. Patterns are defined in `grammar.ne` using Nearley syntax.
+The grammar is extensible. Patterns are defined in `src/languages/{en,es,fr}.ne` using Nearley syntax.
 :::
 
 ## Ambiguity Handling
@@ -536,25 +541,7 @@ results[1].interpretation;  // 'March 2, 2020 (EU format)'
 
 #### Locale-Based Ordering
 
-The `locale` option determines which interpretation is preferred. The following country codes use MM/DD/YYYY (US format) as the default:
-
-| Code | Country/Territory |
-|------|-------------------|
-| US   | United States |
-| PH   | Philippines |
-| BZ   | Belize |
-| FM   | Federated States of Micronesia |
-| PW   | Palau |
-| DO   | Dominican Republic |
-| HN   | Honduras |
-| NI   | Nicaragua |
-| PA   | Panama |
-| PR   | Puerto Rico |
-| GU   | Guam |
-| AS   | American Samoa |
-| VI   | US Virgin Islands |
-
-All other locales default to DD/MM/YYYY (EU format), as this is used by the vast majority of countries worldwide (~150-178 countries).
+The `locale` option selects the grammar language and numeric-order preference. Numeric order comes from the runtime’s `Intl.DateTimeFormat` locale data. Set `dateOrder` to `MDY`, `DMY`, or `YMD` to override it; set `language` to `en`, `es`, or `fr` to select syntax independently.
 
 ```typescript
 // US locale - MM/DD/YYYY preferred
@@ -762,15 +749,9 @@ normalizeArchivalDate('circa Spring 1895');
 
 ## Extending the Grammar
 
-The grammar is defined in `grammar.ne` using [Nearley](https://nearley.js.org/) syntax. You can extend it to support additional patterns.
+The independently compiled grammars live in `src/languages/{en,es,fr}.ne`; shared syntax belongs in `src/shared.ne`. Add vocabulary and language-specific word order in the relevant language pack. Postprocessors build deferred semantic nodes, and shared TypeScript resolves dates and validates every candidate. Keep calendar arithmetic and boundary semantics out of language-specific productions.
 
-```nearley
-# Add custom pattern in grammar.ne
-
-date ->
-    "the year of" __ numeric_year
-      {% d => ({ type: 'date', edtf: pad4(d[2]), confidence: 0.95 }) %}
-```
+Add matching feature identifiers and English, Spanish, and French fixtures to `tests/fixtures/languages.json`, plus focused regressions for semantic edge cases. See the [extension rules](../guide/semantics-migration#internal-structure-and-extension-rules).
 
 After modifying the grammar:
 
@@ -781,11 +762,13 @@ pnpm run build:grammar
 
 ## Limitations
 
-- **English only** - Currently supports only English language patterns
+- **Three languages** - English, Spanish, and French; unsupported languages raise an error
 - **Grammar-based** - Cannot learn new patterns without grammar updates
 - **No semantic understanding** - Doesn't understand context like "next Tuesday"
 - **Relative dates** - Doesn't support relative dates ("yesterday", "last week")
 - **Ambiguity requires judgment** - Some dates are genuinely ambiguous and require human review
+
+The [interactive playground](../playground) uses one top-level locale chooser for both date inputs, formatting, and age/birthday parsing and rendering. It starts with the browser’s locale, supports regional presets and custom tags, and resets to the browser default on reload. API calls still default to `en-US`.
 
 ## See Also
 

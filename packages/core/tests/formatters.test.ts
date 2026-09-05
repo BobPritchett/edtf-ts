@@ -228,8 +228,7 @@ describe('Formatters - Extended Years', () => {
     const date = parse('Y170000002');
     if (date.success && isEDTFDate(date.value)) {
       const formatted = formatHuman(date.value);
-      expect(formatted).toContain('170');
-      expect(formatted).toContain('million');
+      expect(formatted).toBe('170000002');
     }
   });
 
@@ -237,9 +236,7 @@ describe('Formatters - Extended Years', () => {
     const date = parse('Y-170000002');
     if (date.success && isEDTFDate(date.value)) {
       const formatted = formatHuman(date.value);
-      expect(formatted).toContain('170');
-      expect(formatted).toContain('million');
-      expect(formatted).toContain('BC');
+      expect(formatted).toBe('170000003 BC');
     }
   });
 

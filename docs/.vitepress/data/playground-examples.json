@@ -1,0 +1,144 @@
+{
+  "natural": [
+    {
+      "id": "date.full",
+      "en": "March 12, 1870",
+      "es": "12 de marzo de 1870",
+      "fr": "12 mars 1870"
+    },
+    {
+      "id": "date.knownDayUnknownMonth",
+      "en": "12th of unknown month, 1870",
+      "es": "día 12 de mes desconocido, 1870",
+      "fr": "12 d'un mois inconnu, 1870"
+    },
+    {
+      "id": "interval.monthSeason",
+      "en": "march 1988 - spring 1990",
+      "es": "marzo 1988 - primavera 1990",
+      "fr": "mars 1988 - printemps 1990"
+    },
+    {
+      "id": "qualifier.approximate",
+      "en": "circa 1870",
+      "es": "hacia 1870",
+      "fr": "vers 1870"
+    },
+    {
+      "id": "numeric.qualified",
+      "en": "circa 01/02/2020",
+      "es": "hacia 01/02/2020",
+      "fr": "vers 01/02/2020"
+    },
+    {
+      "id": "boundary.before",
+      "en": "before 1870",
+      "es": "antes de 1870",
+      "fr": "avant 1870"
+    },
+    {
+      "id": "boundary.inclusiveAfter",
+      "en": "no earlier than 1870",
+      "es": "no antes de 1870",
+      "fr": "pas avant 1870"
+    },
+    {
+      "id": "boundary.pre",
+      "en": "pre-1870",
+      "es": "pre-1870",
+      "fr": "pré-1870"
+    },
+    {
+      "id": "boundary.post",
+      "en": "post-1870",
+      "es": "post-1870",
+      "fr": "post-1870"
+    },
+    {
+      "id": "interval.since",
+      "en": "since 1870",
+      "es": "desde 1870",
+      "fr": "depuis 1870"
+    },
+    {
+      "id": "interval.sharedDays",
+      "en": "1–3 March 2024",
+      "es": "1–3 marzo 2024",
+      "fr": "1–3 mars 2024"
+    },
+    {
+      "id": "interval.crossYear",
+      "en": "December–January 2024",
+      "es": "diciembre–enero 2024",
+      "fr": "décembre–janvier 2024"
+    },
+    {
+      "id": "set.finiteRange",
+      "en": "sometime between 1870 and 1880",
+      "es": "algún momento entre 1870 y 1880",
+      "fr": "à un moment entre 1870 et 1880"
+    },
+    {
+      "id": "period.century",
+      "en": "nineteenth century",
+      "es": "siglo XIX",
+      "fr": "XIXe siècle"
+    },
+    {
+      "id": "season.north",
+      "en": "spring 1870 (northern hemisphere)",
+      "es": "primavera 1870 (hemisferio norte)",
+      "fr": "printemps 1870 (hémisphère nord)"
+    },
+    {
+      "id": "season.south",
+      "en": "spring 1870 (southern hemisphere)",
+      "es": "primavera 1870 (hemisferio sur)",
+      "fr": "printemps 1870 (hémisphère sud)"
+    }
+  ],
+  "age": [
+    {
+      "id": "age.exact",
+      "en": "20 years old",
+      "es": "20 años",
+      "fr": "20 ans"
+    },
+    {
+      "id": "age.range",
+      "en": "20 to 23 years old",
+      "es": "20 a 23 años",
+      "fr": "20 à 23 ans"
+    },
+    {
+      "id": "age.birthday",
+      "en": "20 years old, birthday March 15",
+      "es": "20 años, cumpleaños 15 de marzo",
+      "fr": "20 ans, anniversaire le 15 mars"
+    },
+    {
+      "id": "age.birthdayMonth",
+      "en": "20 years old, June birthday",
+      "es": "20 años, cumpleaños junio",
+      "fr": "20 ans, anniversaire juin"
+    },
+    {
+      "id": "birthday.only",
+      "en": "birthday March 15",
+      "es": "cumpleaños 15 de marzo",
+      "fr": "anniversaire le 15 mars"
+    },
+    {
+      "id": "age.bornConstraint",
+      "en": "born before 1870",
+      "es": "nacido antes de 1870",
+      "fr": "né avant 1870"
+    },
+    {
+      "id": "age.months",
+      "en": "6 months",
+      "es": "6 meses",
+      "fr": "6 mois"
+    }
+  ]
+}

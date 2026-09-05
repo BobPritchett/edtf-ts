@@ -133,8 +133,8 @@ parseNatural('~1950');
 parseNatural('from 1964 to 2008');
 parseNatural('1964 to 2008');
 parseNatural('between 1964 and 2008');
-parseNatural('before 1930'); // ../1930
-parseNatural('after 1930'); // 1930/..
+parseNatural('before 1930'); // [..1929]
+parseNatural('after 1930'); // [1931..]
 parseNatural('since 1930'); // 1930/..
 ```
 
@@ -153,7 +153,7 @@ parseNatural('Winter 2001'); // 2001-24
 parseNatural('the 1960s'); // 196X
 parseNatural('1960s'); // 196X
 parseNatural('the 1800s'); // 18XX
-parseNatural('19th century'); // 18XX
+parseNatural('19th century'); // 1801/1900
 ```
 
 ### Sets and Lists
@@ -185,10 +185,11 @@ Parse natural language date input into EDTF format.
 ```typescript
 interface ParseResult {
   edtf: string; // The EDTF string representation
-  type: 'date' | 'interval' | 'season' | 'set' | 'list';
+  type: 'date' | 'datetime' | 'interval' | 'season' | 'set' | 'list';
   confidence: number; // Confidence score (0-1)
   interpretation: string; // Human-readable interpretation
-  parsed?: EDTFBase; // Parsed EDTF object (from @edtf-ts/core)
+  parsed: EDTFBase; // Validated EDTF object
+  fuzzyDate: IFuzzyDate; // Required wrapper
   ambiguous?: boolean; // Whether this result is ambiguous
 }
 ```
@@ -208,6 +209,28 @@ try {
   }
 }
 ```
+
+## English, Spanish, and French
+
+The default import includes all three grammars. Use `@edtf-ts/natural/en`, `/es`, or `/fr` for a smaller bundle with the same synchronous API, including age and birthday parsing.
+
+`locale` defaults to `en-US`; regional locales select their language pack. Optional `language: 'en' | 'es' | 'fr'` and `dateOrder: 'MDY' | 'DMY' | 'YMD'` overrides separate syntax from numeric ordering. Unsupported languages raise an error.
+
+English uses one grammar for both MDY and DMY. Shared semantics resolve the captured numbers and rank candidates using locale data: `en-GB` prefers DMY, while `en-US` prefers MDY. The preference stays consistent across qualifiers, intervals, and collection members. An unambiguous date such as `06/15/26` still resolves to June 15 in a DMY locale; alternatives remain available when both orders are valid.
+
+```typescript
+const referenceDate = new Date(2026, 0, 1); // Fix the rolling short-year window for this example.
+parseNatural('06/05/26', { locale: 'en-GB', referenceDate })[0].edtf; // '2026-05-06'
+parseNatural('06/05/26', { locale: 'en-GB', dateOrder: 'MDY', referenceDate })[0].edtf; // '2026-06-05'
+parseNatural('Toutes ces dates: 1667, 1668 et 1670', { locale: 'fr-FR' })[0].edtf;
+// '{1667,1668,1670}'
+```
+
+Cross-language round-trip tests in `tests/locale-roundtrip.test.ts` follow key dates, sets, lists, qualifiers, and open boundaries through English, French, and Spanish, checking the preferred result and every alternative at each step.
+
+The [interactive playground](https://bobpritchett.github.io/edtf-ts/playground) defaults to the browser’s locale. Its top-level chooser overrides parsing and rendering in both date inputs and the age/birthday section, with regional presets and a custom locale field. Select **Browser default** or reload to reset. This browser behavior does not change the API’s `en-US` default.
+
+See the [migration guide](../../docs/guide/semantics-migration.md) and [tested examples](../../docs/guide/language-examples.md).
 
 ## Options
 
@@ -255,9 +278,17 @@ The parser assigns confidence scores based on:
 - Ambiguity (unambiguous results get higher scores)
 - Number of valid interpretations (single valid interpretation = 0.9)
 
+## Unknown components and mixed interval endpoints
+
+`12th of unknown month, 1870`, `día 12 de mes desconocido, 1870`, and `12 d'un mois inconnu, 1870` parse to `1870-XX-12` with their corresponding locales. Renderings preserve that known day. `January` parses to `XXXX-01`; `January 12` prefers `XXXX-01-12`, with January in year 0012 retained as an alternative. Use `January 0012` to select that early year, or `January 12, unknown year` to select the unspecified year explicitly.
+
+`march 1988 - spring 1990` parses to `1988-03/1990-21`. Date, season, and period endpoints share range handling, including prefix/suffix qualifiers. French `De 1970 environ à 1980 environ` parses to `1970~/1980~`. Semicolons enumerate inclusive lists: `2020; 2021` → `{2020..2021}`. Bare `90` remains historical year `0090`; `'90` uses the rolling reference-year window.
+
+The [compatibility review](../../docs/guide/compatibility-review.md) lists every supplied example, selected edtfy tests, preferred renderings, and reasons for intentional rejections. Its fixtures check every returned candidate. Weekdays must match their dates; arbitrary bibliographic prose is not silently truncated.
+
 ## Round-Trip Conversion
 
-The natural language parser supports **bidirectional conversion** - you can parse EDTF-formatted output back into EDTF. This is particularly useful when displaying formatted dates to users and allowing them to type natural language that gets parsed back.
+Canonical phrases have tested round-trip support. Use EDTF itself for lossless storage. The natural language parser supports **bidirectional conversion** - you can parse EDTF-formatted output back into EDTF. This is particularly useful when displaying formatted dates to users and allowing them to type natural language that gets parsed back.
 
 ```typescript
 import { parse } from '@edtf-ts/core';
@@ -277,6 +308,10 @@ if (result.success) {
   console.log(roundTrip[0].edtf); // "1985/.."
 }
 ```
+
+Adjacent exact years in natural-language sets and lists now produce compact ranges: `One of: 1870, 1871, 1872` becomes `[1870..1872]`. Gaps, member order, qualifications, and set/list meaning remain intact. Literal EDTF pass-through retains the supplied spelling; use core `compactYearRanges` when comparing enumerated years with their range form.
+
+All three languages parse rendered year ranges and open/unknown interval endpoints. For example, `1870 a fin abierto` with `es-ES` and `1870 à fin ouverte` with `fr-FR` both return `1870/..`. Unknown endpoint phrases retain an empty endpoint (`1870/`), distinct from an open endpoint (`1870/..`). These cases are exercised across regional locales in chained round-trip tests.
 
 ### Supported Round-Trip Patterns
 
@@ -330,9 +365,9 @@ See the [parser specification](../../tools/research/parser-and-formats-spec.md) 
 
 ## Contributing
 
-The grammar is located in `src/grammar.ne`. To modify it:
+Language syntax lives in `src/languages/en.ne`, `es.ne`, and `fr.ne`, backed by `shared.ne` and shared TypeScript semantics. To modify it:
 
-1. Edit `src/grammar.ne`
+1. Edit the relevant language syntax or shared semantics and add equivalent feature fixtures for all three languages
 2. Run `pnpm build:grammar` to compile
 3. Run `pnpm test` to verify
 
@@ -351,6 +386,3 @@ MIT Copyright 2025 Bob Pritchett
 - [EDTF Specification](https://www.loc.gov/standards/datetime/)
 - [Nearley Documentation](https://nearley.js.org/)
 - [Natural Language Parser Research](../../tools/research/parser-and-formats-spec.md)
-
-
-

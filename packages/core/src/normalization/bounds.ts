@@ -33,7 +33,7 @@ export function parseYearWithUnspecified(year: number | string): { min: number; 
   let multiplier = 1;
 
   for (let i = unsignedYearStr.length - 1; i >= 0; i--) {
-    const char = unsignedYearStr[i];
+    const char = unsignedYearStr[i]!;
 
     if (char === 'X' || char === 'x') {
       // X digit: min = 0, max = 9
@@ -65,7 +65,9 @@ export function parseYearWithUnspecified(year: number | string): { min: number; 
  *
  * Returns { min, max } representing the range of possible months (1-12).
  */
-export function parseMonthWithUnspecified(month: number | string | undefined): { min: number; max: number } | null {
+export function parseMonthWithUnspecified(
+  month: number | string | undefined
+): { min: number; max: number } | null {
   if (month === undefined) {
     return null;
   }
@@ -186,7 +188,10 @@ export function boundsForYear(year: number | string): {
 /**
  * Calculate bounds for a date with month precision.
  */
-export function boundsForMonth(year: number | string, month: number | string): {
+export function boundsForMonth(
+  year: number | string,
+  month: number | string
+): {
   sMin: bigint;
   sMax: bigint;
   eMin: bigint;

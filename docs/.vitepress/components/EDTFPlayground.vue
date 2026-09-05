@@ -2,7 +2,52 @@
   <div class="edtf-playground">
     <div class="playground-header">
       <h2>Interactive EDTF Playground</h2>
-      <p>Try parsing EDTF strings in real-time. Type or select an example below.</p>
+      <p>Parse EDTF and natural language in English, Spanish, or French.</p>
+    </div>
+
+    <div class="playground-locale">
+      <div class="locale-controls">
+        <label for="playground-locale">Locale</label>
+        <select
+          id="playground-locale"
+          v-model="localeChoice"
+          aria-describedby="locale-help locale-status"
+        >
+          <option value="browser">
+            Browser default{{ browserLocale ? ' (' + browserLocale + ')' : '' }}
+          </option>
+          <option v-for="preset in localePresets" :key="preset.value" :value="preset.value">
+            {{ preset.label }}
+          </option>
+          <option value="custom">Custom locale…</option>
+        </select>
+        <template v-if="localeChoice === 'custom'">
+          <label for="custom-locale">Locale tag</label>
+          <input
+            id="custom-locale"
+            v-model="customLocale"
+            type="text"
+            placeholder="e.g., es-AR"
+            spellcheck="false"
+            :aria-invalid="!!localeSettings.error"
+            aria-describedby="locale-status"
+          />
+        </template>
+      </div>
+      <p id="locale-help">
+        Applies to both date inputs, formatting, examples, and age/birthday parsing and rendering.
+        Choose Browser default to reset; overrides last until you reload this page.
+      </p>
+      <p id="locale-status" role="status" :class="{ 'status-invalid': localeSettings.error }">
+        {{
+          localeSettings.error ||
+          activeLocale +
+            ' · ' +
+            languageNames[localeSettings.language!] +
+            ' · Numeric date order: ' +
+            localeSettings.dateOrder
+        }}
+      </p>
     </div>
 
     <div class="playground-examples">
@@ -51,24 +96,18 @@
       </div>
 
       <div class="input-column">
-        <div class="label-with-locale">
+        <div class="natural-input-header">
           <label for="natural-input">Natural Language</label>
-          <div class="locale-input-wrapper">
-            <span class="locale-label">Parse Locale:</span>
-            <input
-              type="text"
-              v-model="naturalLocale"
-              class="locale-input"
-              placeholder="en-US"
-              @input="onNaturalInput"
-            />
-          </div>
+          <label class="show-locales-option">
+            <input type="checkbox" v-model="showAllLocales" aria-controls="all-locales-results" />
+            Show all locales
+          </label>
         </div>
         <input
           id="natural-input"
           v-model="naturalInput"
           type="text"
-          placeholder="January 12, 1940..."
+          :placeholder="naturalExamples[0]?.input"
           @input="onNaturalInput"
           class="edtf-input-field"
           :class="{
@@ -88,10 +127,18 @@
               naturalResult.map((r) => `${r.edtf} (${Math.round(r.confidence * 100)}%)`).join(', ')
             }}]
           </span>
-          <span v-else-if="naturalError" class="status-invalid">✗ No valid parse</span>
+          <span v-else-if="naturalError" class="status-invalid">✗ {{ naturalError }}</span>
         </div>
       </div>
     </div>
+
+    <AllLocalesRoundTrip
+      v-if="showAllLocales"
+      :value="result?.success ? result.value : null"
+      :locale="activeLocale"
+      :locales="localePresets"
+      :format-options="formatOptions"
+    />
 
     <div class="format-options-section">
       <button class="format-options-toggle" @click="formatOptionsExpanded = !formatOptionsExpanded">
@@ -133,19 +180,6 @@
                 <option value="medium">Medium</option>
                 <option value="short">Short</option>
               </select>
-            </label>
-          </div>
-
-          <!-- locale -->
-          <div class="option-item option-item-inline">
-            <label class="option-label-inline">
-              <span class="option-name">Locale</span>
-              <input
-                type="text"
-                v-model="formatOptions.locale"
-                class="option-input"
-                placeholder="e.g., en-US, fr-FR"
-              />
             </label>
           </div>
 
@@ -394,7 +428,7 @@
               id="natural-input-2"
               v-model="naturalInput2"
               type="text"
-              placeholder="December 1995..."
+              :placeholder="naturalExamples[0]?.input"
               @input="onNaturalInput2"
               class="edtf-input-field"
               :class="{
@@ -418,7 +452,7 @@
                     .join(', ')
                 }}]
               </span>
-              <span v-else-if="naturalError2" class="status-invalid">✗ No valid parse</span>
+              <span v-else-if="naturalError2" class="status-invalid">✗ {{ naturalError2 }}</span>
             </div>
           </div>
         </div>
@@ -639,8 +673,8 @@
     <div class="age-birthday-section">
       <h2>Age and Birthdate</h2>
       <p>
-        Parse age expressions and birthdates into EDTF intervals, then render them as human-readable
-        strings.
+        Parse age expressions and birthdates into EDTF dates, intervals, or sets, then render them
+        as human-readable strings.
       </p>
       <p class="current-date-note">
         All calculations use today's date: <strong>{{ formattedCurrentDate }}</strong>
@@ -665,7 +699,7 @@
             id="age-input"
             v-model="ageInput"
             type="text"
-            placeholder="20 yo, early 30s, March 15th birthday..."
+            :placeholder="ageExamples[0]?.input"
             @input="onAgeInput"
             class="edtf-input-field"
             :class="{ 'input-valid': ageParseResult, 'input-invalid': ageParseError }"
@@ -685,7 +719,10 @@
             v-model="ageEdtfInput"
             type="text"
             placeholder="?2004-?06-?02/?2005-?06-?01"
-            @input="onAgeEdtfInput"
+            @input="
+              ageSource = 'edtf';
+              onAgeEdtfInput();
+            "
             class="edtf-input-field"
             :class="{ 'input-valid': ageRenderResult, 'input-invalid': ageRenderError }"
           />
@@ -853,16 +890,70 @@ import {
   isEDTFSet,
   isEDTFList,
   FuzzyDate,
+  resolveLanguage,
+  resolveDateOrder,
+  renderAgeBirthday,
 } from '@edtf-ts/core';
 import { formatHuman } from '@edtf-ts/core';
 import type { FormatOptions, IFuzzyDate } from '@edtf-ts/core';
+import playgroundExamples from '../data/playground-examples.json';
+import AllLocalesRoundTrip from './AllLocalesRoundTrip.vue';
 
+const showAllLocales = ref(false);
 const input = ref('1985-04-12');
 const result = ref<any>(null);
 const naturalInput = ref('');
 const naturalResult = ref<any>(null);
 const naturalError = ref<string | null>(null);
-const naturalLocale = ref(typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+// Read the browser locale after hydration so server and client markup agree.
+const browserLocale = ref('');
+const localeChoice = ref('browser');
+const customLocale = ref('en-US');
+const localePresets = [
+  { value: 'en-US', label: 'English — United States (en-US)' },
+  { value: 'en-GB', label: 'English — United Kingdom (en-GB)' },
+  { value: 'es-ES', label: 'Español — España (es-ES)' },
+  { value: 'es-MX', label: 'Español — México (es-MX)' },
+  { value: 'fr-FR', label: 'Français — France (fr-FR)' },
+  { value: 'fr-CA', label: 'Français — Canada (fr-CA)' },
+];
+const languageNames = { en: 'English', es: 'Español', fr: 'Français' };
+const activeLocale = computed(() =>
+  localeChoice.value === 'browser'
+    ? browserLocale.value || 'en-US'
+    : localeChoice.value === 'custom'
+      ? customLocale.value.trim()
+      : localeChoice.value
+);
+const localeSettings = computed(() => {
+  try {
+    const language = resolveLanguage(activeLocale.value);
+    return { language, dateOrder: resolveDateOrder(activeLocale.value), error: '' };
+  } catch (error) {
+    return {
+      language: null,
+      dateOrder: null,
+      error:
+        (error instanceof Error ? error.message : 'Invalid locale') +
+        '. Choose an English, Spanish, or French locale.',
+    };
+  }
+});
+function requireLocale() {
+  if (localeSettings.value.error) throw new Error(localeSettings.value.error);
+  return activeLocale.value;
+}
+
+function inputError(error: unknown, fallback: string): string {
+  const message = error instanceof Error ? error.message : fallback;
+  // Keep parser implementation details out of the interactive input status.
+  return /Syntax error|Unexpected .*token/.test(message)
+    ? 'No valid date expression for the selected locale.'
+    : message;
+}
+const primarySource = ref<'edtf' | 'natural'>('edtf');
+const secondarySource = ref<'edtf' | 'natural'>('edtf');
+const ageSource = ref<'age' | 'edtf'>('age');
 
 // Second EDTF input for comparison
 const input2 = ref('1990');
@@ -879,11 +970,15 @@ const formatOptions = ref<FormatOptions>({
   includeQualifications: true,
   showUnspecified: false,
   dateStyle: 'full',
-  locale: 'en-US',
   era: 'short',
   eraDisplay: 'auto',
   eraNotation: 'bc-ad',
 });
+
+const localizedFormatOptions = computed(() => ({
+  ...formatOptions.value,
+  locale: activeLocale.value,
+}));
 
 const examples = [
   { label: 'Simple Date', edtf: '1985-04-12' },
@@ -900,20 +995,19 @@ const examples = [
   { label: 'Partial Qual', edtf: '?2004-06-~11' },
 ];
 
-const naturalExamples = [
-  { label: 'Jan 12, 1940', input: 'January 12, 1940' },
-  { label: 'circa 1950', input: 'circa 1950' },
-  { label: 'the 1960s', input: 'the 1960s' },
-  { label: 'early 1990s', input: 'early 1990s' },
-  { label: 'early-to-mid 1950s', input: 'early-to-mid 1950s' },
-  { label: 'mid-to-late 1980s', input: 'mid-to-late 1980s' },
-  { label: '1964 to 2008', input: 'from 1964 to 2008' },
-  { label: 'Spring 1985', input: 'Spring 1985' },
-  { label: '500 BC', input: '500 BC' },
-];
+function localizedExamples(group: 'natural' | 'age') {
+  const language = localeSettings.value.language;
+  return language
+    ? playgroundExamples[group].map((example) => ({
+        label: example[language],
+        input: example[language],
+      }))
+    : [];
+}
+const naturalExamples = computed(() => localizedExamples('natural'));
 
 // Age and Birthday section state
-const ageInput = ref('20 yo');
+const ageInput = ref('');
 const ageEdtfInput = ref('');
 const ageParseResult = ref<any>(null);
 const ageParseError = ref<string | null>(null);
@@ -930,7 +1024,8 @@ const ageFormatOptions = ref({
 // Current date for age calculations (updated on mount)
 const currentDate = ref(new Date());
 const formattedCurrentDate = computed(() => {
-  return currentDate.value.toLocaleDateString('en-US', {
+  if (localeSettings.value.error) return '';
+  return currentDate.value.toLocaleDateString(activeLocale.value, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -938,18 +1033,7 @@ const formattedCurrentDate = computed(() => {
   });
 });
 
-const ageExamples = [
-  { label: '20 yo', input: '20 yo' },
-  { label: 'Early 30s', input: 'early 30s' },
-  { label: 'Teenager', input: 'teenager' },
-  { label: 'Senior', input: 'senior' },
-  { label: '20 + March bday', input: '20 yo, March birthday' },
-  { label: '20 + Mar 15', input: '20 yo, birthday 3/15' },
-  { label: 'Mar 15 bday only', input: 'March 15th birthday' },
-  { label: 'Born 1990', input: 'born 1990' },
-  { label: 'Born c. 1950', input: 'born circa 1950' },
-  { label: '6 months', input: '6 months old' },
-];
+const ageExamples = computed(() => localizedExamples('age'));
 
 // Computed variations for all format combinations
 const ageVariations = computed(() => {
@@ -993,11 +1077,9 @@ const ageVariations = computed(() => {
 });
 
 // Synchronous helper for computed
-let renderAgeBirthdayFn: any = null;
 function renderAgeBirthdaySync(edtf: string, options: any): string {
-  if (!renderAgeBirthdayFn) return '';
   try {
-    const result = renderAgeBirthdayFn(edtf, options);
+    const result = renderAgeBirthday(edtf, { ...options, locale: requireLocale() });
     return result.formatted;
   } catch {
     return '(error)';
@@ -1059,9 +1141,9 @@ const hasPartialQualification = computed(() => {
 });
 
 const formattedEDTF = computed(() => {
-  if (!result.value?.success) return '';
+  if (!result.value?.success || localeSettings.value.error) return '';
   try {
-    return formatHuman(result.value.value, formatOptions.value);
+    return formatHuman(result.value.value, localizedFormatOptions.value);
   } catch {
     return result.value.value.edtf;
   }
@@ -1070,19 +1152,24 @@ const formattedEDTF = computed(() => {
 let isUpdatingFromEdtf = false;
 let isUpdatingFromNatural = false;
 
-// Watch for format options changes and update natural language output
 watch(
   formatOptions,
   () => {
-    if (result.value?.success && !isUpdatingFromNatural) {
-      isUpdatingFromEdtf = true;
-      naturalInput.value = formattedEDTF.value;
-      parseNaturalInput();
-      isUpdatingFromEdtf = false;
-    }
+    if (primarySource.value === 'edtf') onEdtfInput();
+    if (secondarySource.value === 'edtf') onEdtfInput2();
   },
   { deep: true }
 );
+
+// Reinterpret user-entered text; regenerate text that came from EDTF.
+function refreshLocale() {
+  if (primarySource.value === 'natural') onNaturalInput();
+  else onEdtfInput();
+  if (secondarySource.value === 'natural') onNaturalInput2();
+  else onEdtfInput2();
+  if (ageSource.value === 'age') onAgeInput();
+  onAgeEdtfInput();
+}
 
 // Watch for changes in first result and trigger comparison
 watch(result, () => {
@@ -1093,6 +1180,7 @@ watch(result, () => {
 
 function onEdtfInput() {
   if (isUpdatingFromNatural) return;
+  primarySource.value = 'edtf';
 
   if (!input.value.trim()) {
     result.value = null;
@@ -1113,6 +1201,7 @@ function onEdtfInput() {
 
 async function onNaturalInput() {
   if (isUpdatingFromEdtf) return;
+  primarySource.value = 'natural';
 
   if (!naturalInput.value.trim()) {
     naturalResult.value = null;
@@ -1125,7 +1214,7 @@ async function onNaturalInput() {
     const { parseNatural } = await import('@edtf-ts/natural');
     naturalError.value = null;
     naturalResult.value = parseNatural(naturalInput.value, {
-      locale: naturalLocale.value || undefined,
+      locale: requireLocale(),
     });
 
     // Update EDTF input with best parse result
@@ -1136,7 +1225,7 @@ async function onNaturalInput() {
       isUpdatingFromNatural = false;
     }
   } catch (error: any) {
-    naturalError.value = error.message || 'Failed to parse natural language input';
+    naturalError.value = inputError(error, 'Failed to parse natural language input');
     naturalResult.value = null;
   }
 }
@@ -1153,10 +1242,10 @@ async function parseNaturalInput() {
     const { parseNatural } = await import('@edtf-ts/natural');
     naturalError.value = null;
     naturalResult.value = parseNatural(naturalInput.value, {
-      locale: naturalLocale.value || undefined,
+      locale: requireLocale(),
     });
   } catch (error: any) {
-    naturalError.value = error.message || 'Failed to parse natural language input';
+    naturalError.value = inputError(error, 'Failed to parse natural language input');
     naturalResult.value = null;
   }
 }
@@ -1191,34 +1280,18 @@ function formatQualification(qual: any): string {
 }
 
 function getSeasonName(code: number): string {
-  const seasons: Record<number, string> = {
-    21: 'Spring',
-    22: 'Summer',
-    23: 'Autumn',
-    24: 'Winter',
-    25: 'Spring (Southern)',
-    26: 'Summer (Southern)',
-    27: 'Autumn (Southern)',
-    28: 'Winter (Southern)',
-    29: 'Q1',
-    30: 'Q2',
-    31: 'Q3',
-    32: 'Q4',
-    33: 'Quarter 1',
-    34: 'Quarter 2',
-    35: 'Quarter 3',
-    36: 'Quarter 4',
-    37: 'Quadrimester 1',
-    38: 'Quadrimester 2',
-    39: 'Quadrimester 3',
-    40: 'Semestral 1',
-    41: 'Semestral 2',
-  };
-  return seasons[code] || `Season ${code}`;
+  if (localeSettings.value.error) return '';
+  const season = parse('2000-' + code);
+  return season.success
+    ? formatHuman(season.value, localizedFormatOptions.value)
+        .replace(/\s*2000\s*/g, ' ')
+        .trim()
+    : '';
 }
 
 function onEdtfInput2() {
   if (isUpdatingFromNatural) return;
+  secondarySource.value = 'edtf';
 
   if (!input2.value.trim()) {
     result2.value = null;
@@ -1233,7 +1306,9 @@ function onEdtfInput2() {
   if (result2.value.success) {
     isUpdatingFromEdtf = true;
     try {
-      naturalInput2.value = formatHuman(result2.value.value, formatOptions.value);
+      naturalInput2.value = localeSettings.value.error
+        ? ''
+        : formatHuman(result2.value.value, localizedFormatOptions.value);
     } catch {
       naturalInput2.value = result2.value.value.edtf;
     }
@@ -1251,6 +1326,7 @@ function onEdtfInput2() {
 
 async function onNaturalInput2() {
   if (isUpdatingFromEdtf) return;
+  secondarySource.value = 'natural';
 
   if (!naturalInput2.value.trim()) {
     naturalResult2.value = null;
@@ -1261,7 +1337,7 @@ async function onNaturalInput2() {
   try {
     const { parseNatural } = await import('@edtf-ts/natural');
     naturalError2.value = null;
-    naturalResult2.value = parseNatural(naturalInput2.value);
+    naturalResult2.value = parseNatural(naturalInput2.value, { locale: requireLocale() });
 
     if (naturalResult2.value && naturalResult2.value.length > 0) {
       isUpdatingFromNatural = true;
@@ -1275,7 +1351,7 @@ async function onNaturalInput2() {
       }
     }
   } catch (error: any) {
-    naturalError2.value = error.message || 'Failed to parse natural language input';
+    naturalError2.value = inputError(error, 'Failed to parse natural language input');
     naturalResult2.value = null;
   }
 }
@@ -1290,9 +1366,9 @@ async function parseNaturalInput2() {
   try {
     const { parseNatural } = await import('@edtf-ts/natural');
     naturalError2.value = null;
-    naturalResult2.value = parseNatural(naturalInput2.value);
+    naturalResult2.value = parseNatural(naturalInput2.value, { locale: requireLocale() });
   } catch (error: any) {
-    naturalError2.value = error.message || 'Failed to parse natural language input';
+    naturalError2.value = inputError(error, 'Failed to parse natural language input');
     naturalResult2.value = null;
   }
 }
@@ -1431,6 +1507,7 @@ function selectAgeExample(inputVal: string) {
 }
 
 async function onAgeInput() {
+  ageSource.value = 'age';
   if (!ageInput.value.trim()) {
     ageParseResult.value = null;
     ageParseError.value = null;
@@ -1441,7 +1518,10 @@ async function onAgeInput() {
   try {
     const { parseAgeBirthday } = await import('@edtf-ts/natural');
     ageParseError.value = null;
-    ageParseResult.value = parseAgeBirthday(ageInput.value, { currentDate: currentDate.value });
+    ageParseResult.value = parseAgeBirthday(ageInput.value, {
+      currentDate: currentDate.value,
+      locale: requireLocale(),
+    });
 
     // Auto-populate EDTF input and trigger render
     if (ageParseResult.value) {
@@ -1449,7 +1529,7 @@ async function onAgeInput() {
       await onAgeEdtfInput();
     }
   } catch (error: any) {
-    ageParseError.value = error.message || 'Failed to parse age input';
+    ageParseError.value = inputError(error, 'Failed to parse age input');
     ageParseResult.value = null;
   }
 }
@@ -1462,13 +1542,10 @@ async function onAgeEdtfInput() {
   }
 
   try {
-    const { renderAgeBirthday } = await import('@edtf-ts/core');
-    // Cache the function for sync use in computed
-    renderAgeBirthdayFn = renderAgeBirthday;
-
     ageRenderError.value = null;
     ageRenderResult.value = renderAgeBirthday(ageEdtfInput.value, {
       ...ageFormatOptions.value,
+      locale: requireLocale(),
       currentDate: currentDate.value,
     });
   } catch (error: any) {
@@ -1497,9 +1574,11 @@ watch(
 );
 
 onMounted(() => {
-  onEdtfInput();
-  onEdtfInput2();
-  onAgeInput();
+  browserLocale.value = navigator.language || 'en-US';
+  currentDate.value = new Date();
+  ageInput.value = ageExamples.value[0]?.input || '';
+  refreshLocale();
+  watch(activeLocale, refreshLocale);
 });
 </script>
 
@@ -1584,44 +1663,69 @@ onMounted(() => {
   color: var(--vp-c-text-1);
 }
 
-.label-with-locale {
+.natural-input-header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 0.35rem;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
-
-.label-with-locale label {
-  margin-bottom: 0;
-}
-
-.locale-input-wrapper {
-  display: flex;
+.natural-input-header .show-locales-option {
+  display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  font-weight: 400;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.show-locales-option input {
+  accent-color: var(--vp-c-brand-1);
 }
 
-.locale-label {
-  font-size: 0.75rem;
-  color: var(--vp-c-text-2);
-  white-space: nowrap;
-}
-
-.locale-input {
-  width: 70px;
-  padding: 0rem 0.4rem;
+.playground-locale {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 3px;
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+}
+.locale-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.locale-controls label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.locale-controls select,
+.locale-controls input {
+  max-width: 100%;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
-  font-size: 0.75rem;
-  font-family: var(--vp-font-family-mono);
+  font-size: 0.9rem;
 }
-
-.locale-input:focus {
-  outline: none;
-  border-color: var(--vp-c-brand);
+.locale-controls select {
+  appearance: auto;
+}
+.locale-controls input {
+  width: 10rem;
+}
+.locale-controls :focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
+}
+.playground-locale p {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+#locale-help {
+  color: var(--vp-c-text-2);
 }
 
 .input-status {

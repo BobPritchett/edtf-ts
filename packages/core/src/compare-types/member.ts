@@ -52,6 +52,10 @@ export interface Qualifiers {
  * Bounds are stored as BigInt milliseconds since Unix epoch for precision with extreme years.
  */
 export interface Member {
+  /** A family of discrete calendar units, not a continuous open interval. */
+  calendarRange?: { direction: 'earlier' | 'later'; anchor: import('../calendar.js').CalendarDate };
+  /** Datetimes without an offset are in a floating local-time domain. */
+  timeDomain?: 'absolute' | 'floating';
   /** Earliest possible start time (epoch milliseconds) */
   sMin: bigint | null;
 

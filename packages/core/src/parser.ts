@@ -19,139 +19,44 @@ import type { ParseResult, EDTFLevel } from './types/index.js';
  * @param level - Optional EDTF conformance level (0, 1, or 2). If omitted, auto-detects the level.
  * @returns ParseResult object with either `{ success: true, value, level }` or `{ success: false, errors }`
  */
-export function parse(input: string, level?: EDTFLevel): ParseResult {
-  // Auto-detect level if not specified
-  if (level === undefined) {
-    level = detectLevel(input);
-  }
-
-  // Try the specified level first
-  if (level === 2) {
-    const result = parseLevel2(input);
-    if (result.success) return result;
-
-    // Fall back to Level 1
-    const result1 = parseLevel1(input);
-    if (result1.success) return result1;
-
-    // Fall back to Level 0
-    return parseLevel0(input);
-  }
-
-  if (level === 1) {
-    // For Level 1, try parseLevel1 and only fall back to Level 0 for simple dates
-    const result = parseLevel1(input);
-    if (result.success) return result;
-
-    // If it failed and has Level 1 features, return the Level 1 error
-    // Don't fall back to Level 0 for things that look like Level 1 features
-    if (detectLevel(input) === 1) {
+export function parse(input: string, level: EDTFLevel = 2): ParseResult {
+  if (typeof input !== 'string' || !input.trim())
+    return {
+      success: false,
+      errors: [{ code: 'INVALID_FORMAT', message: 'Expected a non-empty EDTF string' }],
+    };
+  const text = input.trim();
+  if (/^\.\.[^/]/.test(text))
+    return {
+      success: false,
+      errors: [
+        {
+          code: 'INVALID_FORMAT',
+          message: 'Bare double-dot notation is not EDTF',
+          suggestion: 'Use ../DATE for an interval or [..DATE] for a date choice',
+        },
+      ],
+    };
+  let last: ParseResult = { success: false, errors: [] };
+  for (const parser of [parseLevel0, parseLevel1, parseLevel2]) {
+    const result = parser(text);
+    if (result.success) {
+      if (result.level > level)
+        return {
+          success: false,
+          errors: [
+            { code: 'UNSUPPORTED_LEVEL', message: 'Input requires EDTF level ' + result.level },
+          ],
+        };
       return result;
     }
-
-    // Otherwise try Level 0
-    return parseLevel0(input);
+    if (result.errors[0]?.code !== 'NOT_LEVEL_2' && !last.errors?.[0]?.position) last = result;
   }
-
-  // Level 0
-  return parseLevel0(input);
+  return last;
 }
 
-/**
- * Detect the EDTF conformance level of an input string
- * @param input - EDTF string
- * @returns Detected level (0, 1, or 2)
- */
-function detectLevel(input: string): EDTFLevel {
-  // Level 2 indicators (check first)
-  const level2Indicators = [
-    /^\[.*\]$/,        // Set notation
-    /^\{.*\}$/,        // List notation
-    /E\d+/,            // Exponential year
-    /S\d/,             // Significant digits
-    /-[234]\d(?:[?~%]|$)/, // Extended seasons (25-41 range)
-    /^[?~%]/,          // Individual qualification (qualifier at start)
-    /-[?~%]\d{2}/,     // Individual qualification (qualifier before month or day, not at end)
-    /\d{4}[?~%]-/,     // Group qualification (qualifier after year: 2004?-06)
-    /\d{2}[?~%]-\d{2}/ // Group qualification (qualifier after month: 2004-06~-11)
-  ];
-
-  for (const indicator of level2Indicators) {
-    if (indicator.test(input)) {
-      return 2;
-    }
-  }
-
-  // Level 2 unspecified digit patterns (partial unspecified - more complex than Level 1)
-  // Level 2: partial unspecified within year (156X, 15XX, 1XXX) with month or day components
-  // Level 2: partial unspecified month (1984-1X)
-  // Level 2: mixed patterns (XXXX-12-XX where month is specific but year/day are not)
-  if (/X/.test(input)) {
-    // Check for Level 2 partial unspecified patterns
-    const level2UnspecifiedPatterns = [
-      /^\d{1,3}X+-\d{2}/,     // Partial year with month: 156X-12, 15XX-12, 1XXX-12
-      /^X{4}-\d{2}-/,         // Fully unspecified year with specific month: XXXX-12-XX
-      /^\d{4}-\dX/,           // Partial unspecified month: 1984-1X
-      /^\d{1,3}X+-X{2}/,      // Partial year with unspecified month: 1XXX-XX
-    ];
-
-    for (const pattern of level2UnspecifiedPatterns) {
-      if (pattern.test(input)) {
-        return 2;
-      }
-    }
-
-    // Check for intervals containing Level 2 unspecified patterns
-    if (input.includes('/')) {
-      const [start, end] = input.split('/');
-      if (start && end) {
-        for (const pattern of level2UnspecifiedPatterns) {
-          if (pattern.test(start) || pattern.test(end)) {
-            return 2;
-          }
-        }
-        // Also check for XX day in intervals: 2004-06-XX
-        if (/\d{4}-\d{2}-XX/.test(start) || /\d{4}-\d{2}-XX/.test(end)) {
-          return 2;
-        }
-      }
-    }
-  }
-
-  // Level 1 indicators
-  const level1Indicators = [
-    /[?~%]/,           // Uncertainty/approximation qualifiers
-    /X/,               // Unspecified digits (Level 1: XXXX, XXXX-XX, XXXX-XX-XX)
-    /^\.\./,           // Open interval start
-    /\/\.\.$/,         // Open interval end
-    /^\/|\/$/,         // Unknown interval endpoint
-    /Y-?\d{5,}/,       // Extended year (5+ digits)
-    /-2[1-4](?:[?~%]|$)/,  // Level 1 seasons (21-24)
-    /^-\d+$/           // Negative year (years before year 0000)
-  ];
-
-  for (const indicator of level1Indicators) {
-    if (indicator.test(input)) {
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
-/**
- * Validate an EDTF string.
- *
- * @param input - EDTF string to validate
- * @param level - Optional EDTF conformance level (0, 1, or 2). If omitted, auto-detects the level.
- * @returns `true` if the input is a valid EDTF string, `false` otherwise
- */
+/** Validate against the requested maximum conformance level. */
 export function isValid(input: string, level?: EDTFLevel): boolean {
-  const result = parse(input, level);
-  return result.success;
+  return parse(input, level).success;
 }
-
-// Re-export individual level parsers
-export { parseLevel0 } from './parser/level0.js';
-export { parseLevel1 } from './parser/level1.js';
-export { parseLevel2 } from './parser/level2.js';
+export { parseLevel0, parseLevel1, parseLevel2 };

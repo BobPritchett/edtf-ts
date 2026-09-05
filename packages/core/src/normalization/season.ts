@@ -28,8 +28,8 @@ export interface SeasonMapping {
  * Default season mappings (Northern Hemisphere).
  *
  * Codes 21-24: Seasons
- * Codes 25-28: Hemispheric variations (not standard)
- * Codes 29-32: Meteorological seasons
+ * Codes 25-28: Northern Hemisphere
+ * Codes 29-32: Southern Hemisphere
  * Codes 33-36: Quarters
  * Codes 37-39: Quadrimesters
  * Codes 40-41: Semestrals
@@ -41,11 +41,15 @@ export const DEFAULT_SEASON_MAPPINGS: Record<number, SeasonMapping> = {
   23: { startMonth: 9, endMonth: 11, name: 'Autumn' }, // September-November
   24: { startMonth: 12, endMonth: 2, name: 'Winter' }, // December-February (crosses year)
 
-  // Southern Hemisphere seasons (offset by 6 months)
-  25: { startMonth: 9, endMonth: 11, name: 'Spring (SH)' },
-  26: { startMonth: 12, endMonth: 2, name: 'Summer (SH)' },
-  27: { startMonth: 3, endMonth: 5, name: 'Autumn (SH)' },
-  28: { startMonth: 6, endMonth: 8, name: 'Winter (SH)' },
+  // Explicit northern and southern hemisphere calendar conventions.
+  25: { startMonth: 3, endMonth: 5, name: 'Spring (NH)' },
+  26: { startMonth: 6, endMonth: 8, name: 'Summer (NH)' },
+  27: { startMonth: 9, endMonth: 11, name: 'Autumn (NH)' },
+  28: { startMonth: 12, endMonth: 2, name: 'Winter (NH)' },
+  29: { startMonth: 9, endMonth: 11, name: 'Spring (SH)' },
+  30: { startMonth: 12, endMonth: 2, name: 'Summer (SH)' },
+  31: { startMonth: 3, endMonth: 5, name: 'Autumn (SH)' },
+  32: { startMonth: 6, endMonth: 8, name: 'Winter (SH)' },
 
   // Quarters
   33: { startMonth: 1, endMonth: 3, name: 'Quarter 1' }, // Q1
@@ -124,7 +128,8 @@ export function normalizeSeason(
     startKind: 'closed',
     endKind: 'closed',
     precision: 'subyear',
-    qualifiers: qualifiers && (qualifiers.uncertain || qualifiers.approximate) ? qualifiers : undefined,
+    qualifiers:
+      qualifiers && (qualifiers.uncertain || qualifiers.approximate) ? qualifiers : undefined,
   };
 }
 

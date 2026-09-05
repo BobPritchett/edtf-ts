@@ -1,0 +1,694 @@
+[
+  {
+    "locale": "en-US",
+    "input": "July 1, 1975",
+    "expected": [
+      "1975-07-01"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1975?",
+    "expected": [
+      "1975?"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "summer 1975",
+    "expected": [
+      "1975-22"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1990s",
+    "expected": [
+      "199X"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "20th century",
+    "expected": [
+      "1901/2000"
+    ],
+    "reason": "Numbered centuries use historical boundaries; 19XX covers 1900–1999 instead.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1970 to 1980",
+    "expected": [
+      "1970/1980"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "since 1970",
+    "expected": [
+      "1970/.."
+    ],
+    "reason": "An open endpoint is distinct from the unknown endpoint in 1970/.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "circa 1970 to circa 1980",
+    "expected": [
+      "1970~/1980~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "January 1999 to December 1999",
+    "expected": [
+      "1999-01/1999-12"
+    ],
+    "reason": "An explicit interval is not the unspecified month 1999-XX.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "2020; 2021",
+    "expected": [
+      "{2020..2021}"
+    ],
+    "reason": "An inclusive list uses braces; adjacent years compact.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "January 12, 1940",
+    "expected": [
+      "1940-01-12"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "90",
+    "expected": [
+      "0090"
+    ],
+    "reason": "Bare short years are literal historical years; use 1990 explicitly or '90 for the rolling window (reference year 2026).",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "'90",
+    "expected": [
+      "1990"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "January 2008",
+    "expected": [
+      "2008-01"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "the year 1800",
+    "expected": [
+      "1800"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "10/7/2008",
+    "expected": [
+      "2008-10-07",
+      "2008-07-10"
+    ],
+    "reason": "US ordering ranks first; both valid interpretations survive.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1860?",
+    "expected": [
+      "1860?"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1862 (uncertain)",
+    "expected": [
+      "1862?"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "circa Feb 1812",
+    "expected": [
+      "1812-02~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "c.1860",
+    "expected": [
+      "1860~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "ca1860",
+    "expected": [
+      "1860~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "approx 1860",
+    "expected": [
+      "1860~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "ca. 1860s",
+    "expected": [
+      "186X~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "circa 1840s",
+    "expected": [
+      "184X~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "ca. 1860s?",
+    "expected": [
+      "186X%"
+    ],
+    "reason": "Modern EDTF combines uncertainty and approximation as %.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "c1800s?",
+    "expected": [
+      "18XX%",
+      "180X%"
+    ],
+    "reason": "Both century-block and decade readings remain ambiguous; a qualifier does not disambiguate them.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "January 12",
+    "expected": [
+      "XXXX-01-12",
+      "0012-01"
+    ],
+    "reason": "The missing-year day reading ranks first; January in year 0012 remains an alternative. Write January 0012 to select that year.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "January",
+    "expected": [
+      "XXXX-01"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "7/2008",
+    "expected": [
+      "2008-07"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "month in 1872",
+    "expected": [
+      "1872-XX"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "day in January 1872",
+    "expected": [
+      "1872-01-XX"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "day in 1872",
+    "expected": [
+      "1872-XX-XX"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "Autumn 1872",
+    "expected": [
+      "1872-23"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "Fall 1872",
+    "expected": [
+      "1872-23"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "earlier than 1928",
+    "expected": [
+      "[..1927]"
+    ],
+    "reason": "Strict event-date cutoff excludes 1928; it is a date-choice set.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "later than 1928",
+    "expected": [
+      "[1929..]"
+    ],
+    "reason": "Strict event-date cutoff excludes 1928.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "before January 1928",
+    "expected": [
+      "[..1927-12]"
+    ],
+    "reason": "Strict cutoff shifts one month.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "after about the 1920s",
+    "reject": true,
+    "reason": "A fuzzy cutoff has no exact exclusive boundary; use an exact cutoff or literal EDTF with the intended meaning.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1st century",
+    "expected": [
+      "0001/0100"
+    ],
+    "reason": "Historical century boundaries differ from 00XX.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "10c",
+    "expected": [
+      "0901/1000"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "19th century?",
+    "expected": [
+      "1801?/1900?"
+    ],
+    "reason": "The qualification applies to both boundaries of the century.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "a day in about Spring 1849?",
+    "reject": true,
+    "reason": "EDTF has no day component on a season: 1849-21-XX is invalid. Use circa Spring 1849? (1849-21%) if season precision is sufficient, or specify calendar dates.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1851-1852",
+    "expected": [
+      "1851/1852"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1851-1852; printed 1853-1854",
+    "reject": true,
+    "reason": "Bibliographic event annotations are not date syntax. The parser rejects the whole input instead of discarding the printing date.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1851-52",
+    "expected": [
+      "1851/1852"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1856-ca. 1865",
+    "expected": [
+      "1856/1865~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1860s-1870s",
+    "expected": [
+      "1860/1879"
+    ],
+    "reason": "Interval endpoints expand the decade start/end according to the existing parsing convention.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1920s - early 1930s",
+    "expected": [
+      "1920/1933"
+    ],
+    "reason": "The early-decade convention retains the explicit early modifier.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "1938, printed 1940s-1950s",
+    "reject": true,
+    "reason": "No silent truncation of annotated prose; parse each intended event separately.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "12th of unknown month, 1870",
+    "expected": [
+      "1870-XX-12"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "march 1988 - spring 1990",
+    "expected": [
+      "1988-03/1990-21"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "1 Juillet 1975",
+    "expected": [
+      "1975-07-01"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "1975?",
+    "expected": [
+      "1975?"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "été 1975",
+    "expected": [
+      "1975-22"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "Les années 1990",
+    "expected": [
+      "199X"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "20e siècle",
+    "expected": [
+      "1901/2000"
+    ],
+    "reason": "Numbered centuries are not equivalent to 19XX.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "De 1970 à 1980",
+    "expected": [
+      "1970/1980"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "Depuis 1970",
+    "expected": [
+      "1970/.."
+    ],
+    "reason": "Open, not unknown, end.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "De 1970 environ à 1980 environ",
+    "expected": [
+      "1970~/1980~"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "De Janvier 1999 à Décembre 1999",
+    "expected": [
+      "1999-01/1999-12"
+    ],
+    "reason": "Preserves explicit interval phrasing.",
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "2020; 2021",
+    "expected": [
+      "{2020..2021}"
+    ],
+    "origin": "User-provided examples"
+  },
+  {
+    "locale": "en-US",
+    "input": "mar the 29 1988",
+    "expected": [
+      "1988-03-29"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level0.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "bet the 03/28/1988 and the 03/30/1988",
+    "expected": [
+      "1988-03-28/1988-03-30"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level0.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "le 29 mar 1988",
+    "expected": [
+      "1988-03-29"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level0.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "du 28 mars 1988 au 30/03/1988",
+    "expected": [
+      "1988-03-28/1988-03-30"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level0.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "monday 03/29/1988",
+    "reject": true,
+    "reason": "March 29, 1988 was Tuesday; weekdays must match.",
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level0.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "jeudi 29/03/1988",
+    "reject": true,
+    "reason": "The weekday contradicts the date.",
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level0.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "from sep 1988 to 04/30/1988",
+    "reject": true,
+    "reason": "Reversed intervals are invalid.",
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level0.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "march 1988 - winter 2005?",
+    "expected": [
+      "1988-03/2005-24?"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level1.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "from around sep 10 1988? to unknown",
+    "expected": [
+      "1988-09-10%/"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level1.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "environ l'hiver 1988?",
+    "expected": [
+      "1988-24%"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level1.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "1988 - en cours",
+    "expected": [
+      "1988/.."
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level1.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "XIXth century",
+    "expected": [
+      "1801/1900"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/extras.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "XVIIIème siècle",
+    "expected": [
+      "1701/1800"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/extras.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "IV siecle",
+    "expected": [
+      "0301/0400"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/extras.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "2nd siècle après JC",
+    "expected": [
+      "0101/0200"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/extras.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "12th March 24BC",
+    "expected": [
+      "-0023-03-12"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/extras.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "printemps 4AEC",
+    "expected": [
+      "-0003-21"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/extras.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "bf. 1988",
+    "expected": [
+      "[..1987]"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level2.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "ap. 1988",
+    "expected": [
+      "[1989..]"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level2.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "<1988",
+    "expected": [
+      "[..1987]"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level2.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": ">1988",
+    "expected": [
+      "[1989..]"
+    ],
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level2.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "198u",
+    "reject": true,
+    "reason": "Legacy u masks are not modern EDTF. Use 198X.",
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level1.js"
+  },
+  {
+    "locale": "fr-FR",
+    "input": "11/0u/1988",
+    "reject": true,
+    "reason": "Legacy slash masks are intentionally unsupported. Use modern EDTF 1988-0X-11.",
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/fr/level2.js"
+  },
+  {
+    "locale": "en-US",
+    "input": "11/10/21988",
+    "reject": true,
+    "reason": "The selected EDTF profile supports extended years as year-only values, not extended full calendar dates.",
+    "origin": "https://github.com/nicompte/edtfy/blob/master/tests/en/level1.js"
+  }
+]

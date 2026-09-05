@@ -163,7 +163,14 @@ export { formatHuman, formatISO, formatRange, type FormatOptions } from './forma
 export { isInRange, isCompletelyInRange } from './validators.js';
 
 // Comparators
-export { compare, sort, earliest, latest, type ComparisonMode } from './comparators.js';
+export {
+  compare,
+  sort,
+  earliest,
+  latest,
+  type ComparisonMode,
+  type ComparisonResult,
+} from './comparators.js';
 
 // Age/Birthday constants and utilities
 export * from './age-constants.js';
@@ -228,3 +235,16 @@ export {
   getSearchPadding,
   getUnitForPrecision,
 } from './fuzzy-date/index.js';
+
+export {
+  formatYear,
+  formatCalendarDate,
+  shiftCalendarDate,
+  possibleDateBounds,
+} from './calendar.js';
+export type { CalendarDate } from './calendar.js';
+
+export { resolveLanguage, resolveDateOrder } from './locale.js';
+export type { Language, DateOrder } from './locale.js';
+
+export { compactYearRanges } from './collections.js';

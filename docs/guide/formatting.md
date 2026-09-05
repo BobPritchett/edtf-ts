@@ -11,7 +11,7 @@ EDTF dates can be formatted in several ways:
 
 ## The `.edtf` Property
 
-Every parsed EDTF object has an `.edtf` property containing the canonical EDTF string:
+Every parsed EDTF object has an `.edtf` property containing the original parsed EDTF string:
 
 ```typescript
 import { parse } from '@edtf-ts/core';
@@ -41,6 +41,44 @@ if (date.success) {
 }
 ```
 
+### English, Spanish, and French
+
+```typescript
+const result = parse('1870-03-12');
+if (result.success) {
+  formatHuman(result.value, { locale: 'es-ES' }); // '12 de marzo de 1870'
+  formatHuman(result.value, { locale: 'fr-FR' }); // '12 mars 1870'
+}
+```
+
+Locale selects complete phrases for qualifiers, intervals, sets, seasons, eras, and age/birthday rendering, as well as date names and ordering. Pass the same locale to `parseNatural` or `parseAgeBirthday`. APIs default to `en-US`; the [playground](../playground) instead starts with the browser’s locale and provides one page-wide override.
+
+Display phrases are not a lossless serialization format. Preserve the EDTF string for storage, including component qualification scope. See the [tested multilingual examples](./language-examples) and [migration guide](./semantics-migration).
+
+### Known days in unspecified months
+
+`1870-XX-12` retains day 12 even though the month is unspecified. It renders as `12th of unknown month, 1870` in English, `día 12 de mes desconocido, 1870` in Spanish, and `12 d'un mois inconnu, 1870` in French. These phrases round-trip, including ordinal endings, year zero, qualifiers, and unknown years. `XXXX-01-12` renders in English as `January 12, unknown year`.
+
+Date-to-season intervals such as `1988-03/1990-21` also round-trip. See the [compatibility review](./compatibility-review) for the preferred equivalents of the supplied rendering examples; modern EDTF keeps open/unknown endpoints, numbered centuries/year masks, and intervals/unspecified months distinct.
+
+### Compact year collections
+
+`formatHuman` groups runs of two or more adjacent exact years without sorting members or filling gaps. Sets remain date choices; lists still include every member. For `[1870..1880]`, the renderings are `One of: 1870 through 1880`, `Una de estas fechas: 1870 a 1880`, and `Une de ces dates: 1870 à 1880`. They parse back to the same compact EDTF range.
+
+Use `compactYearRanges` for the EDTF spelling itself:
+
+```typescript
+import { parse, compactYearRanges } from '@edtf-ts/core';
+
+const years = parse('[1667,1668,1670,1671,1672]');
+if (years.success) {
+  compactYearRanges(years.value); // '[1667..1668,1670..1672]'
+  years.value.edtf;              // '[1667,1668,1670,1671,1672]'
+}
+```
+
+Compaction preserves order, duplicates, open bounds, gaps, and qualifications. It does not merge qualified years, masks, seasons, months, or days. Non-collection values return their original string. Exact extended years render with all digits (without thousands separators or rounded “million” wording), preserving range endpoints.
+
 ### Format Options
 
 ```typescript
@@ -51,7 +89,7 @@ interface FormatOptions {
   /** Date format style */
   dateStyle?: 'full' | 'long' | 'medium' | 'short';  // default: 'full'
 
-  /** Locale for month/day names */
+  /** Locale for complete phrases, date names, and ordering */
   locale?: string;  // default: 'en-US'
 }
 ```

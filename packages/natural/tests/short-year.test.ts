@@ -86,9 +86,9 @@ describe('Short Year Support (1-3 digits)', () => {
 
     it('should parse "March 5"', () => {
       const results = parseNatural('March 5');
-      expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('0005-03');
-      expect(results[0].type).toBe('date');
+      expect(results.map((r) => r.edtf)).toEqual(['XXXX-03-05', '0005-03']);
+      expect(results.every((r) => r.ambiguous)).toBe(true);
+      expect(parseNatural('March 0005')[0].edtf).toBe('0005-03');
     });
   });
 

@@ -50,8 +50,8 @@ describe('parseAgeBirthday', () => {
   describe('age with birthday constraint', () => {
     it('should parse "20 y/o, March birthday"', () => {
       const result = parseAgeBirthday('20 y/o, March birthday', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('2005-03-?01/2005-03-?31');
-      expect(result.type).toBe('interval');
+      expect(result.edtf).toBe('[2005-03-01..2005-03-31]');
+      expect(result.type).toBe('set');
       expect(result.birthdayKnown).toEqual({ month: 3 });
     });
 
@@ -63,7 +63,9 @@ describe('parseAgeBirthday', () => {
     });
 
     it('should parse "20 years old, March 15th birthday"', () => {
-      const result = parseAgeBirthday('20 years old, March 15th birthday', { currentDate: REF_DATE });
+      const result = parseAgeBirthday('20 years old, March 15th birthday', {
+        currentDate: REF_DATE,
+      });
       expect(result.edtf).toBe('2005-03-15');
     });
 
@@ -118,7 +120,7 @@ describe('parseAgeBirthday', () => {
 
     it('should parse "early 20s, birthday 3/15"', () => {
       const result = parseAgeBirthday('early 20s, birthday 3/15', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('?2002-03-15/?2005-03-15');
+      expect(result.edtf).toBe('[2002-03-15,2003-03-15,2004-03-15,2005-03-15]');
       expect(result.birthdayKnown).toEqual({ month: 3, day: 15 });
     });
   });
@@ -162,7 +164,9 @@ describe('parseAgeBirthday', () => {
       // Should generate interval with known month August
       expect(result.ageRange).toEqual([1, 3]);
       expect(result.birthdayKnown).toEqual({ month: 8 });
-      expect(result.edtf).toMatch(/^\?20\d{2}-08-\?01\/\?20\d{2}-08-\?31$/);
+      expect(result.edtf).toBe(
+        '[2021-08-01..2021-08-31,2022-08-01..2022-08-31,2023-08-01..2023-08-31]'
+      );
     });
 
     it('should parse "infant, March birthday"', () => {
@@ -233,14 +237,17 @@ describe('parseAgeBirthday', () => {
     });
   });
 
-  describe('spec compliance examples', () => {
+  describe('application age conventions', () => {
     // Examples from the spec with currentDate = 2025-06-01
     const testCases = [
       { input: '20 yo', expected: '?2004-?06-?02/?2005-?06-?01' },
-      { input: '20 y/o, March birthday', expected: '2005-03-?01/2005-03-?31' },
+      { input: '20 y/o, March birthday', expected: '[2005-03-01..2005-03-31]' },
       { input: '20 y/o, birthday 3/15', expected: '2005-03-15' },
       { input: 'early 20s', expected: '?2001-?06-?02/?2005-?06-?01' },
-      { input: 'early 20s, birthday 3/15', expected: '?2002-03-15/?2005-03-15' },
+      {
+        input: 'early 20s, birthday 3/15',
+        expected: '[2002-03-15,2003-03-15,2004-03-15,2005-03-15]',
+      },
       { input: 'teenager', expected: '?2005-?06-?02/?2012-?06-?01' },
       { input: 'March 15th birthday', expected: 'XXXX-03-15' },
       { input: 'senior', expected: '../?1960-?06-?01' },

@@ -8,10 +8,12 @@
 import { parse } from './parser.js';
 import { isEDTFDate, isEDTFInterval } from './type-guards.js';
 import type { EDTFBase, EDTFDate, EDTFInterval } from './types/index.js';
-import {
-  calculateAge,
-  createDate,
-} from './utils-date-helpers.js';
+import { calculateAge, createDate } from './utils-date-helpers.js';
+import { possibleDateBounds } from './calendar.js';
+import { resolveLanguage } from './locale.js';
+import { messages } from './localized-format.js';
+import { localizedLifeStages } from './life-stage-locales.js';
+import type { EDTFSet, EDTFList } from './types/index.js';
 import { LIFE_STAGES } from './age-constants.js';
 
 // Re-export shared types and constants for backwards compatibility
@@ -102,9 +104,21 @@ export function calculateAgeRange(
     }
 
     // Exact date - calculate single age
-    const birthDate = createDateFromEDTF(date);
-    const age = calculateAge(birthDate, currentDate);
-    return [age, age];
+    return [
+      calculateAge(createDateFromEDTF(date, true), currentDate),
+      calculateAge(createDateFromEDTF(date), currentDate),
+    ];
+  }
+
+  if (parsed.type === 'Set' || parsed.type === 'List') {
+    const collection = parsed as EDTFSet | EDTFList;
+    const ranges = collection.values.map((value) => calculateAgeRange(value, currentDate));
+    return [
+      collection.later ? 0 : Math.min(...ranges.map((r) => r[0])),
+      collection.earlier || ranges.some((r) => r[1] === null)
+        ? null
+        : Math.max(...ranges.map((r) => r[1]!)),
+    ];
   }
 
   // Handle interval
@@ -115,7 +129,7 @@ export function calculateAgeRange(
     if (interval.openStart || !interval.start) {
       // Open start means no upper bound on age
       if (interval.end && isEDTFDate(interval.end)) {
-        const latestBirth = createDateFromEDTF(interval.end as EDTFDate);
+        const latestBirth = createDateFromEDTF(interval.end as EDTFDate, true);
         const minAge = calculateAge(latestBirth, currentDate);
         return [minAge, null];
       }
@@ -136,7 +150,7 @@ export function calculateAgeRange(
     // Both bounds present
     if (isEDTFDate(interval.start) && isEDTFDate(interval.end)) {
       const earliestBirth = createDateFromEDTF(interval.start as EDTFDate);
-      const latestBirth = createDateFromEDTF(interval.end as EDTFDate);
+      const latestBirth = createDateFromEDTF(interval.end as EDTFDate, true);
 
       const maxAge = calculateAge(earliestBirth, currentDate);
       const minAge = calculateAge(latestBirth, currentDate);
@@ -153,24 +167,11 @@ export function calculateAgeRange(
  * Create a JavaScript Date from an EDTFDate, stripping uncertainty markers.
  * Uses day 1 if day is unspecified, month 1 if month is unspecified.
  */
-function createDateFromEDTF(date: EDTFDate): Date {
-  const year = typeof date.year === 'string'
-    ? parseInt(date.year.replace(/[?~%X]/g, '0'), 10)
-    : date.year;
-
-  const month = typeof date.month === 'number'
-    ? date.month
-    : typeof date.month === 'string'
-      ? parseInt(date.month.replace(/[?~%X]/g, '1'), 10)
-      : 1;
-
-  const day = typeof date.day === 'number'
-    ? date.day
-    : typeof date.day === 'string'
-      ? parseInt(date.day.replace(/[?~%X]/g, '1'), 10)
-      : 1;
-
-  return createDate(year, month, day);
+function createDateFromEDTF(date: EDTFDate, latest = false): Date {
+  const bounds = possibleDateBounds(date.year, date.month, date.day)!;
+  const epoch = latest ? bounds.maxMs : bounds.minMs;
+  const utc = new Date(Number(epoch));
+  return createDate(utc.getUTCFullYear(), utc.getUTCMonth() + 1, utc.getUTCDate());
 }
 
 /**
@@ -179,6 +180,18 @@ function createDateFromEDTF(date: EDTFDate): Date {
  * Uses the parsed qualification properties from @edtf-ts/core.
  */
 function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: boolean } {
+  if (parsed.type === 'Set' || parsed.type === 'List') {
+    const c = parsed as EDTFSet | EDTFList;
+    if (c.earlier || c.later) return { month: false, day: false };
+    const parts = c.values.map((v) => ({
+      ...extractBirthday(v),
+      certain: extractBirthdayCertainty(v),
+    }));
+    return {
+      month: parts.every((p) => p.certain.month && p.month === parts[0]?.month),
+      day: parts.every((p) => p.certain.day && p.day === parts[0]?.day),
+    };
+  }
   if (isEDTFDate(parsed)) {
     const date = parsed as EDTFDate;
 
@@ -199,8 +212,9 @@ function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: bool
 
   if (isEDTFInterval(parsed)) {
     const interval = parsed as EDTFInterval;
-    const startDate = interval.start && isEDTFDate(interval.start) ? interval.start as EDTFDate : null;
-    const endDate = interval.end && isEDTFDate(interval.end) ? interval.end as EDTFDate : null;
+    const startDate =
+      interval.start && isEDTFDate(interval.start) ? (interval.start as EDTFDate) : null;
+    const endDate = interval.end && isEDTFDate(interval.end) ? (interval.end as EDTFDate) : null;
 
     // For intervals, month is certain if both bounds have the same month value
     // and neither has monthQualification.uncertain set
@@ -209,10 +223,13 @@ function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: bool
     const startMonth = startDate?.month;
     const endMonth = endDate?.month;
     // No qualification means the component is certain (not uncertain)
-    const startMonthUncertain = startDate ? (startDate.monthQualification?.uncertain ?? false) : true;
+    const startMonthUncertain = startDate
+      ? (startDate.monthQualification?.uncertain ?? false)
+      : true;
     const endMonthUncertain = endDate ? (endDate.monthQualification?.uncertain ?? false) : true;
 
-    const monthCertain = typeof startMonth === 'number' &&
+    const monthCertain =
+      typeof startMonth === 'number' &&
       typeof endMonth === 'number' &&
       startMonth === endMonth &&
       !startMonthUncertain &&
@@ -224,7 +241,8 @@ function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: bool
     const startDayUncertain = startDate ? (startDate.dayQualification?.uncertain ?? false) : true;
     const endDayUncertain = endDate ? (endDate.dayQualification?.uncertain ?? false) : true;
 
-    const dayCertain = typeof startDay === 'number' &&
+    const dayCertain =
+      typeof startDay === 'number' &&
       typeof endDay === 'number' &&
       startDay === endDay &&
       !startDayUncertain &&
@@ -240,6 +258,8 @@ function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: bool
  * Extract the birthday (month and day) from an EDTF expression.
  */
 function extractBirthday(parsed: EDTFBase): { month: number | null; day: number | null } {
+  if (parsed.type === 'Set' || parsed.type === 'List')
+    return extractBirthday((parsed as EDTFSet).values[0]!);
   if (isEDTFDate(parsed)) {
     const date = parsed as EDTFDate;
     return {
@@ -319,6 +339,49 @@ function formatAgeRange(
   options: RenderAgeBirthdayOptions
 ): string {
   const { ageStyle = 'vocabulary', ageLength = 'long' } = options;
+  const language = resolveLanguage(options.locale ?? 'en-US');
+  if (language !== 'en') {
+    const stage = ageStyle === 'vocabulary' ? matchLifeStage(minAge, maxAge) : null;
+    if (stage && localizedLifeStages[language][stage]) return localizedLifeStages[language][stage]!;
+    const decade = stage?.match(/^(?:(early|mid|late) )?(\d0)s$/);
+    if (decade) {
+      const terms =
+        language === 'es'
+          ? [
+              'veinte',
+              'treinta',
+              'cuarenta',
+              'cincuenta',
+              'sesenta',
+              'setenta',
+              'ochenta',
+              'noventa',
+            ]
+          : [
+              'vingtaine',
+              'trentaine',
+              'quarantaine',
+              'cinquantaine',
+              'soixantaine',
+              'septantaine',
+              'quatre-vingts',
+              'quatre-vingt-dix',
+            ];
+      const term = terms[Number(decade[2]) / 10 - 2];
+      if (term) {
+        const prefixes: Record<string, string> =
+          language === 'es'
+            ? { early: 'principios de los ', mid: 'mediados de los ', late: 'finales de los ' }
+            : { early: 'début de la ', mid: 'milieu de la ', late: 'fin de la ' };
+        return (decade[1] ? prefixes[decade[1]] : '') + term;
+      }
+    }
+    const amount =
+      maxAge === null ? minAge + '+' : maxAge === minAge ? String(minAge) : minAge + '–' + maxAge;
+    const plural =
+      minAge === maxAge && new Intl.PluralRules(options.locale).select(minAge) === 'one' ? 0 : 1;
+    return amount + (ageLength === 'short' ? '' : ' ' + messages[language].age[plural]);
+  }
 
   // Try vocabulary match if enabled
   if (ageStyle === 'vocabulary') {
@@ -327,8 +390,7 @@ function formatAgeRange(
   }
 
   // Numeric formatting
-  const suffix = ageLength === 'short' ? 'yo' :
-    ageLength === 'medium' ? ' y/o' : ' years old';
+  const suffix = ageLength === 'short' ? 'yo' : ageLength === 'medium' ? ' y/o' : ' years old';
 
   // Open-ended
   if (maxAge === null) {
@@ -359,6 +421,12 @@ function formatBirthday(
     return null;
   }
 
+  if (new Intl.Locale(locale).language !== 'en') {
+    return new Intl.DateTimeFormat(locale, {
+      month: monthFormat,
+      ...(certainty.day && day !== null ? { day: dayFormat } : {}),
+    }).format(new Date(2000, month - 1, day ?? 1));
+  }
   // Format month name
   const monthFormatter = new Intl.DateTimeFormat(locale, { month: monthFormat });
   const monthDate = new Date(2000, month - 1, 1);
@@ -487,13 +555,14 @@ export function renderAgeBirthday(
   // Format age
   let ageStr = formatAgeRange(minAge, maxAge, options);
 
+  const language = resolveLanguage(options.locale ?? 'en-US');
   // Add qualifier prefix if present
   if (qualifier === 'both') {
-    ageStr = `approximately/possibly ${ageStr}`;
+    ageStr = `${language === 'es' ? 'aproximadamente/posiblemente' : language === 'fr' ? 'environ/peut-être' : 'approximately/possibly'} ${ageStr}`;
   } else if (qualifier === 'uncertain') {
-    ageStr = `possibly ${ageStr}`;
+    ageStr = `${language === 'es' ? 'posiblemente' : language === 'fr' ? 'peut-être' : 'possibly'} ${ageStr}`;
   } else if (qualifier === 'approximate') {
-    ageStr = `approximately ${ageStr}`;
+    ageStr = `${language === 'es' ? 'aproximadamente' : language === 'fr' ? 'environ' : 'approximately'} ${ageStr}`;
   }
 
   // Format birthday
@@ -520,6 +589,11 @@ export function renderAgeBirthday(
       break;
   }
 
+  if (language !== 'en' && birthdayStr) {
+    const bday = messages[language].birthday + ' ' + birthdayStr;
+    if (format === 'birthday-only') formatted = bday;
+    else if (format !== 'age-only') formatted = ageStr + ', ' + bday;
+  }
   return {
     age: ageStr,
     birthday: birthdayStr,

@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "lib": ["ES2020"],
+    "lib": [
+      "ES2020",
+      "ES2021.Intl"
+    ],
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowJs": true,
@@ -23,5 +26,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "dist", "**/dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/dist"
+  ]
 }

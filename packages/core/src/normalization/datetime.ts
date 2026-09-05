@@ -84,11 +84,18 @@ export function normalizeDateTime(datetime: EDTFDateTime): Member {
 
   // For date-times, start and end are very close (same time unit)
   // sMax and eMin are the same as sMin and eMax
+  const offsetMatch = datetime.timezone?.match(/^([+-])(\d{2})(?::(\d{2}))?$/);
+  const offset = offsetMatch
+    ? (offsetMatch[1] === '-' ? -1 : 1) *
+      (Number(offsetMatch[2]) * 60 + Number(offsetMatch[3] ?? 0))
+    : 0;
+  const shift = BigInt(offset) * 60000n;
   return {
-    sMin,
-    sMax: sMin, // Start is precise to the millisecond
-    eMin: eMax, // End is precise to the millisecond
-    eMax,
+    timeDomain: datetime.timezone ? 'absolute' : 'floating',
+    sMin: sMin - shift,
+    sMax: sMin - shift, // Start is precise to the millisecond
+    eMin: eMax - shift, // End is precise to the millisecond
+    eMax: eMax - shift,
     startKind: 'closed',
     endKind: 'closed',
     precision,

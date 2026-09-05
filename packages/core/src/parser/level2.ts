@@ -1,10 +1,11 @@
+import { formatCalendarDate, shiftCalendarDate, type CalendarDate } from '../calendar.js';
 import type {
   ParseResult,
   EDTFDate,
   EDTFSeason,
   EDTFSet,
   EDTFList,
-  EDTFInterval
+  EDTFInterval,
 } from '../types/index.js';
 import {
   calculateEpochMs,
@@ -36,20 +37,7 @@ export function parseLevel2(input: string): ParseResult {
     return parseList(input);
   }
 
-  // Try to parse as interval with Level 2 features (contains '/')
-  // Check if it has partial qualifications that indicate Level 2
-  // Level 2: qualifier BEFORE component (2004-~06) or qualifier AFTER non-final component (2004?-06)
-  // Level 1: qualifier AFTER final component only (1984?, 2004-06~)
-  if (input.includes('/')) {
-    const hasLevel2Features = /^[?~%]\d{4}-/.test(input) ||  // ?2004-06 (qualifier before year at start)
-                               /-[?~%]\d{2}/.test(input) ||   // 2004-~06 or 2004-06-~01 (qualifier before month/day)
-                               /\d{4}[?~%]-/.test(input) ||   // 2004?-06 (qualifier after year, before month)
-                               /\d{2}[?~%]-/.test(input);     // 06?-01 (qualifier after month, before day)
-
-    if (hasLevel2Features) {
-      return parseLevel2Interval(input);
-    }
-  }
+  if (input.includes('/')) return parseLevel2Interval(input);
 
   // Try to parse exponential year with optional significant digits (Y-17E7 or Y3388E2S3 format)
   if (/^Y-?\d+E\d+/.test(input)) {
@@ -66,16 +54,23 @@ export function parseLevel2(input: string): ParseResult {
     return parseSignificantDigits(input);
   }
 
+  if (/^-?\d{4}-(?:2[5-9]|3\d|4[01])[?~%]?$/.test(input)) return parseExtendedSeason(input);
+
   // Try to parse partial qualification
   // Individual: ?2004-06-~11 or 2004-~06-11 (qualifier before component)
   // Group: 2004?-06-11 or 2004-06~-11 (qualifier after component)
-  if (/^[?~%]/.test(input) || /-[?~%]\d{2}/.test(input) || /\d{4}[?~%]/.test(input) || /\d{2}[?~%]/.test(input)) {
+  if (
+    /^[?~%]/.test(input) ||
+    /-[?~%]\d{2}/.test(input) ||
+    /\d{4}[?~%]/.test(input) ||
+    /\d{2}[?~%]/.test(input)
+  ) {
     return parsePartialQualification(input);
   }
 
   // Try to parse extended season (25-41 range)
-  if (/^\d{4}-[234]\d/.test(input)) {
-    const seasonNum = parseInt(input.slice(5, 7), 10);
+  if (/^-?\d{4}-[234]\d/.test(input)) {
+    const seasonNum = Number(input.match(/-([234]\d)/)![1]);
     if (seasonNum >= 21 && seasonNum <= 41) {
       return parseExtendedSeason(input);
     }
@@ -98,10 +93,12 @@ function parseLevel2Interval(input: string): ParseResult<EDTFInterval> {
   if (parts.length !== 2) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_INTERVAL',
-        message: 'Interval must have exactly one "/" separator'
-      }]
+      errors: [
+        {
+          code: 'INVALID_INTERVAL',
+          message: 'Interval must have exactly one "/" separator',
+        },
+      ],
     };
   }
 
@@ -117,29 +114,17 @@ function parseLevel2Interval(input: string): ParseResult<EDTFInterval> {
   if (startStr === '..') {
     openStart = true;
   } else if (startStr === '') {
-    start = null;  // Unknown start
+    start = null; // Unknown start
   } else {
-    // Try to parse as extended season first (25-41), then partial qualification, then fall back
-    let startResult: ParseResult<EDTFDate | EDTFSeason>;
-
-    if (startStr.match(/^\d{4}-[234]\d/)) {
-      const seasonNum = parseInt(startStr.slice(5, 7), 10);
-      if (seasonNum >= 25 && seasonNum <= 41) {
-        startResult = parseExtendedSeason(startStr);
-      } else {
-        startResult = parsePartialQualification(startStr);
-      }
-    } else {
-      startResult = parsePartialQualification(startStr);
-    }
+    const startResult = parseIntervalEndpoint(startStr);
 
     if (!startResult.success) {
       return {
         success: false,
-        errors: startResult.errors.map(err => ({
+        errors: startResult.errors.map((err) => ({
           ...err,
-          message: `Invalid interval start: ${err.message}`
-        }))
+          message: `Invalid interval start: ${err.message}`,
+        })),
       };
     }
     start = startResult.value as EDTFDate | EDTFSeason;
@@ -149,29 +134,17 @@ function parseLevel2Interval(input: string): ParseResult<EDTFInterval> {
   if (endStr === '..') {
     openEnd = true;
   } else if (endStr === '') {
-    end = null;  // Unknown end
+    end = null; // Unknown end
   } else {
-    // Try to parse as extended season first (25-41), then partial qualification, then fall back
-    let endResult: ParseResult<EDTFDate | EDTFSeason>;
-
-    if (endStr.match(/^\d{4}-[234]\d/)) {
-      const seasonNum = parseInt(endStr.slice(5, 7), 10);
-      if (seasonNum >= 25 && seasonNum <= 41) {
-        endResult = parseExtendedSeason(endStr);
-      } else {
-        endResult = parsePartialQualification(endStr);
-      }
-    } else {
-      endResult = parsePartialQualification(endStr);
-    }
+    const endResult = parseIntervalEndpoint(endStr);
 
     if (!endResult.success) {
       return {
         success: false,
-        errors: endResult.errors.map(err => ({
+        errors: endResult.errors.map((err) => ({
           ...err,
-          message: `Invalid interval end: ${err.message}`
-        }))
+          message: `Invalid interval end: ${err.message}`,
+        })),
       };
     }
     end = endResult.value as EDTFDate | EDTFSeason;
@@ -179,13 +152,15 @@ function parseLevel2Interval(input: string): ParseResult<EDTFInterval> {
 
   // Validate interval order (if both endpoints are known and not open)
   if (start && end && !openStart && !openEnd) {
-    if (start.min > end.max) {
+    if (start.minMs > end.maxMs) {
       return {
         success: false,
-        errors: [{
-          code: 'INVALID_INTERVAL_ORDER',
-          message: 'Interval start must be before or equal to end'
-        }]
+        errors: [
+          {
+            code: 'INVALID_INTERVAL_ORDER',
+            message: 'Interval start must be before or equal to end',
+          },
+        ],
       };
     }
   }
@@ -224,15 +199,15 @@ function parseLevel2Interval(input: string): ParseResult<EDTFInterval> {
         start: this.start?.toJSON(),
         end: this.end?.toJSON(),
         ...(this.openStart && { openStart: this.openStart }),
-        ...(this.openEnd && { openEnd: this.openEnd })
+        ...(this.openEnd && { openEnd: this.openEnd }),
       };
-    }
+    },
   };
 
   return {
     success: true,
     value: edtfInterval,
-    level: 2
+    level: 2,
   };
 }
 
@@ -247,122 +222,75 @@ function parseSet(input: string): ParseResult<EDTFSet> {
   let earlier = false;
   let later = false;
 
-  // Check for open-ended sets
-  if (content.startsWith('..')) {
-    earlier = true;
-    const remaining = content.slice(2);
-    const parts = remaining.split(',').map(p => p.trim()).filter(p => p);
-    for (const part of parts) {
-      const result = parseSetValue(part);
-      if (!result.success) return result;
-      values.push(result.value as EDTFDate | EDTFSeason);
+  if (/\s/.test(content))
+    return {
+      success: false,
+      errors: [{ code: 'INVALID_SET', message: 'Whitespace is not allowed inside an EDTF set' }],
+    };
+  const parts = content.split(',');
+  for (let i = 0; i < parts.length; i++) {
+    let part = parts[i]!;
+    if (i === 0 && part.startsWith('..')) {
+      earlier = true;
+      part = part.slice(2);
     }
-  } else if (content.endsWith('..')) {
-    later = true;
-    const remaining = content.slice(0, -2);
-    const parts = remaining.split(',').map(p => p.trim()).filter(p => p);
-    for (const part of parts) {
-      const result = parseSetValue(part);
-      if (!result.success) return result;
-      values.push(result.value as EDTFDate | EDTFSeason);
+    if (i === parts.length - 1 && part.endsWith('..')) {
+      later = true;
+      part = part.slice(0, -2);
     }
-  } else {
-    // Regular set or range
-    const parts = content.split(',').map(p => p.trim());
-    for (const part of parts) {
-      if (part.includes('..')) {
-        // Range: 1670..1672
-        const [start, end] = part.split('..').map(p => p.trim());
-        if (!start || !end) {
-          return {
-            success: false,
-            errors: [{ code: 'INVALID_RANGE', message: 'Invalid range in set' }]
-          };
-        }
-        const startResult = parseSetValue(start);
-        const endResult = parseSetValue(end);
-        if (!startResult.success) return startResult;
-        if (!endResult.success) return endResult;
-
-        // Expand range based on precision
-        const startDate = startResult.value as EDTFDate;
-        const endDate = endResult.value as EDTFDate;
-
-        if (typeof startDate.year === 'number' && typeof endDate.year === 'number') {
-          const precision = startDate.precision;
-
-          // Validate that both dates have the same precision for range expansion
-          if (startDate.precision !== endDate.precision) {
-            return {
-              success: false,
-              errors: [{ code: 'INVALID_RANGE', message: 'Range endpoints must have the same precision' }]
-            };
-          }
-
-          if (precision === 'day') {
-            // Expand day range (e.g., 2025-01-15..2025-01-20)
-            const startTime = startDate.min.getTime();
-            const endTime = endDate.min.getTime();
-            const oneDayMs = 24 * 60 * 60 * 1000;
-
-            for (let time = startTime; time <= endTime; time += oneDayMs) {
-              const d = new Date(time);
-              const dateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-              const result = parseSetValue(dateStr);
-              if (result.success) {
-                values.push(result.value as EDTFDate);
-              }
-            }
-          } else if (precision === 'month') {
-            // Expand month range (e.g., 2025-01..2026-11)
-            let currentYear = startDate.year;
-            let currentMonth = (startDate.month as number);
-            const endYear = endDate.year;
-            const endMonth = (endDate.month as number);
-
-            while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
-              const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-              const result = parseSetValue(dateStr);
-              if (result.success) {
-                values.push(result.value as EDTFDate);
-              }
-
-              currentMonth++;
-              if (currentMonth > 12) {
-                currentMonth = 1;
-                currentYear++;
-              }
-            }
-          } else {
-            // Expand year range (e.g., 1670..1672)
-            for (let y = startDate.year; y <= endDate.year; y++) {
-              const yearResult = parseSetValue(y.toString());
-              if (yearResult.success) {
-                values.push(yearResult.value as EDTFDate);
-              }
-            }
-          }
-        }
-      } else {
-        const result = parseSetValue(part);
-        if (!result.success) return result;
-        values.push(result.value as EDTFDate | EDTFSeason);
-      }
+    if (!part)
+      return { success: false, errors: [{ code: 'INVALID_SET', message: 'Empty set member' }] };
+    const endpoints = part.split('..');
+    if (endpoints.length > 2)
+      return { success: false, errors: [{ code: 'INVALID_RANGE', message: 'Malformed range' }] };
+    const firstResult = parseSetValue(endpoints[0]!);
+    if (!firstResult.success) return firstResult;
+    if (endpoints.length === 1) {
+      values.push(firstResult.value);
+      continue;
+    }
+    const lastResult = parseSetValue(endpoints[1]!);
+    if (!lastResult.success) return lastResult;
+    const first = firstResult.value,
+      last = lastResult.value;
+    if (
+      first.type !== 'Date' ||
+      last.type !== 'Date' ||
+      first.precision !== last.precision ||
+      /[X?~%]/.test(part) ||
+      first.minMs > last.maxMs
+    )
+      return {
+        success: false,
+        errors: [
+          {
+            code: 'INVALID_RANGE',
+            message: 'Range endpoints must be ordered exact dates of equal precision',
+          },
+        ],
+      };
+    let current = { year: first.year, month: first.month, day: first.day } as CalendarDate;
+    while (true) {
+      const value = parseLevel1Date(formatCalendarDate(current));
+      if (!value.success) return value;
+      values.push(value.value);
+      if (value.value.minMs >= last.minMs) break;
+      current = shiftCalendarDate(current, 1);
     }
   }
 
   if (values.length === 0) {
     return {
       success: false,
-      errors: [{ code: 'EMPTY_SET', message: 'Set cannot be empty' }]
+      errors: [{ code: 'EMPTY_SET', message: 'Set cannot be empty' }],
     };
   }
 
   // Calculate min/max from values using bigint
-  const allMinMs = values.map(v => v.minMs);
-  const allMaxMs = values.map(v => v.maxMs);
-  const calculatedMinMs = allMinMs.reduce((a, b) => a < b ? a : b);
-  const calculatedMaxMs = allMaxMs.reduce((a, b) => a > b ? a : b);
+  const allMinMs = values.map((v) => v.minMs);
+  const allMaxMs = values.map((v) => v.maxMs);
+  const calculatedMinMs = allMinMs.reduce((a, b) => (a < b ? a : b));
+  const calculatedMaxMs = allMaxMs.reduce((a, b) => (a > b ? a : b));
 
   const finalMinMs = earlier ? DATE_MIN_MS : calculatedMinMs;
   const finalMaxMs = later ? DATE_MAX_MS : calculatedMaxMs;
@@ -390,14 +318,14 @@ function parseSet(input: string): ParseResult<EDTFSet> {
     toJSON() {
       return {
         type: this.type,
-        values: this.values.map(v => v.toJSON()),
+        values: this.values.map((v) => v.toJSON()),
         ...(this.earlier && { earlier: true }),
-        ...(this.later && { later: true })
+        ...(this.later && { later: true }),
       };
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfSet, level: 2 };
@@ -424,11 +352,11 @@ function parseList(input: string): ParseResult<EDTFList> {
     toJSON() {
       return {
         type: this.type,
-        values: this.values.map(v => v.toJSON()),
+        values: this.values.map((v) => v.toJSON()),
         ...(this.earlier && { earlier: true }),
-        ...(this.later && { later: true })
+        ...(this.later && { later: true }),
       };
-    }
+    },
   };
 
   return { success: true, value: edtfList, level: 2 };
@@ -444,7 +372,7 @@ function parseSetValue(value: string): ParseResult<EDTFDate | EDTFSeason> {
   }
 
   // Extended seasons without qualifiers (21-41)
-  if (/^\d{4}-[234]\d$/.test(value)) {
+  if (/^-?\d{4}-[234]\d[?~%]?$/.test(value)) {
     return parseExtendedSeason(value);
   }
 
@@ -488,7 +416,7 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
   if (!match) {
     return {
       success: false,
-      errors: [{ code: 'INVALID_EXPONENTIAL', message: 'Invalid exponential year format' }]
+      errors: [{ code: 'INVALID_EXPONENTIAL', message: 'Invalid exponential year format' }],
     };
   }
 
@@ -496,6 +424,13 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
   const exponent = parseInt(match[2]!, 10);
   const sigDigits = match[3] ? parseInt(match[3], 10) : undefined;
   const year = base * Math.pow(10, exponent);
+  if (!Number.isSafeInteger(year))
+    return {
+      success: false,
+      errors: [
+        { code: 'YEAR_OUT_OF_RANGE', message: 'Year must be representable as a safe integer' },
+      ],
+    };
 
   const minMsValue = yearStartMs(year);
   const maxMsValue = yearEndMs(year);
@@ -526,7 +461,7 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
       const result: any = {
         type: this.type,
         year: this.year,
-        exponential: this.exponential
+        exponential: this.exponential,
       };
       if (this.significantDigitsYear !== undefined) {
         result.significantDigits = this.significantDigitsYear;
@@ -536,7 +471,7 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfDate, level: 2 };
@@ -551,12 +486,24 @@ function parseExtendedYearSignificantDigits(input: string): ParseResult<EDTFDate
   if (!match) {
     return {
       success: false,
-      errors: [{ code: 'INVALID_EXTENDED_YEAR', message: 'Invalid extended year with significant digits format' }]
+      errors: [
+        {
+          code: 'INVALID_EXTENDED_YEAR',
+          message: 'Invalid extended year with significant digits format',
+        },
+      ],
     };
   }
 
   const year = parseInt(match[1]!, 10);
   const sigDigits = parseInt(match[2]!, 10);
+  if (!Number.isSafeInteger(year))
+    return {
+      success: false,
+      errors: [
+        { code: 'YEAR_OUT_OF_RANGE', message: 'Year must be representable as a safe integer' },
+      ],
+    };
 
   const minMsValue = yearStartMs(year);
   const maxMsValue = yearEndMs(year);
@@ -586,14 +533,14 @@ function parseExtendedYearSignificantDigits(input: string): ParseResult<EDTFDate
       const result: any = {
         type: this.type,
         year: this.year,
-        significantDigits: this.significantDigitsYear
+        significantDigits: this.significantDigitsYear,
       };
       if (this.isBoundsClamped) result.isBoundsClamped = this.isBoundsClamped;
       return result;
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfDate, level: 2 };
@@ -608,7 +555,9 @@ function parseSignificantDigits(input: string): ParseResult<EDTFDate> {
   if (!match) {
     return {
       success: false,
-      errors: [{ code: 'INVALID_SIGNIFICANT_DIGITS', message: 'Invalid significant digits format' }]
+      errors: [
+        { code: 'INVALID_SIGNIFICANT_DIGITS', message: 'Invalid significant digits format' },
+      ],
     };
   }
 
@@ -641,12 +590,12 @@ function parseSignificantDigits(input: string): ParseResult<EDTFDate> {
       return {
         type: this.type,
         year: this.year,
-        significantDigits: this.significantDigitsYear
+        significantDigits: this.significantDigitsYear,
       };
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfDate, level: 2 };
@@ -666,16 +615,21 @@ function parseSignificantDigits(input: string): ParseResult<EDTFDate> {
 function parsePartialQualification(input: string): ParseResult<EDTFDate> {
   // Pattern: [?~%]?YYYY[?~%]?[-[?~%]?MM[?~%]?[-[?~%]?DD[?~%]?]]
   // Supports qualifiers both before (individual) and after (group) components
-  const match = input.match(/^([?~%])?(-?\d{4})([?~%])?(?:-([?~%])?(\d{2})([?~%])?(?:-([?~%])?(\d{2})([?~%])?)?)?$/);
+  const match = input.match(
+    /^([?~%])?(-?\d{4})([?~%])?(?:-([?~%])?(\d{2})([?~%])?(?:-([?~%])?(\d{2})([?~%])?)?)?$/
+  );
 
   if (!match) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_FORMAT',
-        message: `Invalid partial qualification format: ${input}`,
-        suggestion: 'Use format like ?2004-06-~11 (uncertain year, approximate day) or 2004?-06-11 (uncertain year)'
-      }]
+      errors: [
+        {
+          code: 'INVALID_FORMAT',
+          message: `Invalid partial qualification format: ${input}`,
+          suggestion:
+            'Use format like ?2004-06-~11 (uncertain year, approximate day) or 2004?-06-11 (uncertain year)',
+        },
+      ],
     };
   }
 
@@ -693,10 +647,12 @@ function parsePartialQualification(input: string): ParseResult<EDTFDate> {
   if (month !== undefined && (month < 1 || month > 12)) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_MONTH',
-        message: `Month must be 01-12, got: ${match[5]}`
-      }]
+      errors: [
+        {
+          code: 'INVALID_MONTH',
+          message: `Month must be 01-12, got: ${match[5]}`,
+        },
+      ],
     };
   }
 
@@ -706,10 +662,12 @@ function parsePartialQualification(input: string): ParseResult<EDTFDate> {
     if (day < 1 || day > maxDay) {
       return {
         success: false,
-        errors: [{
-          code: 'INVALID_DAY',
-          message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[8]}`
-        }]
+        errors: [
+          {
+            code: 'INVALID_DAY',
+            message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[8]}`,
+          },
+        ],
       };
     }
   }
@@ -722,35 +680,21 @@ function parsePartialQualification(input: string): ParseResult<EDTFDate> {
   let monthQualification: import('../types/index.js').Qualification | undefined;
   let dayQualification: import('../types/index.js').Qualification | undefined;
 
-  // Process qualifications from right to left (group qualifications cascade left)
-  if (dayQualAfter) {
-    // Group qualification: applies to day, month, and year
-    const qual = parseQualificationChar(dayQualAfter);
-    dayQualification = qual;
-    monthQualification = qual;
-    yearQualification = qual;
-  } else if (dayQualBefore) {
-    // Individual qualification: applies only to day
-    dayQualification = parseQualificationChar(dayQualBefore);
-  }
-
-  if (monthQualAfter && !dayQualAfter) {
-    // Group qualification: applies to month and year (unless overridden by day group qual)
-    const qual = parseQualificationChar(monthQualAfter);
-    monthQualification = qual;
-    yearQualification = qual;
-  } else if (monthQualBefore && !monthQualification) {
-    // Individual qualification: applies only to month (if not already set)
-    monthQualification = parseQualificationChar(monthQualBefore);
-  }
-
-  if (yearQualAfter && !monthQualAfter && !dayQualAfter) {
-    // Group qualification: applies to year only (unless overridden by month/day group qual)
-    yearQualification = parseQualificationChar(yearQualAfter);
-  } else if (yearQualBefore && !yearQualification) {
-    // Individual qualification: applies only to year (if not already set)
-    yearQualification = parseQualificationChar(yearQualBefore);
-  }
+  // Combine every qualifier that applies to a component; a later group cannot erase an earlier qualifier.
+  const combine = (...chars: (string | undefined)[]) => {
+    const uncertain = chars.some((c) => c === '?' || c === '%');
+    const approximate = chars.some((c) => c === '~' || c === '%');
+    return uncertain && approximate
+      ? { uncertainApproximate: true }
+      : uncertain
+        ? { uncertain: true }
+        : approximate
+          ? { approximate: true }
+          : undefined;
+  };
+  yearQualification = combine(yearQualBefore, yearQualAfter, monthQualAfter, dayQualAfter);
+  monthQualification = combine(monthQualBefore, monthQualAfter, dayQualAfter);
+  dayQualification = combine(dayQualBefore, dayQualAfter);
 
   // Pre-calculate bounds
   const minMonth = month ?? 1;
@@ -794,7 +738,7 @@ function parsePartialQualification(input: string): ParseResult<EDTFDate> {
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfDate, level: 2 };
@@ -825,11 +769,11 @@ function parseQualificationChar(char: string): import('../types/index.js').Quali
  * 40-41: Semestrals
  */
 function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
-  const match = input.match(/^(\d{4})-([234]\d)$/);
+  const match = input.match(/^(-?\d{4})-([234]\d)([?~%])?$/);
   if (!match) {
     return {
       success: false,
-      errors: [{ code: 'INVALID_SEASON', message: 'Invalid season format' }]
+      errors: [{ code: 'INVALID_SEASON', message: 'Invalid season format' }],
     };
   }
 
@@ -840,7 +784,7 @@ function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
   if (season < 21 || season > 41) {
     return {
       success: false,
-      errors: [{ code: 'INVALID_SEASON', message: `Season must be 21-41, got ${season}` }]
+      errors: [{ code: 'INVALID_SEASON', message: `Season must be 21-41, got ${season}` }],
     };
   }
 
@@ -848,7 +792,7 @@ function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
   if (!mapping) {
     return {
       success: false,
-      errors: [{ code: 'INVALID_SEASON', message: `Unknown season code: ${season}` }]
+      errors: [{ code: 'INVALID_SEASON', message: `Unknown season code: ${season}` }],
     };
   }
 
@@ -863,6 +807,7 @@ function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
     level: season >= 25 ? 2 : 1,
     edtf: input,
     precision: 'month',
+    ...(match[3] ? { qualification: parseQualificationChar(match[3]) } : {}),
     year,
     season,
     get min() {
@@ -881,15 +826,21 @@ function parseExtendedSeason(input: string): ParseResult<EDTFSeason> {
       return {
         type: this.type,
         year: this.year,
-        season: this.season
+        season: this.season,
       };
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfSeason, level: season >= 25 ? 2 : 1 };
 }
 
 // Exports are handled via imports from level1
+
+function parseIntervalEndpoint(input: string): ParseResult<EDTFDate | EDTFSeason> {
+  if (/^-?\d{4}-(?:2[1-9]|3\d|4[01])[?~%]?$/.test(input)) return parseExtendedSeason(input);
+  const basic = parseLevel1Date(input);
+  return basic.success ? basic : parsePartialQualification(input);
+}

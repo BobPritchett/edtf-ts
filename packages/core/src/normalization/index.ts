@@ -6,7 +6,14 @@
 
 import type { EDTFBase } from '../types/index.js';
 import type { Shape, Member } from '../compare-types/index.js';
-import { isEDTFDate, isEDTFDateTime, isEDTFInterval, isEDTFSeason, isEDTFSet, isEDTFList } from '../type-guards.js';
+import {
+  isEDTFDate,
+  isEDTFDateTime,
+  isEDTFInterval,
+  isEDTFSeason,
+  isEDTFSet,
+  isEDTFList,
+} from '../type-guards.js';
 import { normalizeDate } from './date.js';
 import { normalizeDateTime } from './datetime.js';
 import { normalizeInterval } from './interval.js';
@@ -87,6 +94,18 @@ export function normalizeToMembers(edtf: EDTFBase): Member[] {
  */
 export function normalizeToConvexHull(edtf: EDTFBase): Member {
   const shape = normalize(edtf);
+  // Hulls intentionally discard the calendar-unit gaps, while retaining infinity.
+  shape.members = shape.members.map((m) =>
+    m.calendarRange
+      ? {
+          ...m,
+          calendarRange: undefined,
+          ...(m.calendarRange.direction === 'earlier'
+            ? { sMin: null, sMax: null, startKind: 'open' as const }
+            : { eMin: null, eMax: null, endKind: 'open' as const }),
+        }
+      : m
+  );
 
   if (shape.members.length === 1) {
     return shape.members[0]!;
@@ -117,10 +136,10 @@ export function normalizeToConvexHull(edtf: EDTFBase): Member {
   const hasApproximate = shape.members.some((m) => m.qualifiers?.approximate);
 
   return {
-    sMin,
-    sMax,
-    eMin,
-    eMax,
+    sMin: startKind === 'closed' ? sMin : null,
+    sMax: startKind === 'closed' ? sMax : null,
+    eMin: endKind === 'closed' ? eMin : null,
+    eMax: endKind === 'closed' ? eMax : null,
     startKind,
     endKind,
     precision: 'mixed',

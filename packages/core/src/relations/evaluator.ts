@@ -1,3 +1,4 @@
+import { calendarWitnesses } from './calendar-ranges.js';
 /**
  * Evaluator for comparing EDTF values using Allen relations.
  *
@@ -45,12 +46,21 @@ export function evaluateRelation(
   quantifierA: Quantifier = 'ANY',
   quantifierB: Quantifier = 'ANY'
 ): Truth {
+  const symbolic = [...a.members, ...b.members].some((m) => m.calendarRange);
+  if (symbolic && ![...Object.values(allen), ...Object.values(derived)].includes(relation)) {
+    throw new Error('Custom relation callbacks do not support symbolic calendar ranges');
+  }
+  const membersA = a.members.flatMap((m) => calendarWitnesses(m, [a, b]));
   const combineA = quantifierA === 'ANY' ? combineWithAny : combineWithAll;
   const combineB = quantifierB === 'ANY' ? combineWithAny : combineWithAll;
 
   // Evaluate relation for each pair of members
-  const outerResults: Truth[] = a.members.map((memberA) => {
-    const innerResults: Truth[] = b.members.map((memberB) => {
+  const outerResults: Truth[] = membersA.map((memberA) => {
+    // Inner quantification needs witnesses beyond this particular outer choice.
+    const membersB = b.members.flatMap((m) => calendarWitnesses(m, [{ members: [memberA] }, b]));
+    const innerResults: Truth[] = membersB.map((memberB) => {
+      if ((memberA.timeDomain ?? 'floating') !== (memberB.timeDomain ?? 'floating'))
+        return 'UNKNOWN';
       return relation(memberA, memberB);
     });
     return combineB(innerResults);

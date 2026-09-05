@@ -20,13 +20,25 @@ Yet most software insists on **rigid ISO 8601 dates**, forcing humans to pretend
 ## Features
 
 - **FuzzyDate API** - Temporal-inspired, method-based interface with IDE autocomplete
-- **Full EDTF Level 0, 1, 2 support** - Complete spec compliance
+- **EDTF Levels 0, 1, and 2** - Strict profile validation with a source-linked conformance corpus
 - **TypeScript-first** - Complete type safety with discriminated unions
 - **Allen's interval algebra** - 13 temporal relations with four-valued logic
-- **Human-readable formatting** - i18n-ready output with customizable options
+- **Human-readable formatting** - English, Spanish, and French phrases, including qualifiers, collections, seasons, and ages
 - **Zero runtime dependencies** - Lightweight and fast
 - **BigInt support** - Handle extreme historical dates beyond JavaScript Date limits
 - **Tree-shakeable** - Import only what you need
+
+## Localized Output
+
+```typescript
+import { FuzzyDate } from '@edtf-ts/core';
+
+const date = FuzzyDate.parse('1870-03-12');
+date.format({ locale: 'es-ES' }); // '12 de marzo de 1870'
+date.format({ locale: 'fr-FR' }); // '12 mars 1870'
+```
+
+Rendering defaults to `en-US`. Pass the same locale to `@edtf-ts/natural` when parsing natural-language dates or ages. The [playground](https://bobpritchett.github.io/edtf-ts/playground) starts with your browser’s locale and offers one top-level override for all parsing and rendering. See the [migration guide](../../docs/guide/semantics-migration.md) for corrected EDTF semantics and public interfaces.
 
 ## Installation
 
@@ -95,6 +107,12 @@ decade.isPossiblyBefore(year); // true (could be 1980-1984)
 - Partial unspecified: `156X-12-25`, `15XX-12-25`
 - Sets/Lists: `[1985,1990,1995]`, `{1985-04,1985-05}`
 - Extended seasons: `1985-25` (Winter, Northern)
+
+## Compact year sets and lists
+
+`compactYearRanges(parsedValue)` returns compact EDTF such as `[1667..1668,1670..1672]` from `[1667,1668,1670,1671,1672]`. It merges adjacent exact years in their existing order, retaining gaps, duplicates, open bounds, and set/list meaning. Other precisions and qualified years remain separate. The original parsed object and its `edtf` stay unchanged.
+
+`formatHuman` uses concise year ranges in English, Spanish, and French. For example, `[1870..1880]` renders as `One of: 1870 through 1880`, `Una de estas fechas: 1870 a 1880`, or `Une de ces dates: 1870 à 1880`.
 
 ## Truth Values in Comparison
 

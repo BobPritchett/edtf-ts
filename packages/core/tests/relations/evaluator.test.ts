@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { parse, normalize, evaluateRelation, evaluate, isBefore, isAfter, overlaps, contains, intersects, allen } from '../../src/index.js';
+import {
+  parse,
+  normalize,
+  evaluateRelation,
+  evaluate,
+  isBefore,
+  isAfter,
+  overlaps,
+  contains,
+  intersects,
+  allen,
+} from '../../src/index.js';
 
 describe('Evaluator - evaluateRelation', () => {
   it('evaluates relation between single-member shapes', () => {
@@ -10,24 +21,24 @@ describe('Evaluator - evaluateRelation', () => {
   });
 
   it('evaluates relation between sets with ANY quantifier', () => {
-    const a = normalize(parse('[1985, 1990]').value!);
-    const b = normalize(parse('[1987, 1992]').value!);
+    const a = normalize(parse('[1985,1990]').value!);
+    const b = normalize(parse('[1987,1992]').value!);
 
     // ANY member of A before ANY member of B: 1985 before 1992 = YES
     expect(evaluateRelation(a, b, allen.before, 'ANY', 'ANY')).toBe('YES');
   });
 
   it('evaluates relation between sets with ALL quantifier', () => {
-    const a = normalize(parse('[1985, 1990]').value!);
-    const b = normalize(parse('[1987, 1992]').value!);
+    const a = normalize(parse('[1985,1990]').value!);
+    const b = normalize(parse('[1987,1992]').value!);
 
     // ALL members of A before ALL members of B: 1990 NOT before 1987 = NO
     expect(evaluateRelation(a, b, allen.before, 'ALL', 'ALL')).toBe('NO');
   });
 
   it('handles mixed quantifiers', () => {
-    const a = normalize(parse('[1985, 1990]').value!);
-    const b = normalize(parse('[2000, 2005]').value!);
+    const a = normalize(parse('[1985,1990]').value!);
+    const b = normalize(parse('[2000,2005]').value!);
 
     // ALL members of A before ANY member of B = YES
     expect(evaluateRelation(a, b, allen.before, 'ALL', 'ANY')).toBe('YES');
@@ -122,7 +133,7 @@ describe('Evaluator - complex scenarios', () => {
   });
 
   it('handles sets with ANY quantifier (oneOf semantics)', () => {
-    const a = parse('[1985, 1995]').value!;
+    const a = parse('[1985,1995]').value!;
     const b = parse('1990').value!;
 
     // Is ANY member of A before B? 1985 < 1990 = YES
@@ -130,7 +141,7 @@ describe('Evaluator - complex scenarios', () => {
   });
 
   it('handles sets with ALL quantifier (allOf semantics)', () => {
-    const a = parse('[1985, 1995]').value!;
+    const a = parse('[1985,1995]').value!;
     const b = parse('1990').value!;
 
     // Are ALL members of A before B? 1995 NOT before 1990 = NO
@@ -138,8 +149,8 @@ describe('Evaluator - complex scenarios', () => {
   });
 
   it('handles nested set comparisons', () => {
-    const a = parse('[1985, 1987]').value!;
-    const b = parse('[1990, 1992]').value!;
+    const a = parse('[1985,1987]').value!;
+    const b = parse('[1990,1992]').value!;
 
     // ANY member of A before ANY member of B
     expect(isBefore(a, b, 'ANY')).toBe('YES');

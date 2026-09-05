@@ -18,7 +18,7 @@ import type {
   Precision,
 } from '../types/index.js';
 import type { Truth, Shape } from '../compare-types/index.js';
-import type { ComparisonMode } from '../comparators.js';
+import type { ComparisonMode, ComparisonResult } from '../comparators.js';
 import type { FormatOptions } from '../formatters.js';
 import type { IFuzzyDate, FuzzyDateInput, FuzzyDateParseResult } from './types.js';
 import { FuzzyDateParseError } from './types.js';
@@ -26,6 +26,7 @@ import { getSearchPadding } from './search-constants.js';
 
 import { parse } from '../parser.js';
 import { dateFromMs } from '../core-utils/date-helpers.js';
+import { calendarWitnesses } from '../relations/calendar-ranges.js';
 import { normalize } from '../normalization/index.js';
 import { compare } from '../comparators.js';
 import { formatHuman, formatISO, formatRange } from '../formatters.js';
@@ -292,7 +293,7 @@ export abstract class FuzzyDateBase implements IFuzzyDate {
   // Numeric Comparison
   // ============================================================
 
-  compareTo(other: FuzzyDateInput, mode: ComparisonMode = 'min'): number {
+  compareTo(other: FuzzyDateInput, mode: ComparisonMode = 'min'): ComparisonResult {
     return compare(this._inner, this._unwrap(other), mode);
   }
 
@@ -345,10 +346,29 @@ export abstract class FuzzyDateBase implements IFuzzyDate {
    */
   overlapScore(other: FuzzyDateInput): number {
     // Get search bounds for the other input
-    const otherFuzzy = other instanceof FuzzyDateBase
-      ? other
-      : FuzzyDateBase.wrap(this._unwrap(other));
+    const otherFuzzy =
+      other instanceof FuzzyDateBase ? other : FuzzyDateBase.wrap(this._unwrap(other));
 
+    const shapeA = this.normalize(),
+      shapeB = otherFuzzy.normalize();
+    if ([...shapeA.members, ...shapeB.members].some((m) => m.calendarRange)) {
+      // Best attainable calendar-choice score; never score the continuous hull of a set.
+      let best = 0;
+      for (const a of shapeA.members.flatMap((m) => calendarWitnesses(m, [shapeA, shapeB]))) {
+        for (const b of shapeB.members.flatMap((m) =>
+          calendarWitnesses(m, [{ members: [a] }, shapeB])
+        )) {
+          if (a.sMin === null || a.eMax === null || b.sMin === null || b.eMax === null) continue;
+          const start = a.sMin > b.sMin ? a.sMin : b.sMin,
+            end = a.eMax < b.eMax ? a.eMax : b.eMax;
+          if (end < start) continue;
+          const outerStart = a.sMin < b.sMin ? a.sMin : b.sMin,
+            outerEnd = a.eMax > b.eMax ? a.eMax : b.eMax;
+          best = Math.max(best, Number(end - start + 1n) / Number(outerEnd - outerStart + 1n));
+        }
+      }
+      return best;
+    }
     const startA = this.searchMinMs;
     const endA = this.searchMaxMs;
     const startB = otherFuzzy.searchMinMs;
@@ -446,6 +466,9 @@ export abstract class FuzzyDateBase implements IFuzzyDate {
    * Compare two FuzzyDate values numerically (for sort callbacks).
    */
   static compare(a: IFuzzyDate, b: IFuzzyDate, mode: ComparisonMode = 'min'): number {
-    return compare(a.inner, b.inner, mode);
+    const result = compare(a.inner, b.inner, mode);
+    if (result === 'UNKNOWN')
+      throw new Error('Cannot sort floating dates together with absolute timestamps');
+    return result;
   }
 }

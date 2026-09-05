@@ -14,7 +14,7 @@ import type {
   ParseError,
 } from '../types/index.js';
 import type { Truth, Shape } from '../compare-types/index.js';
-import type { ComparisonMode } from '../comparators.js';
+import type { ComparisonMode, ComparisonResult } from '../comparators.js';
 import type { FormatOptions } from '../formatters.js';
 
 /**
@@ -146,7 +146,7 @@ export interface IFuzzyDate {
   // ============================================================
 
   /** Compare to another date numerically (-1, 0, 1) */
-  compareTo(other: FuzzyDateInput, mode?: ComparisonMode): number;
+  compareTo(other: FuzzyDateInput, mode?: ComparisonMode): ComparisonResult;
 
   // ============================================================
   // Formatting Methods
@@ -282,7 +282,7 @@ export class FuzzyDateParseError extends Error {
   readonly errors: ParseError[];
 
   constructor(errors: ParseError[]) {
-    const message = errors.map(e => e.message).join('; ');
+    const message = errors.map((e) => e.message).join('; ');
     super(`Failed to parse EDTF: ${message}`);
     this.name = 'FuzzyDateParseError';
     this.errors = errors;

@@ -136,7 +136,7 @@ FuzzyDate.parse('85-04-12');       // ❌ Two-digit year not allowed
 Think about how people actually describe dates:
 
 * "Shakespeare was born **in late April 1564**."
-* "The photo was taken **sometime in the 1930s**."
+* "The photo was taken **the 1930s**."
 * "She moved to New York **in the early 2000s**."
 * "This letter dates to **around the end of the 18th century**."
 
@@ -209,8 +209,8 @@ Archivists deal with dates like:
 
 * "**Probably 1918**" → `1918?`
 * "**After the war, but before 1925**" → `1919/1924`
-* "**Mid-19th century**" → `1850/1870`
-* "**No earlier than 1870**" → `../1870`
+* "**Mid-19th century**" → `1834/1866`
+* "**No earlier than 1870**" → `[1870..]`
 
 Forcing these into `YYYY-MM-DD` destroys information. EDTF preserves it.
 

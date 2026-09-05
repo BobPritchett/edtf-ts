@@ -58,25 +58,25 @@ describe('Unspecified Digits', () => {
     it('should parse "the nineteenth century"', () => {
       const results = parseNatural('the nineteenth century');
       expect(results).toHaveLength(1);
-      expect(results[0]!.edtf).toBe('18XX');
+      expect(results[0]!.edtf).toBe('1801/1900');
     });
 
     it('should parse "19th century"', () => {
       const results = parseNatural('19th century');
       expect(results).toHaveLength(1);
-      expect(results[0]!.edtf).toBe('18XX');
+      expect(results[0]!.edtf).toBe('1801/1900');
     });
 
     it('should parse "the 19th century"', () => {
       const results = parseNatural('the 19th century');
       expect(results).toHaveLength(1);
-      expect(results[0]!.edtf).toBe('18XX');
+      expect(results[0]!.edtf).toBe('1801/1900');
     });
 
     it('should parse "19th c."', () => {
       const results = parseNatural('19th c.');
       expect(results).toHaveLength(1);
-      expect(results[0]!.edtf).toBe('18XX');
+      expect(results[0]!.edtf).toBe('1801/1900');
     });
   });
 

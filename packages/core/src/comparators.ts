@@ -11,6 +11,7 @@ import type { EDTFBase, EDTFDate, EDTFDateTime } from './types/index.js';
  * - 'midpoint': Compare using the midpoint between min and max
  */
 export type ComparisonMode = 'min' | 'max' | 'midpoint';
+export type ComparisonResult = number | 'UNKNOWN';
 
 /**
  * Compare two EDTF dates.
@@ -30,28 +31,26 @@ export type ComparisonMode = 'min' | 'max' | 'midpoint';
  * }
  * ```
  */
-export function compare(
-  a: EDTFBase,
-  b: EDTFBase,
-  mode: ComparisonMode = 'min'
-): number {
+export function compare(a: EDTFBase, b: EDTFBase, mode: ComparisonMode = 'min'): ComparisonResult {
+  const absolute = (v: EDTFBase) => v.type === 'DateTime' && !!(v as EDTFDateTime).timezone;
+  if (absolute(a) !== absolute(b)) return 'UNKNOWN';
   const aTime = getComparisonTime(a, mode);
   const bTime = getComparisonTime(b, mode);
 
-  return aTime - bTime;
+  return Number(aTime - bTime);
 }
 
 /**
  * Get the comparison time for a date based on the mode.
  */
-function getComparisonTime(value: EDTFBase, mode: ComparisonMode): number {
+function getComparisonTime(value: EDTFBase, mode: ComparisonMode): bigint {
   switch (mode) {
     case 'min':
-      return value.min.getTime();
+      return value.minMs;
     case 'max':
-      return value.max.getTime();
+      return value.maxMs;
     case 'midpoint':
-      return (value.min.getTime() + value.max.getTime()) / 2;
+      return (value.minMs + value.maxMs) / 2n;
   }
 }
 
@@ -77,7 +76,7 @@ export function sort(
   mode: ComparisonMode = 'min',
   order: 'asc' | 'desc' = 'asc'
 ): EDTFBase[] {
-  const sorted = [...dates].sort((a, b) => compare(a, b, mode));
+  const sorted = [...dates].sort((a, b) => orderedComparison(a, b, mode));
 
   return order === 'desc' ? sorted.reverse() : sorted;
 }
@@ -97,14 +96,11 @@ export function sort(
  * earliest(validDates); // 1999
  * ```
  */
-export function earliest(
-  dates: EDTFBase[],
-  mode: ComparisonMode = 'min'
-): EDTFBase | undefined {
+export function earliest(dates: EDTFBase[], mode: ComparisonMode = 'min'): EDTFBase | undefined {
   if (dates.length === 0) return undefined;
 
   return dates.reduce((min, current) =>
-    compare(current, min, mode) < 0 ? current : min
+    orderedComparison(current, min, mode) < 0 ? current : min
   );
 }
 
@@ -123,14 +119,11 @@ export function earliest(
  * latest(validDates); // 2001
  * ```
  */
-export function latest(
-  dates: EDTFBase[],
-  mode: ComparisonMode = 'max'
-): EDTFBase | undefined {
+export function latest(dates: EDTFBase[], mode: ComparisonMode = 'max'): EDTFBase | undefined {
   if (dates.length === 0) return undefined;
 
   return dates.reduce((max, current) =>
-    compare(current, max, mode) > 0 ? current : max
+    orderedComparison(current, max, mode) > 0 ? current : max
   );
 }
 
@@ -152,7 +145,9 @@ export function latest(
  * // }
  * ```
  */
-export function groupByYear(dates: (EDTFDate | EDTFDateTime)[]): Map<number, (EDTFDate | EDTFDateTime)[]> {
+export function groupByYear(
+  dates: (EDTFDate | EDTFDateTime)[]
+): Map<number, (EDTFDate | EDTFDateTime)[]> {
   const groups = new Map<number, (EDTFDate | EDTFDateTime)[]>();
 
   for (const date of dates) {
@@ -186,7 +181,9 @@ export function groupByYear(dates: (EDTFDate | EDTFDateTime)[]): Map<number, (ED
  * // }
  * ```
  */
-export function groupByMonth(dates: (EDTFDate | EDTFDateTime)[]): Map<string, (EDTFDate | EDTFDateTime)[]> {
+export function groupByMonth(
+  dates: (EDTFDate | EDTFDateTime)[]
+): Map<string, (EDTFDate | EDTFDateTime)[]> {
   const groups = new Map<string, (EDTFDate | EDTFDateTime)[]>();
 
   for (const date of dates) {
@@ -221,15 +218,11 @@ export function groupByMonth(dates: (EDTFDate | EDTFDateTime)[]): Map<string, (E
  * }
  * ```
  */
-export function duration(
-  start: EDTFBase,
-  end: EDTFBase,
-  mode: ComparisonMode = 'min'
-): number {
+export function duration(start: EDTFBase, end: EDTFBase, mode: ComparisonMode = 'min'): number {
   const startTime = getComparisonTime(start, mode);
   const endTime = getComparisonTime(end, mode);
 
-  return Math.abs(endTime - startTime);
+  return Math.abs(Number(endTime - startTime));
 }
 
 /**
@@ -344,5 +337,12 @@ export function unique(dates: EDTFBase[]): EDTFBase[] {
     }
   }
 
+  return result;
+}
+
+function orderedComparison(a: EDTFBase, b: EDTFBase, mode: ComparisonMode): number {
+  const result = compare(a, b, mode);
+  if (result === 'UNKNOWN')
+    throw new Error('Cannot sort floating dates together with absolute timestamps');
   return result;
 }

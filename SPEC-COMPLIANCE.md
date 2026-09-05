@@ -4,8 +4,9 @@ Based on [https://www.loc.gov/standards/datetime/](https://www.loc.gov/standards
 
 ## Overall Status
 
-- **Parsing**: 64/64 examples (100%) ✅
-- **Formatting**: 27/27 examples (100%) ✅
+The executable source-linked corpus is [conformance.test.ts](packages/core/tests/conformance.test.ts). It checks positive examples, rejected non-profile forms, required levels, qualification scope, independent calendar bounds, all 21 season codes, and symbolic open-set comparisons. The tables below are example inventories, not a claim that a passing example count establishes complete conformance.
+
+See the [migration guide](docs/guide/semantics-migration.md) for corrected interpretations and the distinction between application conventions and EDTF syntax.
 
 ## Level 0 - ISO 8601 Profile
 
@@ -106,7 +107,7 @@ All Level 0 values format sensibly with appropriate human-readable output.
 | `2004-06-~11` | ✅ | Approximate day |
 | `2004?-06-11` | ✅ | Uncertain year |
 | `?2004-06-~11` | ✅ | Uncertain year, approximate day |
-| `2004-%06-11` | ✅ | Approximate month |
+| `2004-%06-11` | ✅ | Uncertain and approximate month |
 | `156X-12-25` | ✅ | Unspecified decade with month/day |
 | `15XX-12-25` | ✅ | Unspecified century with month/day |
 | `XXXX-12-XX` | ✅ | Completely unspecified year |

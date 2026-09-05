@@ -11,6 +11,21 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./en": {
+      "types": "./dist/en.d.ts",
+      "import": "./dist/en.js",
+      "require": "./dist/en.cjs"
+    },
+    "./es": {
+      "types": "./dist/es.d.ts",
+      "import": "./dist/es.js",
+      "require": "./dist/es.cjs"
+    },
+    "./fr": {
+      "types": "./dist/fr.d.ts",
+      "import": "./dist/fr.js",
+      "require": "./dist/fr.cjs"
     }
   },
   "files": [
@@ -18,13 +33,15 @@
   ],
   "scripts": {
     "build": "npm run build:grammar && tsup",
-    "build:grammar": "nearleyc src/grammar.ne -o src/grammar.ts && node scripts/fix-grammar-esm.js",
+    "build:grammar": "node scripts/build-grammars.cjs",
     "dev": "npm run build:grammar && tsup --watch",
     "pretest": "npm run build:grammar",
     "test": "vitest run",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit",
-    "benchmark": "npx tsx scripts/benchmark.ts"
+    "benchmark": "npx tsx scripts/benchmark.ts",
+    "check:packages": "node scripts/check-packages.cjs",
+    "docs:examples": "node scripts/generate-examples.cjs"
   },
   "keywords": [
     "edtf",

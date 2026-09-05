@@ -1,9 +1,5 @@
 import type { ParseResult, EDTFDate, EDTFDateTime, EDTFInterval } from '../types/index.js';
-import {
-  calculateEpochMs,
-  dateFromMs,
-  daysInMonth,
-} from '../core-utils/date-helpers.js';
+import { calculateEpochMs, dateFromMs, daysInMonth } from '../core-utils/date-helpers.js';
 
 /**
  * Parse EDTF Level 0 strings
@@ -31,17 +27,19 @@ export function parseLevel0(input: string): ParseResult {
  */
 function parseDate(input: string): ParseResult<EDTFDate> {
   // Match: YYYY, YYYY-MM, or YYYY-MM-DD
-  // Allow negative years for BCE dates
-  const match = input.match(/^(-?\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
+  // Negative years require Level 1.
+  const match = input.match(/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
 
   if (!match) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_FORMAT',
-        message: `Invalid date format: ${input}`,
-        suggestion: 'Use format: YYYY, YYYY-MM, or YYYY-MM-DD'
-      }]
+      errors: [
+        {
+          code: 'INVALID_FORMAT',
+          message: `Invalid date format: ${input}`,
+          suggestion: 'Use format: YYYY, YYYY-MM, or YYYY-MM-DD',
+        },
+      ],
     };
   }
 
@@ -53,11 +51,13 @@ function parseDate(input: string): ParseResult<EDTFDate> {
   if (month !== undefined && (month < 1 || month > 12)) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_MONTH',
-        message: `Month must be 01-12, got: ${match[2]}`,
-        position: { start: 5, end: 7 }
-      }]
+      errors: [
+        {
+          code: 'INVALID_MONTH',
+          message: `Month must be 01-12, got: ${match[2]}`,
+          position: { start: 5, end: 7 },
+        },
+      ],
     };
   }
 
@@ -67,11 +67,13 @@ function parseDate(input: string): ParseResult<EDTFDate> {
     if (day < 1 || day > maxDay) {
       return {
         success: false,
-        errors: [{
-          code: 'INVALID_DAY',
-          message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[3]}`,
-          position: { start: 8, end: 10 }
-        }]
+        errors: [
+          {
+            code: 'INVALID_DAY',
+            message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[3]}`,
+            position: { start: 8, end: 10 },
+          },
+        ],
       };
     }
   }
@@ -122,7 +124,7 @@ function parseDate(input: string): ParseResult<EDTFDate> {
     toJSON() {
       const result: { type: string; year: number; month?: number; day?: number } = {
         type: this.type,
-        year: this.year as number
+        year: this.year as number,
       };
       if (this.month !== undefined) result.month = this.month as number;
       if (this.day !== undefined) result.day = this.day as number;
@@ -130,7 +132,7 @@ function parseDate(input: string): ParseResult<EDTFDate> {
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfDate, level: 0 };
@@ -143,16 +145,20 @@ function parseDate(input: string): ParseResult<EDTFDate> {
 function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   // Match ISO 8601 datetime with optional timezone
   // Supports: Z, ±HH:MM, or ±HH
-  const match = input.match(/^(-?\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}(?::\d{2})?)?$/);
+  const match = input.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-]\d{2}(?::\d{2})?)?$/
+  );
 
   if (!match) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_FORMAT',
-        message: `Invalid datetime format: ${input}`,
-        suggestion: 'Use format: YYYY-MM-DDTHH:MM:SS[Z|±HH:MM|±HH]'
-      }]
+      errors: [
+        {
+          code: 'INVALID_FORMAT',
+          message: `Invalid datetime format: ${input}`,
+          suggestion: 'Use format: YYYY-MM-DDTHH:MM:SS[Z|±HH:MM|±HH]',
+        },
+      ],
     };
   }
 
@@ -168,10 +174,12 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   if (month < 1 || month > 12) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_MONTH',
-        message: `Month must be 01-12, got: ${match[2]}`
-      }]
+      errors: [
+        {
+          code: 'INVALID_MONTH',
+          message: `Month must be 01-12, got: ${match[2]}`,
+        },
+      ],
     };
   }
 
@@ -180,10 +188,12 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   if (day < 1 || day > maxDay) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_DAY',
-        message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[3]}`
-      }]
+      errors: [
+        {
+          code: 'INVALID_DAY',
+          message: `Day must be 01-${maxDay} for ${year}-${String(month).padStart(2, '0')}, got: ${match[3]}`,
+        },
+      ],
     };
   }
 
@@ -191,36 +201,54 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   if (hour < 0 || hour > 23) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_HOUR',
-        message: `Hour must be 00-23, got: ${match[4]}`
-      }]
+      errors: [
+        {
+          code: 'INVALID_HOUR',
+          message: `Hour must be 00-23, got: ${match[4]}`,
+        },
+      ],
     };
   }
 
   if (minute < 0 || minute > 59) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_MINUTE',
-        message: `Minute must be 00-59, got: ${match[5]}`
-      }]
+      errors: [
+        {
+          code: 'INVALID_MINUTE',
+          message: `Minute must be 00-59, got: ${match[5]}`,
+        },
+      ],
     };
   }
 
   if (second < 0 || second > 59) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_SECOND',
-        message: `Second must be 00-59, got: ${match[6]}`
-      }]
+      errors: [
+        {
+          code: 'INVALID_SECOND',
+          message: `Second must be 00-59, got: ${match[6]}`,
+        },
+      ],
     };
   }
 
-  // Pre-calculate bounds
-  const minMsValue = calculateEpochMs(year, month, day, hour, minute, second, 0);
-  const maxMsValue = calculateEpochMs(year, month, day, hour, minute, second, 999);
+  let offset = 0;
+  if (timezone && timezone !== 'Z') {
+    const h = Number(timezone.slice(1, 3));
+    const m = timezone.length > 3 ? Number(timezone.slice(4)) : 0;
+    if (h > 23 || m > 59)
+      return {
+        success: false,
+        errors: [{ code: 'INVALID_TIMEZONE', message: 'Invalid UTC offset' }],
+      };
+    offset = (timezone[0] === '-' ? -1 : 1) * (h * 60 + m);
+  }
+  const shift = BigInt(offset) * 60000n;
+  // Floating local times use a nominal epoch; normalization marks their domain.
+  const minMsValue = calculateEpochMs(year, month, day, hour, minute, second, 0) - shift;
+  const maxMsValue = calculateEpochMs(year, month, day, hour, minute, second, 999) - shift;
 
   const edtfDateTime: EDTFDateTime = {
     type: 'DateTime',
@@ -247,21 +275,30 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
       return maxMsValue;
     },
     toJSON() {
-      const result: { type: string; year: number; month: number; day: number; hour: number; minute: number; second: number; timezone?: string } = {
+      const result: {
+        type: string;
+        year: number;
+        month: number;
+        day: number;
+        hour: number;
+        minute: number;
+        second: number;
+        timezone?: string;
+      } = {
         type: this.type,
         year: this.year,
         month: this.month,
         day: this.day,
         hour: this.hour,
         minute: this.minute,
-        second: this.second
+        second: this.second,
       };
       if (this.timezone) result.timezone = this.timezone;
       return result;
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfDateTime, level: 0 };
@@ -269,7 +306,7 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
 
 /**
  * Parse an interval in format START/END
- * START and END can be dates or datetimes
+ * START and END must be dates
  */
 function parseInterval(input: string): ParseResult<EDTFInterval> {
   const parts = input.split('/');
@@ -277,10 +314,12 @@ function parseInterval(input: string): ParseResult<EDTFInterval> {
   if (parts.length !== 2) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_INTERVAL',
-        message: 'Interval must have exactly one "/" separator'
-      }]
+      errors: [
+        {
+          code: 'INVALID_INTERVAL',
+          message: 'Interval must have exactly one "/" separator',
+        },
+      ],
     };
   }
 
@@ -290,48 +329,62 @@ function parseInterval(input: string): ParseResult<EDTFInterval> {
   if (!startStr || !endStr) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_INTERVAL',
-        message: 'Interval must have both start and end dates'
-      }]
+      errors: [
+        {
+          code: 'INVALID_INTERVAL',
+          message: 'Interval must have both start and end dates',
+        },
+      ],
     };
   }
 
+  if (startStr.includes('T') || endStr.includes('T'))
+    return {
+      success: false,
+      errors: [
+        {
+          code: 'INVALID_INTERVAL',
+          message: 'EDTF interval endpoints must be dates, without time of day',
+        },
+      ],
+    };
   // Parse start
-  const startResult = startStr.includes('T') ? parseDateTime(startStr) : parseDate(startStr);
+  const startResult = parseDate(startStr);
   if (!startResult.success) {
     return {
       success: false,
-      errors: startResult.errors.map(err => ({
+      errors: startResult.errors.map((err) => ({
         ...err,
-        message: `Invalid interval start: ${err.message}`
-      }))
+        message: `Invalid interval start: ${err.message}`,
+      })),
     };
   }
 
   // Parse end
-  const endResult = endStr.includes('T') ? parseDateTime(endStr) : parseDate(endStr);
+  const endResult = parseDate(endStr);
   if (!endResult.success) {
     return {
       success: false,
-      errors: endResult.errors.map(err => ({
+      errors: endResult.errors.map((err) => ({
         ...err,
-        message: `Invalid interval end: ${err.message}`
-      }))
+        message: `Invalid interval end: ${err.message}`,
+      })),
     };
   }
 
-  const start = startResult.value as EDTFDate | EDTFDateTime;
-  const end = endResult.value as EDTFDate | EDTFDateTime;
+  const start = startResult.value;
+  const end = endResult.value;
 
   // Validate that start is before end
   if (start.min > end.max) {
     return {
       success: false,
-      errors: [{
-        code: 'INVALID_INTERVAL_ORDER',
-        message: 'Interval start must be before or equal to end'
-      }]
+      errors: [
+        {
+          code: 'INVALID_INTERVAL_ORDER',
+          message: 'Interval start must be before or equal to end',
+        },
+      ],
     };
   }
 
@@ -378,9 +431,12 @@ function parseInterval(input: string): ParseResult<EDTFInterval> {
         const month = current.getUTCMonth() + 1;
         const day = current.getUTCDate();
 
-        const edtfStr = unit === 'year' ? `${year}` :
-                       unit === 'month' ? `${year}-${String(month).padStart(2, '0')}` :
-                       `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const edtfStr =
+          unit === 'year'
+            ? `${year}`
+            : unit === 'month'
+              ? `${year}-${String(month).padStart(2, '0')}`
+              : `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
         const dateResult = parseDate(edtfStr);
         if (dateResult.success) {
@@ -401,14 +457,13 @@ function parseInterval(input: string): ParseResult<EDTFInterval> {
       return {
         type: this.type,
         start: this.start!.toJSON(),
-        end: this.end!.toJSON()
+        end: this.end!.toJSON(),
       };
     },
     toString() {
       return this.edtf;
-    }
+    },
   };
 
   return { success: true, value: edtfInterval, level: 0 };
 }
-

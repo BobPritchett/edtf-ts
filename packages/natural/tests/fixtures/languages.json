@@ -1,0 +1,1029 @@
+[
+  {
+    "id": "date.year",
+    "en": "1870",
+    "es": "1870",
+    "fr": "1870",
+    "expected": [
+      "1870"
+    ]
+  },
+  {
+    "id": "date.full",
+    "en": "March 12, 1870",
+    "es": "12 de marzo de 1870",
+    "fr": "12 mars 1870",
+    "expected": [
+      "1870-03-12"
+    ]
+  },
+  {
+    "id": "date.month",
+    "en": "March 1870",
+    "es": "marzo 1870",
+    "fr": "mars 1870",
+    "expected": [
+      "1870-03"
+    ]
+  },
+  {
+    "id": "date.abbreviation",
+    "en": "Sept. 1870",
+    "es": "sept. 1870",
+    "fr": "sept. 1870",
+    "expected": [
+      "1870-09"
+    ]
+  },
+  {
+    "id": "date.ordinal",
+    "en": "1ST March 1870",
+    "es": "1º marzo 1870",
+    "fr": "1er mars 1870",
+    "expected": [
+      "1870-03-01"
+    ]
+  },
+  {
+    "id": "qualifier.approximate",
+    "en": "circa 1870",
+    "es": "hacia 1870",
+    "fr": "vers 1870",
+    "expected": [
+      "1870~"
+    ]
+  },
+  {
+    "id": "qualifier.uncertain",
+    "en": "possibly 1870",
+    "es": "quizás 1870",
+    "fr": "peut-être 1870",
+    "expected": [
+      "1870?"
+    ]
+  },
+  {
+    "id": "qualifier.both",
+    "en": "possibly circa 1870",
+    "es": "quizás hacia 1870",
+    "fr": "peut-être vers 1870",
+    "expected": [
+      "1870%"
+    ]
+  },
+  {
+    "id": "qualifier.component",
+    "en": "1870 (year uncertain)",
+    "es": "1870 (año incierto)",
+    "fr": "1870 (année incertaine)",
+    "expected": [
+      "?1870"
+    ]
+  },
+  {
+    "id": "boundary.before",
+    "en": "before 1870",
+    "es": "antes de 1870",
+    "fr": "avant 1870",
+    "expected": [
+      "[..1869]"
+    ]
+  },
+  {
+    "id": "boundary.after",
+    "en": "after 1870",
+    "es": "después de 1870",
+    "fr": "après 1870",
+    "expected": [
+      "[1871..]"
+    ]
+  },
+  {
+    "id": "boundary.inclusiveBefore",
+    "en": "no later than 1870",
+    "es": "no más tarde de 1870",
+    "fr": "pas après 1870",
+    "expected": [
+      "[..1870]"
+    ]
+  },
+  {
+    "id": "boundary.inclusiveAfter",
+    "en": "no earlier than 1870",
+    "es": "no antes de 1870",
+    "fr": "pas avant 1870",
+    "expected": [
+      "[1870..]"
+    ]
+  },
+  {
+    "id": "boundary.by",
+    "en": "by 1870",
+    "es": "a más tardar en 1870",
+    "fr": "au plus tard en 1870",
+    "expected": [
+      "[..1870]"
+    ]
+  },
+  {
+    "id": "boundary.suffixBefore",
+    "en": "1870 or earlier",
+    "es": "1870 o antes",
+    "fr": "1870 ou avant",
+    "expected": [
+      "[..1870]"
+    ]
+  },
+  {
+    "id": "boundary.suffixAfter",
+    "en": "1870 or later",
+    "es": "1870 o después",
+    "fr": "1870 ou après",
+    "expected": [
+      "[1870..]"
+    ]
+  },
+  {
+    "id": "boundary.pre",
+    "en": "pre-1870",
+    "es": "pre-1870",
+    "fr": "pré-1870",
+    "expected": [
+      "[..1869]"
+    ]
+  },
+  {
+    "id": "boundary.post",
+    "en": "post-1870",
+    "es": "post-1870",
+    "fr": "post-1870",
+    "expected": [
+      "[1871..]"
+    ]
+  },
+  {
+    "id": "boundary.month",
+    "en": "before March 2024",
+    "es": "antes de marzo 2024",
+    "fr": "avant mars 2024",
+    "expected": [
+      "[..2024-02]"
+    ]
+  },
+  {
+    "id": "boundary.leapDay",
+    "en": "before March 1, 2024",
+    "es": "antes de 1 de marzo de 2024",
+    "fr": "avant 1 mars 2024",
+    "expected": [
+      "[..2024-02-29]"
+    ]
+  },
+  {
+    "id": "interval.since",
+    "en": "since 1870",
+    "es": "desde 1870",
+    "fr": "depuis 1870",
+    "expected": [
+      "1870/.."
+    ]
+  },
+  {
+    "id": "interval.explicit",
+    "en": "from 1870 to 1880",
+    "es": "desde 1870 a 1880",
+    "fr": "depuis 1870 à 1880",
+    "expected": [
+      "1870/1880"
+    ]
+  },
+  {
+    "id": "interval.unknown",
+    "en": "1870 to unknown",
+    "es": "1870 a desconocido",
+    "fr": "1870 à inconnu",
+    "expected": [
+      "1870/"
+    ]
+  },
+  {
+    "id": "interval.between",
+    "en": "between 1870 and 1880",
+    "es": "entre 1870 y 1880",
+    "fr": "entre 1870 et 1880",
+    "expected": [
+      "1870/1880"
+    ]
+  },
+  {
+    "id": "interval.sharedDays",
+    "en": "1–3 March 2024",
+    "es": "1–3 marzo 2024",
+    "fr": "1–3 mars 2024",
+    "expected": [
+      "2024-03-01/2024-03-03"
+    ]
+  },
+  {
+    "id": "interval.sharedMonths",
+    "en": "March–April 2024",
+    "es": "marzo–abril 2024",
+    "fr": "mars–avril 2024",
+    "expected": [
+      "2024-03/2024-04"
+    ]
+  },
+  {
+    "id": "interval.crossYear",
+    "en": "December–January 2024",
+    "es": "diciembre–enero 2024",
+    "fr": "décembre–janvier 2024",
+    "expected": [
+      "2023-12/2024-01",
+      "2024-12/2025-01"
+    ],
+    "ambiguous": true
+  },
+  {
+    "id": "set.finiteRange",
+    "en": "sometime between 1870 and 1880",
+    "es": "algún momento entre 1870 y 1880",
+    "fr": "à un moment entre 1870 et 1880",
+    "expected": [
+      "[1870..1880]"
+    ]
+  },
+  {
+    "id": "set.sequence",
+    "en": "1870, 1880, 1890, 1900 or 1910",
+    "es": "1870, 1880, 1890, 1900 o 1910",
+    "fr": "1870, 1880, 1890, 1900 ou 1910",
+    "expected": [
+      "[1870,1880,1890,1900,1910]"
+    ]
+  },
+  {
+    "id": "list.sequence",
+    "en": "1870, 1880, 1890, 1900 and 1910",
+    "es": "1870, 1880, 1890, 1900 y 1910",
+    "fr": "1870, 1880, 1890, 1900 et 1910",
+    "expected": [
+      "{1870,1880,1890,1900,1910}"
+    ]
+  },
+  {
+    "id": "list.earlier",
+    "en": "1870 and earlier",
+    "es": "1870 y antes",
+    "fr": "1870 et avant",
+    "expected": [
+      "{..1870}"
+    ]
+  },
+  {
+    "id": "period.century",
+    "en": "nineteenth century",
+    "es": "siglo XIX",
+    "fr": "XIXe siècle",
+    "expected": [
+      "1801/1900"
+    ]
+  },
+  {
+    "id": "period.decade",
+    "en": "the 1980s",
+    "es": "los años 1980",
+    "fr": "les années 1980",
+    "expected": [
+      "198X"
+    ]
+  },
+  {
+    "id": "period.earlyYear",
+    "en": "early 1870",
+    "es": "a principios de 1870",
+    "fr": "au début de 1870",
+    "expected": [
+      "1870-01/1870-04"
+    ]
+  },
+  {
+    "id": "period.midMonth",
+    "en": "mid March 1870",
+    "es": "a mediados de marzo 1870",
+    "fr": "au milieu de mars 1870",
+    "expected": [
+      "1870-03-11/1870-03-20"
+    ]
+  },
+  {
+    "id": "period.lateDecade",
+    "en": "late 1980s",
+    "es": "a finales de los años 1980",
+    "fr": "à la fin des années 1980",
+    "expected": [
+      "1987/1989"
+    ]
+  },
+  {
+    "id": "season.spring",
+    "en": "spring 1870",
+    "es": "primavera 1870",
+    "fr": "printemps 1870",
+    "expected": [
+      "1870-21"
+    ]
+  },
+  {
+    "id": "season.summer",
+    "en": "summer 1870",
+    "es": "verano 1870",
+    "fr": "été 1870",
+    "expected": [
+      "1870-22"
+    ]
+  },
+  {
+    "id": "season.autumn",
+    "en": "autumn 1870",
+    "es": "otoño 1870",
+    "fr": "automne 1870",
+    "expected": [
+      "1870-23"
+    ]
+  },
+  {
+    "id": "season.winter",
+    "en": "winter 1870",
+    "es": "invierno 1870",
+    "fr": "hiver 1870",
+    "expected": [
+      "1870-24"
+    ]
+  },
+  {
+    "id": "season.north",
+    "en": "spring 1870 (northern hemisphere)",
+    "es": "primavera 1870 (hemisferio norte)",
+    "fr": "printemps 1870 (hémisphère nord)",
+    "expected": [
+      "1870-25"
+    ]
+  },
+  {
+    "id": "season.south",
+    "en": "spring 1870 (southern hemisphere)",
+    "es": "primavera 1870 (hemisferio sur)",
+    "fr": "printemps 1870 (hémisphère sud)",
+    "expected": [
+      "1870-29"
+    ]
+  },
+  {
+    "id": "period.quarter",
+    "en": "first quarter 1870",
+    "es": "primer trimestre 1870",
+    "fr": "premier trimestre 1870",
+    "expected": [
+      "1870-33"
+    ]
+  },
+  {
+    "id": "period.quadrimester",
+    "en": "second quadrimester 1870",
+    "es": "segundo cuatrimestre 1870",
+    "fr": "deuxième quadrimestre 1870",
+    "expected": [
+      "1870-38"
+    ]
+  },
+  {
+    "id": "period.semester",
+    "en": "second semester 1870",
+    "es": "segundo semestre 1870",
+    "fr": "deuxième semestre 1870",
+    "expected": [
+      "1870-41"
+    ]
+  },
+  {
+    "id": "era.bce",
+    "en": "1 BCE",
+    "es": "1 a. e. c.",
+    "fr": "1 aec",
+    "expected": [
+      "0000"
+    ]
+  },
+  {
+    "id": "era.ce",
+    "en": "79 CE",
+    "es": "79 e. c.",
+    "fr": "79 ec",
+    "expected": [
+      "0079"
+    ]
+  },
+  {
+    "id": "numeric.qualified",
+    "en": "circa 01/02/2020",
+    "es": "hacia 01/02/2020",
+    "fr": "vers 01/02/2020",
+    "expected": [
+      "2020-02-01~",
+      "2020-01-02~"
+    ],
+    "ambiguous": true
+  },
+  {
+    "id": "unspecified.day",
+    "en": "some day in March 1870",
+    "es": "algún día de marzo 1870",
+    "fr": "un jour de mars 1870",
+    "expected": [
+      "1870-03-XX"
+    ]
+  },
+  {
+    "id": "unspecified.month",
+    "en": "some month in 1870",
+    "es": "algún mes de 1870",
+    "fr": "un mois de 1870",
+    "expected": [
+      "1870-XX"
+    ]
+  },
+  {
+    "id": "reject.calendar",
+    "en": "February 30, 2024",
+    "es": "30 de febrero de 2024",
+    "fr": "30 février 2024",
+    "reject": true
+  },
+  {
+    "id": "reject.reversed",
+    "en": "from 1880 to 1870",
+    "es": "desde 1880 a 1870",
+    "fr": "depuis 1880 à 1870",
+    "reject": true
+  },
+  {
+    "id": "reject.fuzzyCutoff",
+    "en": "before circa 1870",
+    "es": "antes de hacia 1870",
+    "fr": "avant vers 1870",
+    "reject": true
+  },
+  {
+    "id": "age.exact",
+    "en": "20 years old",
+    "es": "20 años",
+    "fr": "20 ans",
+    "age": true,
+    "expected": [
+      "?2004-?06-?02/?2005-?06-?01"
+    ]
+  },
+  {
+    "id": "age.range",
+    "en": "20 to 23 years old",
+    "es": "20 a 23 años",
+    "fr": "20 à 23 ans",
+    "age": true,
+    "expected": [
+      "?2001-?06-?02/?2005-?06-?01"
+    ]
+  },
+  {
+    "id": "age.birthday",
+    "en": "20 years old, birthday March 15",
+    "es": "20 años, cumpleaños 15 de marzo",
+    "fr": "20 ans, anniversaire le 15 mars",
+    "age": true,
+    "expected": [
+      "2005-03-15"
+    ]
+  },
+  {
+    "id": "age.birthdayMonth",
+    "en": "20 years old, June birthday",
+    "es": "20 años, cumpleaños junio",
+    "fr": "20 ans, anniversaire juin",
+    "age": true,
+    "expected": [
+      "[2004-06-02..2004-06-30,2005-06-01]"
+    ]
+  },
+  {
+    "id": "birthday.only",
+    "en": "birthday March 15",
+    "es": "cumpleaños 15 de marzo",
+    "fr": "anniversaire le 15 mars",
+    "age": true,
+    "expected": [
+      "XXXX-03-15"
+    ]
+  },
+  {
+    "id": "birthday.numeric",
+    "en": "birthday 15/03",
+    "es": "cumpleaños 15/03",
+    "fr": "anniversaire 15/03",
+    "age": true,
+    "expected": [
+      "XXXX-03-15"
+    ]
+  },
+  {
+    "id": "age.bornConstraint",
+    "en": "born before 1870",
+    "es": "nacido antes de 1870",
+    "fr": "né avant 1870",
+    "age": true,
+    "expected": [
+      "[..1869]"
+    ]
+  },
+  {
+    "id": "age.months",
+    "en": "6 months",
+    "es": "6 meses",
+    "fr": "6 mois",
+    "age": true,
+    "expected": [
+      "?2024-?11-?02/?2024-?12-?01"
+    ]
+  },
+  {
+    "id": "age.weeks",
+    "en": "2 weeks",
+    "es": "2 semanas",
+    "fr": "2 semaines",
+    "age": true,
+    "expected": [
+      "?2025-?05-?12/?2025-?05-?18"
+    ]
+  },
+  {
+    "id": "age.days",
+    "en": "10 days",
+    "es": "10 días",
+    "fr": "10 jours",
+    "age": true,
+    "expected": [
+      "?2025-?05-?22/?2025-?05-?22"
+    ]
+  },
+  {
+    "id": "age.rejectBirthday",
+    "en": "20 years old, birthday February 30",
+    "es": "20 años, cumpleaños 30 de febrero",
+    "fr": "20 ans, anniversaire 30 février",
+    "age": true,
+    "reject": true
+  },
+  {
+    "id": "period.earlyCentury",
+    "en": "early 19th century",
+    "es": "a principios del siglo XIX",
+    "fr": "au début du XIXe siècle",
+    "expected": [
+      "1801/1833"
+    ]
+  },
+  {
+    "id": "period.lateCentury",
+    "en": "late 19th century",
+    "es": "a finales del siglo XIX",
+    "fr": "à la fin du XIXe siècle",
+    "expected": [
+      "1867/1900"
+    ]
+  },
+  {
+    "id": "period.bceCentury",
+    "en": "early 5th century BCE",
+    "es": "a principios del siglo V aec",
+    "fr": "au début du Ve siècle aec",
+    "expected": [
+      "-0499/-0467"
+    ]
+  },
+  {
+    "id": "period.combinedMonth",
+    "en": "early to mid March 2024",
+    "es": "principios a mediados de marzo 2024",
+    "fr": "du début au milieu de mars 2024",
+    "expected": [
+      "2024-03-01/2024-03-20"
+    ]
+  },
+  {
+    "id": "period.combinedYear",
+    "en": "mid to late 1870",
+    "es": "mediados a finales de 1870",
+    "fr": "du milieu à la fin de 1870",
+    "expected": [
+      "1870-05/1870-12"
+    ]
+  },
+  {
+    "id": "period.combinedDecade",
+    "en": "early to mid 1980s",
+    "es": "principios a mediados de los años 1980",
+    "fr": "du début au milieu des années 1980",
+    "expected": [
+      "1980/1986"
+    ]
+  },
+  {
+    "id": "period.qualified",
+    "en": "circa late 1870",
+    "es": "aproximadamente a finales de 1870",
+    "fr": "approximativement à la fin de 1870",
+    "expected": [
+      "1870-09~/1870-12~"
+    ]
+  },
+  {
+    "id": "period.range",
+    "en": "early 1870 to late 1880",
+    "es": "desde principios de 1870 a finales de 1880",
+    "fr": "du début de 1870 à la fin de 1880",
+    "expected": [
+      "1870-01/1880-12"
+    ]
+  },
+  {
+    "id": "age.approximateBirthday",
+    "en": "about 20 years old, birthday March 15",
+    "es": "aproximadamente 20 años, cumpleaños 15 de marzo",
+    "fr": "environ 20 ans, anniversaire le 15 mars",
+    "age": true,
+    "expected": [
+      "~2005-03-15"
+    ]
+  },
+  {
+    "id": "age.monthsBirthday",
+    "en": "6 months, December birthday",
+    "es": "6 meses, cumpleaños diciembre",
+    "fr": "6 mois, anniversaire décembre",
+    "age": true,
+    "expected": [
+      "2024-12-01"
+    ]
+  },
+  {
+    "id": "age.rejectMonthsBirthday",
+    "en": "6 months, March birthday",
+    "es": "6 meses, cumpleaños marzo",
+    "fr": "6 mois, anniversaire mars",
+    "age": true,
+    "reject": true
+  },
+  {
+    "id": "age.rejectUnboundedBirthday",
+    "en": "senior, March birthday",
+    "es": "persona mayor, cumpleaños marzo",
+    "fr": "personne âgée, anniversaire mars",
+    "age": true,
+    "reject": true
+  },
+  {
+    "id": "set.rendered",
+    "en": "One of: 1667, 1668, 1670",
+    "es": "Una de estas fechas: 1667, 1668 o 1670",
+    "fr": "Une de ces dates: 1667, 1668 ou 1670",
+    "expected": [
+      "[1667..1668,1670]"
+    ]
+  },
+  {
+    "id": "list.rendered",
+    "en": "All of: 1667, 1668, 1670",
+    "es": "Todas estas fechas: 1667, 1668 y 1670",
+    "fr": "Toutes ces dates: 1667, 1668 et 1670",
+    "expected": [
+      "{1667..1668,1670}"
+    ]
+  },
+  {
+    "id": "set.renderedOpen",
+    "en": "Earlier or one of: 1667, 1668, 1670, or later",
+    "es": "Una de estas fechas: 1667 o antes, 1668 o 1670 o después",
+    "fr": "Une de ces dates: 1667 ou avant, 1668 ou 1670 ou après",
+    "expected": [
+      "[..1667..1668,1670..]"
+    ]
+  },
+  {
+    "id": "list.renderedOpen",
+    "en": "Earlier and all of: 1667, 1668, 1670, and later",
+    "es": "Todas estas fechas: 1667 y antes, 1668 y 1670 y después",
+    "fr": "Toutes ces dates: 1667 et avant, 1668 et 1670 et après",
+    "expected": [
+      "{..1667..1668,1670..}"
+    ]
+  },
+  {
+    "id": "set.rejectConjunction",
+    "en": "One of: 1667 and 1668",
+    "es": "Una de estas fechas: 1667 y 1668",
+    "fr": "Une de ces dates: 1667 et 1668",
+    "reject": true
+  },
+  {
+    "id": "list.rejectDisjunction",
+    "en": "All of: 1667 or 1668",
+    "es": "Todas estas fechas: 1667 o 1668",
+    "fr": "Toutes ces dates: 1667 ou 1668",
+    "reject": true
+  },
+  {
+    "id": "set.renderedRange",
+    "en": "One of: 1870 through 1880",
+    "es": "Una de estas fechas: 1870 a 1880",
+    "fr": "Une de ces dates: 1870 à 1880",
+    "expected": [
+      "[1870..1880]"
+    ]
+  },
+  {
+    "id": "list.renderedRange",
+    "en": "All of: 1870 through 1880",
+    "es": "Todas estas fechas: 1870 a 1880",
+    "fr": "Toutes ces dates: 1870 à 1880",
+    "expected": [
+      "{1870..1880}"
+    ]
+  },
+  {
+    "id": "set.renderedOpenRange",
+    "en": "Earlier or one of: 1870 through 1880, 1890, or later",
+    "es": "Antes o Una de estas fechas: 1870 a 1880 o 1890 o después",
+    "fr": "Plus tôt ou Une de ces dates: 1870 à 1880 ou 1890 ou après",
+    "expected": [
+      "[..1870..1880,1890..]"
+    ]
+  },
+  {
+    "id": "list.renderedOpenRange",
+    "en": "Earlier and all of: 1870 through 1880, 1890, and later",
+    "es": "Antes y Todas estas fechas: 1870 a 1880 y 1890 y después",
+    "fr": "Plus tôt et Toutes ces dates: 1870 à 1880 et 1890 et après",
+    "expected": [
+      "{..1870..1880,1890..}"
+    ]
+  },
+  {
+    "id": "interval.renderedOpenEnd",
+    "en": "1870 to open end",
+    "es": "1870 a fin abierto",
+    "fr": "1870 à fin ouverte",
+    "expected": [
+      "1870/.."
+    ]
+  },
+  {
+    "id": "interval.renderedOpenStart",
+    "en": "open start to 1870",
+    "es": "inicio abierto a 1870",
+    "fr": "début ouvert à 1870",
+    "expected": [
+      "../1870"
+    ]
+  },
+  {
+    "id": "interval.renderedUnknownEnd",
+    "en": "1870 to unknown",
+    "es": "1870 a desconocido",
+    "fr": "1870 à inconnu",
+    "expected": [
+      "1870/"
+    ]
+  },
+  {
+    "id": "interval.renderedUnknownStart",
+    "en": "unknown to 1870",
+    "es": "desconocido a 1870",
+    "fr": "inconnu à 1870",
+    "expected": [
+      "/1870"
+    ]
+  },
+  {
+    "id": "date.knownDayUnknownMonth",
+    "en": "12th of unknown month, 1870",
+    "es": "día 12 de mes desconocido, 1870",
+    "fr": "12 d'un mois inconnu, 1870",
+    "expected": [
+      "1870-XX-12"
+    ]
+  },
+  {
+    "id": "date.knownDayUnknownMonthEra",
+    "en": "12th of unknown month, 1 BC",
+    "es": "día 12 de mes desconocido, 1 a. C.",
+    "fr": "12 d'un mois inconnu, 1 av. J.-C.",
+    "expected": [
+      "0000-XX-12"
+    ]
+  },
+  {
+    "id": "date.unknownYearDay",
+    "en": "January 12, unknown year",
+    "es": "12 enero año desconocido",
+    "fr": "12 janvier année inconnue",
+    "expected": [
+      "XXXX-01-12"
+    ]
+  },
+  {
+    "id": "date.unknownYearMonth",
+    "en": "January, unknown year",
+    "es": "enero año desconocido",
+    "fr": "janvier année inconnue",
+    "expected": [
+      "XXXX-01"
+    ]
+  },
+  {
+    "id": "date.monthOnly",
+    "en": "January",
+    "es": "enero",
+    "fr": "janvier",
+    "expected": [
+      "XXXX-01"
+    ]
+  },
+  {
+    "id": "date.unadornedMonth",
+    "en": "month in 1872",
+    "es": "mes en 1872",
+    "fr": "mois en 1872",
+    "expected": [
+      "1872-XX"
+    ]
+  },
+  {
+    "id": "date.unadornedDay",
+    "en": "day in January 1872",
+    "es": "día en enero 1872",
+    "fr": "jour en janvier 1872",
+    "expected": [
+      "1872-01-XX"
+    ]
+  },
+  {
+    "id": "date.unadornedDayMonth",
+    "en": "day in 1872",
+    "es": "día en 1872",
+    "fr": "jour en 1872",
+    "expected": [
+      "1872-XX-XX"
+    ]
+  },
+  {
+    "id": "interval.monthSeason",
+    "en": "march 1988 - spring 1990",
+    "es": "marzo 1988 - primavera 1990",
+    "fr": "mars 1988 - printemps 1990",
+    "expected": [
+      "1988-03/1990-21"
+    ]
+  },
+  {
+    "id": "interval.seasonMonth",
+    "en": "spring 1988 - march 1990",
+    "es": "primavera 1988 - marzo 1990",
+    "fr": "printemps 1988 - mars 1990",
+    "expected": [
+      "1988-21/1990-03"
+    ]
+  },
+  {
+    "id": "interval.monthQualifiedSeason",
+    "en": "march 1988 - winter 2005?",
+    "es": "marzo 1988 - invierno 2005?",
+    "fr": "mars 1988 - hiver 2005?",
+    "expected": [
+      "1988-03/2005-24?"
+    ]
+  },
+  {
+    "id": "interval.fromMonths",
+    "en": "from January 1999 to December 1999",
+    "es": "de enero 1999 a diciembre 1999",
+    "fr": "De Janvier 1999 à Décembre 1999",
+    "expected": [
+      "1999-01/1999-12"
+    ]
+  },
+  {
+    "id": "interval.fromApproximateYears",
+    "en": "from 1970 about to 1980 about",
+    "es": "de 1970 aproximadamente a 1980 aproximadamente",
+    "fr": "De 1970 environ à 1980 environ",
+    "expected": [
+      "1970~/1980~"
+    ]
+  },
+  {
+    "id": "interval.shortEndYear",
+    "en": "1851-52",
+    "es": "1851-52",
+    "fr": "1851-52",
+    "expected": [
+      "1851/1852"
+    ]
+  },
+  {
+    "id": "interval.dashUnknown",
+    "en": "1988 - unknown",
+    "es": "1988 - desconocido",
+    "fr": "1988 - inconnu",
+    "expected": [
+      "1988/"
+    ]
+  },
+  {
+    "id": "interval.dashOpen",
+    "en": "1988 - open",
+    "es": "1988 - abierto",
+    "fr": "1988 - en cours",
+    "expected": [
+      "1988/.."
+    ]
+  },
+  {
+    "id": "list.semicolon",
+    "en": "2020; 2021",
+    "es": "2020; 2021",
+    "fr": "2020; 2021",
+    "expected": [
+      "{2020..2021}"
+    ]
+  },
+  {
+    "id": "period.qualifiedCentury",
+    "en": "19th century?",
+    "es": "siglo 19?",
+    "fr": "19e siècle?",
+    "expected": [
+      "1801?/1900?"
+    ]
+  },
+  {
+    "id": "period.romanCentury",
+    "en": "XIXth century",
+    "es": "siglo XIX",
+    "fr": "XIXè siècle",
+    "expected": [
+      "1801/1900"
+    ]
+  },
+  {
+    "id": "season.era",
+    "en": "Spring 4BCE",
+    "es": "primavera 4 a. C.",
+    "fr": "printemps 4AEC",
+    "expected": [
+      "-0003-21"
+    ]
+  },
+  {
+    "id": "season.qualifiedSuffix",
+    "en": "about winter 1988?",
+    "es": "aproximadamente invierno 1988?",
+    "fr": "environ l'hiver 1988?",
+    "expected": [
+      "1988-24%"
+    ]
+  },
+  {
+    "id": "date.article",
+    "en": "the 03/29/1988",
+    "es": "el 29/03/1988",
+    "fr": "le 29/03/1988",
+    "expected": [
+      "1988-03-29"
+    ]
+  },
+  {
+    "id": "date.validWeekday",
+    "en": "Tuesday, March 29, 1988",
+    "es": "martes, 29 marzo 1988",
+    "fr": "mardi, 29 mars 1988",
+    "expected": [
+      "1988-03-29"
+    ]
+  },
+  {
+    "id": "date.invalidWeekday",
+    "en": "Monday, March 29, 1988",
+    "es": "lunes, 29 marzo 1988",
+    "fr": "lundi, 29 mars 1988",
+    "reject": true
+  }
+]

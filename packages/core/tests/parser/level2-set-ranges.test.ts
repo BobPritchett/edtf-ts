@@ -45,7 +45,7 @@ describe('Level 2 - Set Range Expansion', () => {
       expect(result.value.values[2]!.edtf).toBe('2026-01');
       expect(result.value.values[3]!.edtf).toBe('2026-02');
       // All should have month precision
-      result.value.values.forEach(v => {
+      result.value.values.forEach((v) => {
         expect(v.precision).toBe('month');
       });
     }
@@ -60,7 +60,7 @@ describe('Level 2 - Set Range Expansion', () => {
       expect(result.value.values[0]!.edtf).toBe('2025-01');
       expect(result.value.values[22]!.edtf).toBe('2026-11');
       // All should have month precision
-      result.value.values.forEach(v => {
+      result.value.values.forEach((v) => {
         expect(v.precision).toBe('month');
       });
     }
@@ -79,7 +79,7 @@ describe('Level 2 - Set Range Expansion', () => {
       expect(result.value.values[4]!.edtf).toBe('2025-01-19');
       expect(result.value.values[5]!.edtf).toBe('2025-01-20');
       // All should have day precision
-      result.value.values.forEach(v => {
+      result.value.values.forEach((v) => {
         expect(v.precision).toBe('day');
       });
     }
@@ -96,7 +96,7 @@ describe('Level 2 - Set Range Expansion', () => {
       expect(result.value.values[2]!.edtf).toBe('2025-02-01');
       expect(result.value.values[3]!.edtf).toBe('2025-02-02');
       // All should have day precision
-      result.value.values.forEach(v => {
+      result.value.values.forEach((v) => {
         expect(v.precision).toBe('day');
       });
     }
@@ -107,7 +107,7 @@ describe('Level 2 - Set Range Expansion', () => {
     const result = parse('[2025-01..2026]');
     expect(result.success).toBe(false);
     // Error comes from general parsing, not from range expansion
-    expect(result.errors?.[0]?.code).toBe('INVALID_FORMAT');
+    expect(result.errors?.[0]?.code).toBe('INVALID_RANGE');
   });
 
   it('should handle mixed set values and ranges', () => {
