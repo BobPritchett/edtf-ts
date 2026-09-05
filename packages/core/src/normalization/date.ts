@@ -12,6 +12,8 @@
 import type { EDTFDate } from '../types/index.js';
 import type { Member, Precision, Qualifiers } from '../compare-types/index.js';
 import { possibleDateBounds } from '../calendar.js';
+import { getYearRange } from '../year-range.js';
+import { startOfYear, endOfYear } from './epoch.js';
 import { dateToEpochMs } from './epoch.js';
 import { getDaysInMonth } from '../compare-utils/calendar.js';
 
@@ -79,6 +81,14 @@ export function normalizeDate(date: EDTFDate): Member {
     }),
     eMax: possibilities.maxMs,
   };
+
+  if (date.significantDigitsYear !== undefined) {
+    const range = getYearRange(date);
+    bounds.sMin = startOfYear(range.min);
+    bounds.sMax = startOfYear(range.max);
+    bounds.eMin = endOfYear(range.min);
+    bounds.eMax = endOfYear(range.max);
+  }
 
   // Extract qualifiers
   const qualifiers: Qualifiers = {};

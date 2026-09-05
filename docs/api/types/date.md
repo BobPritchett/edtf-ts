@@ -574,4 +574,4 @@ function getAccurateBounds(edtfString: string) {
 - [EDTFDateTime](/api/types/datetime) - Dates with time components
 - [EDTFInterval](/api/types/interval) - Date ranges and intervals
 - [Temporal Comparison](/api/compare) - Advanced temporal comparison
-- [Uncertainty & Approximation](/guide/uncertainty)
+- [Uncertainty & Approximation](/guide/parsing#qualified-dates-level-1)

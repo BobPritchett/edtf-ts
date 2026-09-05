@@ -5,6 +5,9 @@ const lexer = createLexer(lexicon);
 %}
 @include "../shared.ne"
 
+shared_day_set -> shared_day_choices __ %of __ month_name __ %of __ calendar_year
+  {% d => sharedDaySet(pad4(d[8]), months[d[4]], d[0]) %}
+
 bound_prefix -> %inclusiveBefore {% () => ['before', true] %} | %inclusiveAfter {% () => ['after', true] %}
 datevalue_base -> day_num __ %of __ month_name __ %of __ year_num {% d => ({ edtf: pad4(d[8]) + '-' + months[d[4]] + '-' + pad2(d[0]), confidence: 0.95 }) %}
   | %decadeWord __ %number {% d => ({ edtf: String(d[2].value).slice(0,3) + 'X', confidence: 0.95 }) %}
@@ -39,3 +42,7 @@ datevalue_base -> %day __ day_num __ %of __ %unknownMonth _ %comma:? _ calendar_
   | %day __ day_num _ %comma _ %some __ %month __ %of __ year_num {% d => ({ edtf: pad4(d[12]) + '-XX-' + pad2(d[2]), confidence: 0.95 }) %}
 
 datevalue_base -> %inWord __ %sometime __ %of __ year_num {% d => ({ edtf: pad4(d[6]) + '-XX-XX', confidence: 0.95 }) %}
+
+# Era markers in the ordinary Spanish calendar spelling: marzo de 5 d. C.
+datevalue_base -> month_name __ %of __ era_year {% d => ({ edtf: pad4(d[4]) + '-' + months[d[0]], confidence: 0.95 }) %}
+  | day_num __ %of __ month_name __ %of __ era_year {% d => ({ edtf: pad4(d[8]) + '-' + months[d[4]] + '-' + pad2(d[0]), confidence: 0.95 }) %}

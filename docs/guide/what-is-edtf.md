@@ -140,5 +140,5 @@ The full EDTF specification is maintained by the Library of Congress:
 ## Next Steps
 
 - [Getting Started](./getting-started) - Install and use EDTF-TS
-- [EDTF Levels](./edtf-levels) - Detailed breakdown of each conformance level
+- [Level-Specific Parsing](./parsing#level-specific-parsing) - Choose an EDTF conformance level
 - [Examples](../examples/basic-usage) - See EDTF in action

@@ -77,7 +77,7 @@
     "es": "1870 (año incierto)",
     "fr": "1870 (année incertaine)",
     "expected": [
-      "?1870"
+      "1870?"
     ]
   },
   {
@@ -191,8 +191,8 @@
   {
     "id": "interval.explicit",
     "en": "from 1870 to 1880",
-    "es": "desde 1870 a 1880",
-    "fr": "depuis 1870 à 1880",
+    "es": "de 1870 a 1880",
+    "fr": "de 1870 à 1880",
     "expected": [
       "1870/1880"
     ]
@@ -245,6 +245,33 @@
     "ambiguous": true
   },
   {
+    "id": "set.sharedDays",
+    "en": "April 12th or 14th 1985",
+    "es": "12 o 14 de abril de 1985",
+    "fr": "12 ou 14 avril 1985",
+    "expected": [
+      "[1985-04-12,1985-04-14]"
+    ]
+  },
+  {
+    "id": "set.sharedDaysMultiple",
+    "en": "April 12, 14, or 16, 1985",
+    "es": "12, 14 o 16 de abril de 1985",
+    "fr": "12, 14 ou 16 avril 1985",
+    "expected": [
+      "[1985-04-12,1985-04-14,1985-04-16]"
+    ]
+  },
+  {
+    "id": "set.sharedDaysOrdinals",
+    "en": "1st or 3rd April 1985",
+    "es": "1º o 3º de abril de 1985",
+    "fr": "1er ou 3 avril 1985",
+    "expected": [
+      "[1985-04-01,1985-04-03]"
+    ]
+  },
+  {
     "id": "set.finiteRange",
     "en": "sometime between 1870 and 1880",
     "es": "algún momento entre 1870 y 1880",
@@ -272,12 +299,12 @@
     ]
   },
   {
-    "id": "list.earlier",
+    "id": "interval.andEarlier",
     "en": "1870 and earlier",
     "es": "1870 y antes",
     "fr": "1870 et avant",
     "expected": [
-      "{..1870}"
+      "../1870"
     ]
   },
   {
@@ -481,7 +508,7 @@
     "fr": "20 ans",
     "age": true,
     "expected": [
-      "?2004-?06-?02/?2005-?06-?01"
+      "[2004-06-02..2005-06-01]"
     ]
   },
   {
@@ -491,7 +518,7 @@
     "fr": "20 à 23 ans",
     "age": true,
     "expected": [
-      "?2001-?06-?02/?2005-?06-?01"
+      "[2001-06-02..2005-06-01]"
     ]
   },
   {
@@ -551,7 +578,7 @@
     "fr": "6 mois",
     "age": true,
     "expected": [
-      "?2024-?11-?02/?2024-?12-?01"
+      "[2024-11-02..2024-12-01]"
     ]
   },
   {
@@ -561,7 +588,7 @@
     "fr": "2 semaines",
     "age": true,
     "expected": [
-      "?2025-?05-?12/?2025-?05-?18"
+      "[2025-05-12..2025-05-18]"
     ]
   },
   {
@@ -571,7 +598,7 @@
     "fr": "10 jours",
     "age": true,
     "expected": [
-      "?2025-?05-?22/?2025-?05-?22"
+      "2025-05-22"
     ]
   },
   {
@@ -696,7 +723,7 @@
     "es": "Una de estas fechas: 1667, 1668 o 1670",
     "fr": "Une de ces dates: 1667, 1668 ou 1670",
     "expected": [
-      "[1667..1668,1670]"
+      "[1667,1668,1670]"
     ]
   },
   {
@@ -705,25 +732,25 @@
     "es": "Todas estas fechas: 1667, 1668 y 1670",
     "fr": "Toutes ces dates: 1667, 1668 et 1670",
     "expected": [
-      "{1667..1668,1670}"
+      "{1667,1668,1670}"
     ]
   },
   {
     "id": "set.renderedOpen",
-    "en": "Earlier or one of: 1667, 1668, 1670, or later",
+    "en": "One of: 1667 or earlier, 1668, 1670 or later",
     "es": "Una de estas fechas: 1667 o antes, 1668 o 1670 o después",
     "fr": "Une de ces dates: 1667 ou avant, 1668 ou 1670 ou après",
     "expected": [
-      "[..1667..1668,1670..]"
+      "[..1667,1668,1670..]"
     ]
   },
   {
     "id": "list.renderedOpen",
-    "en": "Earlier and all of: 1667, 1668, 1670, and later",
-    "es": "Todas estas fechas: 1667 y antes, 1668 y 1670 y después",
-    "fr": "Toutes ces dates: 1667 et avant, 1668 et 1670 et après",
+    "en": "All of: 1667 and all earlier dates, 1668, 1670 and all later dates",
+    "es": "Todas estas fechas: 1667 y todas las fechas anteriores, 1668 y 1670 y todas las fechas posteriores",
+    "fr": "Toutes ces dates: 1667 et toutes les dates antérieures, 1668 et 1670 et toutes les dates ultérieures",
     "expected": [
-      "{..1667..1668,1670..}"
+      "{..1667,1668,1670..}"
     ]
   },
   {
@@ -760,20 +787,20 @@
   },
   {
     "id": "set.renderedOpenRange",
-    "en": "Earlier or one of: 1870 through 1880, 1890, or later",
-    "es": "Antes o Una de estas fechas: 1870 a 1880 o 1890 o después",
-    "fr": "Plus tôt ou Une de ces dates: 1870 à 1880 ou 1890 ou après",
+    "en": "One of: 1880 or earlier, 1890 or later",
+    "es": "Una de estas fechas: 1880 o antes, 1890 o después",
+    "fr": "Une de ces dates: 1880 ou avant, 1890 ou après",
     "expected": [
-      "[..1870..1880,1890..]"
+      "[..1880,1890..]"
     ]
   },
   {
     "id": "list.renderedOpenRange",
-    "en": "Earlier and all of: 1870 through 1880, 1890, and later",
-    "es": "Antes y Todas estas fechas: 1870 a 1880 y 1890 y después",
-    "fr": "Plus tôt et Toutes ces dates: 1870 à 1880 et 1890 et après",
+    "en": "All of: 1880 and all earlier dates, 1890 and all later dates",
+    "es": "Todas estas fechas: 1880 y todas las fechas anteriores, 1890 y todas las fechas posteriores",
+    "fr": "Toutes ces dates: 1880 et toutes les dates antérieures, 1890 et toutes les dates ultérieures",
     "expected": [
-      "{..1870..1880,1890..}"
+      "{..1880,1890..}"
     ]
   },
   {
@@ -962,7 +989,7 @@
     "es": "2020; 2021",
     "fr": "2020; 2021",
     "expected": [
-      "{2020..2021}"
+      "{2020,2021}"
     ]
   },
   {

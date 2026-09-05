@@ -5,9 +5,6 @@ hero:
   name: EDTF-TS
   text: Dates, the Way Humans Mean Them
   tagline: Because real time is messy—and pretending otherwise loses information
-  image:
-    src: /logo.svg
-    alt: EDTF-TS
   actions:
     - theme: brand
       text: Get Started

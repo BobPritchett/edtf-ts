@@ -214,7 +214,7 @@ describe('localized rendering and canonical round trips', () => {
 describe('age reference-date edge cases', () => {
   it('clamps anniversaries when the reference day is February 29', () => {
     const result = parseAgeBirthday('21 years old', { currentDate: new Date(2024, 1, 29) });
-    expect(result.edtf).toBe('?2002-?03-?01/?2003-?02-?28');
+    expect(result.edtf).toBe('[2002-03-01..2003-02-28]');
     expect(parse(result.edtf).success).toBe(true);
   });
 });

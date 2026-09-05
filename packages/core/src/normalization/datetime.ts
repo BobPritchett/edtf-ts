@@ -19,9 +19,12 @@ import { dateToEpochMs } from './epoch.js';
  * - Hour: HH:00:00.000 to HH:59:59.999
  * - Minute: HH:MM:00.000 to HH:MM:59.999
  * - Second: HH:MM:SS.000 to HH:MM:SS.999
+ * - Fraction: .1 spans 100–199 ms; .123 spans exactly 123 ms
  */
 export function normalizeDateTime(datetime: EDTFDateTime): Member {
-  const { year, month, day, hour, minute, second } = datetime;
+  const { year, month, day, hour, minute, second, fractionalSecond } = datetime;
+  const millisecond = Number(fractionalSecond?.padEnd(3, '0') ?? 0);
+  const width = 10 ** (3 - (fractionalSecond?.length ?? 0));
 
   // Determine time precision
   let precision: Precision;
@@ -41,14 +44,14 @@ export function normalizeDateTime(datetime: EDTFDateTime): Member {
     hour,
     minute: minute ?? 0,
     second: second ?? 0,
-    millisecond: 0,
+    millisecond,
   });
 
   // Calculate end bound (end of the time unit)
   let eMax: bigint;
 
   if (second !== undefined) {
-    // Second precision: HH:MM:SS.000 to HH:MM:SS.999
+    // A written fraction refines the second without changing the precision enum.
     eMax = dateToEpochMs({
       year,
       month,
@@ -56,7 +59,7 @@ export function normalizeDateTime(datetime: EDTFDateTime): Member {
       hour,
       minute: minute!,
       second,
-      millisecond: 999,
+      millisecond: millisecond + width - 1,
     });
   } else if (minute !== undefined) {
     // Minute precision: HH:MM:00.000 to HH:MM:59.999

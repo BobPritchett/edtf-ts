@@ -218,6 +218,8 @@ export interface IFuzzyDateTime extends IFuzzyDate {
   readonly hour: number;
   readonly minute: number;
   readonly second: number;
+  /** Written fractional-second digits (1–3), if present. */
+  readonly fractionalSecond?: string;
   readonly timezone: string | undefined;
 }
 

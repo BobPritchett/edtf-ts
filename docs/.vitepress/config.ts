@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress';
+import { version } from '../../packages/core/package.json';
 
 export default defineConfig({
   title: 'EDTF-TS',
@@ -6,10 +7,7 @@ export default defineConfig({
 
   base: '/edtf-ts/',
 
-  ignoreDeadLinks: true, // TODO: Remove when all pages are created
-
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/edtf-ts/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#646cff' }],
     ['meta', { name: 'og:type', content: 'website' }],
     ['meta', { name: 'og:locale', content: 'en' }],
@@ -17,23 +15,17 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    logo: '/logo.svg',
-
     nav: [
       { text: 'Guide', link: '/guide/what-is-edtf' },
       { text: 'Playground', link: '/playground' },
       { text: 'API Reference', link: '/api/core' },
       { text: 'Examples', link: '/examples/basic-usage' },
       {
-        text: 'v0.1.0',
+        text: `v${version}`,
         items: [
           {
             text: 'Changelog',
-            link: 'https://github.com/BobPritchett/edtf-ts/blob/main/CHANGELOG.md',
-          },
-          {
-            text: 'Contributing',
-            link: 'https://github.com/BobPritchett/edtf-ts/blob/main/CONTRIBUTING.md',
+            link: '/changelog',
           },
         ],
       },
@@ -53,10 +45,13 @@ export default defineConfig({
           text: 'Working with Dates',
           items: [
             { text: 'Parsing', link: '/guide/parsing' },
+            { text: 'Interoperability and Policies', link: '/guide/interoperability' },
+            { text: 'Natural Parsing Outcomes', link: '/guide/parsing-policies' },
             { text: 'Formatting', link: '/guide/formatting' },
             { text: 'Comparison', link: '/guide/comparison' },
-            { text: 'Semantics & Language Migration', link: '/guide/semantics-migration' },
+            { text: 'Migrating to 0.6.0', link: '/guide/semantics-migration' },
             { text: 'Tested Language Examples', link: '/guide/language-examples' },
+            { text: 'Locales and Bundle Sizes', link: '/guide/locales-and-bundles' },
             { text: 'Compatibility Review', link: '/guide/compatibility-review' },
           ],
         },
@@ -95,6 +90,7 @@ export default defineConfig({
             { text: 'Validators', link: '/api/validators' },
             { text: 'Formatters', link: '/api/formatters' },
             { text: 'Comparators', link: '/api/comparators' },
+            { text: 'Canonicalization and Operations', link: '/api/operations' },
           ],
         },
       ],

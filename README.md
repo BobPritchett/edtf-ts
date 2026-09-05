@@ -8,7 +8,18 @@ Try the **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playgr
 
 Known days survive unknown months (`1870-XX-12` → “12th of unknown month, 1870”), and month-to-season intervals parse across all three languages. See the [tested compatibility review](docs/guide/compatibility-review.md) for the supplied examples, edtfy comparisons, and intentional semantic differences.
 
-Check **Show all locales** beside the Natural Language label for one compact row per other locale preset: localized text on the right, preferred back-parsed EDTF on the left. Green checks mark matches after compacting adjacent exact years; red crosses identify differences or parse failures. Hover over `(+n)` results to inspect alternatives. Consecutive years render as concise ranges in all three languages, and Spanish/French open intervals round-trip too.
+Check **Show all locales** beside the Natural Language label for one compact row per other locale preset: localized text on the right, preferred back-parsed EDTF on the left. Green checks mark matches after compacting adjacent exact years for comparison; red crosses identify differences or parse failures. Hover over `(+n)` results to inspect alternatives. Written enumerations and ranges preserve their structure, and Spanish/French open intervals round-trip too.
+
+## Upgrading from 0.5.0 to 0.6.0
+
+Existing exports and required call arguments remain available. Before updating both packages, check these cases that can stop existing code:
+
+- **Datetime intervals:** Time-of-day interval endpoints are rejected; handle failures with `FuzzyDate.from()` or core `parse()`. Standalone `Date.toISOString()` timestamps remain accepted, with milliseconds now preserved in bounds and ISO output.
+- **Comparisons:** `compare()` / `.compareTo()` can return `'UNKNOWN'`, so numeric callers need a guard. Sorting helpers throw when mixing timezone-qualified timestamps with dates or timezone-free datetimes.
+- **Input language:** `locale` now selects the natural parser's grammar. For English input with a browser/regional locale, pass `language: 'en'`; unsupported languages otherwise throw.
+- **Age-result shape:** Age-derived results can be sets. Check the returned type before using interval endpoints; code storing `.edtf` or formatting `.parsed` can retain that flow.
+
+See the [migration guide](https://bobpritchett.github.io/edtf-ts/guide/semantics-migration) for fixes, TypeScript compatibility details, and the separate list of parsing-result changes.
 
 ## Why EDTF?
 
@@ -279,6 +290,8 @@ parseAgeBirthday('20 ans, anniversaire le 15 mars', {
 ```
 
 The API defaults to `en-US`. Regional locales select the language and numeric-order preference from `Intl` data. Optional `language` and `dateOrder` overrides separate syntax from numeric ordering; unsupported parsing languages raise an error. For smaller bundles, use `@edtf-ts/natural/en`, `/es`, or `/fr`.
+
+All `en-*` regions share English grammar without adding another parser. The playground demonstrates MDY (`en-US`), DMY (`en-GB`), and YMD (`en-ZA`). See [locales and bundle sizes](https://bobpritchett.github.io/edtf-ts/guide/locales-and-bundles) for regional fallback, selective imports, and measured browser sizes.
 
 The playground uses the browser’s locale instead, with one override for both date inputs, comparisons, localized output, and the age/birthday section. Selecting **Browser default** resets it; reloading also clears the override. See the [playground instructions](docs/playground.md), [tested language examples](docs/guide/language-examples.md), and [migration guide](docs/guide/semantics-migration.md).
 

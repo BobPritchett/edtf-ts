@@ -51,6 +51,10 @@ export class FuzzyDateTime extends FuzzyDateBase implements IFuzzyDateTime {
     return this._inner.second;
   }
 
+  get fractionalSecond(): string | undefined {
+    return this._inner.fractionalSecond;
+  }
+
   get timezone(): string | undefined {
     return this._inner.timezone;
   }

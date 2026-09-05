@@ -242,5 +242,5 @@ if (result.success && isEDTFDate(result.value)) {
 
 - [Parsing Guide](../guide/parsing) - Deep dive into parsing
 - [Formatting Guide](../guide/formatting) - Advanced formatting
-- [Interval Examples](./intervals) - Working with date ranges
-- [Cultural Heritage](./cultural-heritage) - Real-world museum use case
+- [Intervals & Ranges](../api/types/interval) - Working with date ranges
+- [Cultural Heritage](../guide/why-edtf-ts#cultural-heritage-museums) - Museum use cases

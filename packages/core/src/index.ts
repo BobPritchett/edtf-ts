@@ -4,7 +4,9 @@
  * with comprehensive temporal reasoning capabilities.
  */
 
-export const VERSION = '0.4.2';
+import { version } from '../package.json';
+
+export const VERSION = version;
 
 // ============================================================
 // CORE (formerly @edtf-ts/core)
@@ -23,6 +25,7 @@ export type {
   EDTFType,
   Precision,
   ParseResult,
+  ParseOptions,
   ParseError,
   DateComponents,
   Qualification,
@@ -248,3 +251,11 @@ export { resolveLanguage, resolveDateOrder } from './locale.js';
 export type { Language, DateOrder } from './locale.js';
 
 export { compactYearRanges } from './collections.js';
+
+// Additive operations accept EDTF strings, parsed values, or FuzzyDate instances.
+export { EDTFOperationError, type EDTFInput } from './operations.js';
+export { getYearRange, type YearRange } from './year-range.js';
+export { canonicalize, canonicalLevel } from './canonical.js';
+export { getBounds, type TemporalBound, type TemporalBounds } from './bounds.js';
+export { enumerateValues, EnumerationError, type EnumerationErrorCode } from './enumeration.js';
+export { relate, type RelationOptions, type RelationSummary } from './relations/summary.js';

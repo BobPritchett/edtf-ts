@@ -98,7 +98,7 @@ describe('Qualified Dates', () => {
     it('should parse "~1950"', () => {
       const results = parseNatural('~1950');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('~1950');
+      expect(results[0].edtf).toBe('1950~');
     });
 
     it('should parse "circa June 1950"', () => {
@@ -136,7 +136,7 @@ describe('Qualified Dates', () => {
     it('should parse "~1984?"', () => {
       const results = parseNatural('~1984?');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('~1984?');
+      expect(results[0].edtf).toBe('1984%');
     });
   });
 });

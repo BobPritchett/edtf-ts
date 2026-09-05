@@ -14,6 +14,7 @@ import type {
   EDTFSet,
   EDTFList,
   EDTFLevel,
+  ParseOptions,
   EDTFType,
   Precision,
 } from '../types/index.js';
@@ -406,8 +407,8 @@ export abstract class FuzzyDateBase implements IFuzzyDate {
    * Returns { success: true, value, level } on success,
    * or { success: false, errors } on failure.
    */
-  static from(input: string): FuzzyDateParseResult {
-    const result = parse(input);
+  static from(input: string, options?: EDTFLevel | ParseOptions): FuzzyDateParseResult {
+    const result = parse(input, options);
     if (!result.success) {
       return result;
     }
@@ -422,8 +423,8 @@ export abstract class FuzzyDateBase implements IFuzzyDate {
    * Parse an EDTF string and return a FuzzyDate.
    * Throws FuzzyDateParseError on invalid input.
    */
-  static parse(input: string): IFuzzyDate {
-    const result = parse(input);
+  static parse(input: string, options?: EDTFLevel | ParseOptions): IFuzzyDate {
+    const result = parse(input, options);
     if (!result.success) {
       throw new FuzzyDateParseError(result.errors);
     }

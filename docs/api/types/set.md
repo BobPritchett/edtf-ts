@@ -1,5 +1,7 @@
 # EDTFSet
 
+See [interoperability and migration](../../guide/interoperability) for strict/extended mode, supported extensions, and the current natural-language output contracts.
+
 Represents "one of a set" of dates (Level 2).
 
 ## Interface

@@ -1,5 +1,7 @@
 # Parsing EDTF Strings
 
+See [interoperability and migration](./interoperability) for strict/extended mode, supported extensions, and the current natural-language output contracts.
+
 This guide covers parsing EDTF strings into structured objects.
 
 ## Basic Parsing

@@ -3,7 +3,8 @@ import { calculateEpochMs, dateFromMs, daysInMonth } from '../core-utils/date-he
 
 /**
  * Parse EDTF Level 0 strings
- * Level 0 is the ISO 8601 profile - basic dates and intervals without uncertainty
+ * Level 0 is the ISO 8601 profile - basic dates and intervals without uncertainty.
+ * Also recognizes ISO datetime extensions; parse() applies the conformance policy.
  */
 export function parseLevel0(input: string): ParseResult {
   input = input.trim();
@@ -141,22 +142,24 @@ function parseDate(input: string): ParseResult<EDTFDate> {
 /**
  * Parse a datetime in ISO 8601 format
  * Format: YYYY-MM-DDTHH:MM:SS[.sss][Z|±HH:MM|±HH]
+ * Extended mode also accepts the signed six-digit years produced by Date.toISOString().
  */
 function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   // Match ISO 8601 datetime with optional timezone
   // Supports: Z, ±HH:MM, or ±HH
   const match = input.match(
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-]\d{2}(?::\d{2})?)?$/
+    /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|[+-]\d{2}(?::\d{2})?)?$/
   );
 
-  if (!match) {
+  if (!match || match[1] === '-000000') {
     return {
       success: false,
       errors: [
         {
           code: 'INVALID_FORMAT',
           message: `Invalid datetime format: ${input}`,
-          suggestion: 'Use format: YYYY-MM-DDTHH:MM:SS[Z|±HH:MM|±HH]',
+          suggestion:
+            'Use format: YYYY-MM-DDTHH:MM:SS[.sss][Z|±HH:MM|±HH] (at most 3 fractional digits)',
         },
       ],
     };
@@ -168,7 +171,8 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   const hour = parseInt(match[4]!, 10);
   const minute = parseInt(match[5]!, 10);
   const second = parseInt(match[6]!, 10);
-  const timezone = match[7] || undefined;
+  const fractionalSecond = match[7] || undefined;
+  const timezone = match[8] || undefined;
 
   // Validate month
   if (month < 1 || month > 12) {
@@ -247,8 +251,11 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
   }
   const shift = BigInt(offset) * 60000n;
   // Floating local times use a nominal epoch; normalization marks their domain.
-  const minMsValue = calculateEpochMs(year, month, day, hour, minute, second, 0) - shift;
-  const maxMsValue = calculateEpochMs(year, month, day, hour, minute, second, 999) - shift;
+  // Keep the written resolution: .1 spans 100–199 ms, .123 is exactly 123 ms.
+  const millisecond = Number(fractionalSecond?.padEnd(3, '0') ?? 0);
+  const width = 10 ** (3 - (fractionalSecond?.length ?? 0));
+  const minMsValue = calculateEpochMs(year, month, day, hour, minute, second, millisecond) - shift;
+  const maxMsValue = minMsValue + BigInt(width - 1);
 
   const edtfDateTime: EDTFDateTime = {
     type: 'DateTime',
@@ -261,6 +268,7 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
     hour,
     minute,
     second,
+    ...(fractionalSecond !== undefined ? { fractionalSecond } : {}),
     timezone,
     get min() {
       return dateFromMs(minMsValue);
@@ -283,6 +291,7 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
         hour: number;
         minute: number;
         second: number;
+        fractionalSecond?: string;
         timezone?: string;
       } = {
         type: this.type,
@@ -294,6 +303,7 @@ function parseDateTime(input: string): ParseResult<EDTFDateTime> {
         second: this.second,
       };
       if (this.timezone) result.timezone = this.timezone;
+      if (this.fractionalSecond !== undefined) result.fractionalSecond = this.fractionalSecond;
       return result;
     },
     toString() {

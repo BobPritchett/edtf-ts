@@ -1,4 +1,5 @@
 import type { EDTFBase, EDTFSet, EDTFList } from './types/index.js';
+import { parse } from './parser.js';
 
 // Only exact calendar years can join a run. Qualifications, masks, and other
 // precisions retain their original spelling and act as boundaries between runs.
@@ -39,24 +40,30 @@ function compactMembers(members: string[]): string[] {
  */
 export function compactYearRanges(value: EDTFBase): string {
   if (value.type !== 'Set' && value.type !== 'List') return value.edtf;
-  const collection = value as EDTFSet | EDTFList;
-  let content = value.edtf.slice(1, -1);
-  if (collection.earlier) content = content.slice(2);
-  if (collection.later) content = content.slice(0, -2);
   return (
     value.edtf[0] +
-    (collection.earlier ? '..' : '') +
-    compactMembers(content.split(',')).join(',') +
-    (collection.later ? '..' : '') +
+    compactMembers(value.edtf.slice(1, -1).split(',')).join(',') +
     value.edtf.slice(-1)
   );
 }
 
-/** Group expanded parser values for concise rendering using the same year rule. */
-export function collectionYearGroups(collection: EDTFSet | EDTFList) {
+/** Render the written elements, preserving enumerations and ranges at every precision. */
+export function collectionGroups(collection: EDTFSet | EDTFList) {
   const members = new Map(collection.values.map((value) => [value.edtf, value]));
-  return compactMembers(collection.values.map((value) => value.edtf)).map((part) => {
-    const [first, last] = part.split('..');
-    return { first: members.get(first!)!, last: last ? members.get(last)! : undefined };
-  });
+  const member = (text: string) => {
+    const existing = members.get(text);
+    if (existing) return existing;
+    const result = parse(text);
+    if (!result.success) throw new Error(`Invalid collection endpoint: ${text}`);
+    return result.value;
+  };
+  return collection.edtf
+    .slice(1, -1)
+    .split(',')
+    .map((part) => {
+      const earlier = part.startsWith('..'),
+        later = part.endsWith('..');
+      const [first, last] = part.replace(/^\.\.|\.\.$/g, '').split('..');
+      return { first: member(first!), last: last ? member(last) : undefined, earlier, later };
+    });
 }

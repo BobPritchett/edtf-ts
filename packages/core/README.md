@@ -7,7 +7,19 @@
 
 Modern TypeScript implementation of [Extended Date/Time Format (EDTF)](https://www.loc.gov/standards/datetime/) with temporal reasoning, fuzzy date comparison, and human-readable formatting.
 
+Additive [core operations](https://bobpritchett.github.io/edtf-ts/api/operations) provide canonical spelling, significant-year ranges, tagged finite/open/unknown bounds, lazy value enumeration, and an all-relations summary. Existing `FuzzyDate` methods and collection arrays remain available. Significant-digit bounds now cover the represented range (`1950S2` means 1900–1999); invalid digit counts are rejected.
+
 **[GitHub Repository](https://github.com/BobPritchett/edtf-ts)** | **[Documentation](https://bobpritchett.github.io/edtf-ts/)** | **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playground)**
+
+## Upgrading from 0.5.0 to 0.6.0
+
+Existing exports remain available. The main risks to existing callers are:
+
+- Datetime interval endpoints are rejected. Use `FuzzyDate.from()` or `parse()` to handle validation failures. Standalone `Date.toISOString()` timestamps remain accepted by default; milliseconds are preserved in bounds and ISO output. Strict mode excludes fractional seconds.
+- `compare()` / `.compareTo()` now return `number | 'UNKNOWN'`; numeric assignments and direct sort callbacks may need a TypeScript guard.
+- `sort()`, `earliest()`, `latest()`, and `FuzzyDate.compare()` throw when mixing timezone-qualified timestamps with calendar dates or timezone-free datetimes.
+
+The [migration guide](https://bobpritchett.github.io/edtf-ts/guide/semantics-migration) explains safe adaptations, result-type changes, and advanced relation callbacks. Update `@edtf-ts/natural` at the same time if you use it.
 
 ## Why EDTF?
 
@@ -38,7 +50,7 @@ date.format({ locale: 'es-ES' }); // '12 de marzo de 1870'
 date.format({ locale: 'fr-FR' }); // '12 mars 1870'
 ```
 
-Rendering defaults to `en-US`. Pass the same locale to `@edtf-ts/natural` when parsing natural-language dates or ages. The [playground](https://bobpritchett.github.io/edtf-ts/playground) starts with your browser’s locale and offers one top-level override for all parsing and rendering. See the [migration guide](../../docs/guide/semantics-migration.md) for corrected EDTF semantics and public interfaces.
+Rendering defaults to `en-US`. When passing a locale to `@edtf-ts/natural`, make sure its language matches the input, or set `language` explicitly. The [playground](https://bobpritchett.github.io/edtf-ts/playground) starts with your browser’s locale and offers one top-level override for all parsing and rendering. See the [migration guide](https://bobpritchett.github.io/edtf-ts/guide/semantics-migration) for compatibility details.
 
 ## Installation
 
@@ -156,3 +168,7 @@ MIT Copyright 2025 Bob Pritchett
 ## Contributing
 
 Contributions welcome! See the [GitHub repository](https://github.com/BobPritchett/edtf-ts) for details.
+
+## Interoperability profile
+
+`parse(input, { level: 2, conformance: 'strict' })`, `isValid`, and `FuzzyDate.from` / `FuzzyDate.parse` support the strict interoperability profile. Extended support is the default. Season interval endpoints are a supported extension; strict mode excludes season endpoints, season collection members, and qualified seasons. Qualified calendar-date collection members remain supported. Human formatting preserves explicit enumeration/range structure, including month/day ranges. See [interoperability and migration](../../docs/guide/interoperability.md).

@@ -219,20 +219,20 @@ describe('Sets (Level 2)', () => {
     it('should parse "1667 or 1668 or 1670"', () => {
       const results = parseNatural('1667 or 1668 or 1670');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('[1667..1668,1670]');
+      expect(results[0].edtf).toBe('[1667,1668,1670]');
       expect(results[0].type).toBe('set');
     });
 
     it('should parse "either 1667 or 1668"', () => {
       const results = parseNatural('either 1667 or 1668');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('[1667..1668]');
+      expect(results[0].edtf).toBe('[1667,1668]');
     });
 
     it('should parse "1667 or 1668" (without either)', () => {
       const results = parseNatural('1667 or 1668');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('[1667..1668]');
+      expect(results[0].edtf).toBe('[1667,1668]');
     });
   });
 
@@ -270,20 +270,20 @@ describe('Lists (Level 2)', () => {
     it('should parse "1667 and 1668 and 1670"', () => {
       const results = parseNatural('1667 and 1668 and 1670');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('{1667..1668,1670}');
+      expect(results[0].edtf).toBe('{1667,1668,1670}');
       expect(results[0].type).toBe('list');
     });
 
     it('should parse "both 1667 and 1668"', () => {
       const results = parseNatural('both 1667 and 1668');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('{1667..1668}');
+      expect(results[0].edtf).toBe('{1667,1668}');
     });
 
     it('should parse "1667 and 1668" (without both)', () => {
       const results = parseNatural('1667 and 1668');
       expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('{1667..1668}');
+      expect(results[0].edtf).toBe('{1667,1668}');
     });
   });
 });

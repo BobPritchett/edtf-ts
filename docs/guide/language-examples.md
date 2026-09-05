@@ -12,7 +12,7 @@ Generated from `packages/natural/tests/fixtures/languages.json` by `node package
 | qualifier.approximate | circa 1870 | hacia 1870 | vers 1870 | `1870~` |
 | qualifier.uncertain | possibly 1870 | quizás 1870 | peut-être 1870 | `1870?` |
 | qualifier.both | possibly circa 1870 | quizás hacia 1870 | peut-être vers 1870 | `1870%` |
-| qualifier.component | 1870 (year uncertain) | 1870 (año incierto) | 1870 (année incertaine) | `?1870` |
+| qualifier.component | 1870 (year uncertain) | 1870 (año incierto) | 1870 (année incertaine) | `1870?` |
 | boundary.before | before 1870 | antes de 1870 | avant 1870 | `[..1869]` |
 | boundary.after | after 1870 | después de 1870 | après 1870 | `[1871..]` |
 | boundary.inclusiveBefore | no later than 1870 | no más tarde de 1870 | pas après 1870 | `[..1870]` |
@@ -25,16 +25,19 @@ Generated from `packages/natural/tests/fixtures/languages.json` by `node package
 | boundary.month | before March 2024 | antes de marzo 2024 | avant mars 2024 | `[..2024-02]` |
 | boundary.leapDay | before March 1, 2024 | antes de 1 de marzo de 2024 | avant 1 mars 2024 | `[..2024-02-29]` |
 | interval.since | since 1870 | desde 1870 | depuis 1870 | `1870/..` |
-| interval.explicit | from 1870 to 1880 | desde 1870 a 1880 | depuis 1870 à 1880 | `1870/1880` |
+| interval.explicit | from 1870 to 1880 | de 1870 a 1880 | de 1870 à 1880 | `1870/1880` |
 | interval.unknown | 1870 to unknown | 1870 a desconocido | 1870 à inconnu | `1870/` |
 | interval.between | between 1870 and 1880 | entre 1870 y 1880 | entre 1870 et 1880 | `1870/1880` |
 | interval.sharedDays | 1–3 March 2024 | 1–3 marzo 2024 | 1–3 mars 2024 | `2024-03-01/2024-03-03` |
 | interval.sharedMonths | March–April 2024 | marzo–abril 2024 | mars–avril 2024 | `2024-03/2024-04` |
 | interval.crossYear | December–January 2024 | diciembre–enero 2024 | décembre–janvier 2024 | `2023-12/2024-01`; `2024-12/2025-01` |
+| set.sharedDays | April 12th or 14th 1985 | 12 o 14 de abril de 1985 | 12 ou 14 avril 1985 | `[1985-04-12,1985-04-14]` |
+| set.sharedDaysMultiple | April 12, 14, or 16, 1985 | 12, 14 o 16 de abril de 1985 | 12, 14 ou 16 avril 1985 | `[1985-04-12,1985-04-14,1985-04-16]` |
+| set.sharedDaysOrdinals | 1st or 3rd April 1985 | 1º o 3º de abril de 1985 | 1er ou 3 avril 1985 | `[1985-04-01,1985-04-03]` |
 | set.finiteRange | sometime between 1870 and 1880 | algún momento entre 1870 y 1880 | à un moment entre 1870 et 1880 | `[1870..1880]` |
 | set.sequence | 1870, 1880, 1890, 1900 or 1910 | 1870, 1880, 1890, 1900 o 1910 | 1870, 1880, 1890, 1900 ou 1910 | `[1870,1880,1890,1900,1910]` |
 | list.sequence | 1870, 1880, 1890, 1900 and 1910 | 1870, 1880, 1890, 1900 y 1910 | 1870, 1880, 1890, 1900 et 1910 | `{1870,1880,1890,1900,1910}` |
-| list.earlier | 1870 and earlier | 1870 y antes | 1870 et avant | `{..1870}` |
+| interval.andEarlier | 1870 and earlier | 1870 y antes | 1870 et avant | `../1870` |
 | period.century | nineteenth century | siglo XIX | XIXe siècle | `1801/1900` |
 | period.decade | the 1980s | los años 1980 | les années 1980 | `198X` |
 | period.earlyYear | early 1870 | a principios de 1870 | au début de 1870 | `1870-01/1870-04` |
@@ -57,16 +60,16 @@ Generated from `packages/natural/tests/fixtures/languages.json` by `node package
 | reject.calendar | February 30, 2024 | 30 de febrero de 2024 | 30 février 2024 | Rejected |
 | reject.reversed | from 1880 to 1870 | desde 1880 a 1870 | depuis 1880 à 1870 | Rejected |
 | reject.fuzzyCutoff | before circa 1870 | antes de hacia 1870 | avant vers 1870 | Rejected |
-| age.exact | 20 years old | 20 años | 20 ans | `?2004-?06-?02/?2005-?06-?01` |
-| age.range | 20 to 23 years old | 20 a 23 años | 20 à 23 ans | `?2001-?06-?02/?2005-?06-?01` |
+| age.exact | 20 years old | 20 años | 20 ans | `[2004-06-02..2005-06-01]` |
+| age.range | 20 to 23 years old | 20 a 23 años | 20 à 23 ans | `[2001-06-02..2005-06-01]` |
 | age.birthday | 20 years old, birthday March 15 | 20 años, cumpleaños 15 de marzo | 20 ans, anniversaire le 15 mars | `2005-03-15` |
 | age.birthdayMonth | 20 years old, June birthday | 20 años, cumpleaños junio | 20 ans, anniversaire juin | `[2004-06-02..2004-06-30,2005-06-01]` |
 | birthday.only | birthday March 15 | cumpleaños 15 de marzo | anniversaire le 15 mars | `XXXX-03-15` |
 | birthday.numeric | birthday 15/03 | cumpleaños 15/03 | anniversaire 15/03 | `XXXX-03-15` |
 | age.bornConstraint | born before 1870 | nacido antes de 1870 | né avant 1870 | `[..1869]` |
-| age.months | 6 months | 6 meses | 6 mois | `?2024-?11-?02/?2024-?12-?01` |
-| age.weeks | 2 weeks | 2 semanas | 2 semaines | `?2025-?05-?12/?2025-?05-?18` |
-| age.days | 10 days | 10 días | 10 jours | `?2025-?05-?22/?2025-?05-?22` |
+| age.months | 6 months | 6 meses | 6 mois | `[2024-11-02..2024-12-01]` |
+| age.weeks | 2 weeks | 2 semanas | 2 semaines | `[2025-05-12..2025-05-18]` |
+| age.days | 10 days | 10 días | 10 jours | `2025-05-22` |
 | age.rejectBirthday | 20 years old, birthday February 30 | 20 años, cumpleaños 30 de febrero | 20 ans, anniversaire 30 février | Rejected |
 | period.earlyCentury | early 19th century | a principios del siglo XIX | au début du XIXe siècle | `1801/1833` |
 | period.lateCentury | late 19th century | a finales del siglo XIX | à la fin du XIXe siècle | `1867/1900` |
@@ -80,16 +83,16 @@ Generated from `packages/natural/tests/fixtures/languages.json` by `node package
 | age.monthsBirthday | 6 months, December birthday | 6 meses, cumpleaños diciembre | 6 mois, anniversaire décembre | `2024-12-01` |
 | age.rejectMonthsBirthday | 6 months, March birthday | 6 meses, cumpleaños marzo | 6 mois, anniversaire mars | Rejected |
 | age.rejectUnboundedBirthday | senior, March birthday | persona mayor, cumpleaños marzo | personne âgée, anniversaire mars | Rejected |
-| set.rendered | One of: 1667, 1668, 1670 | Una de estas fechas: 1667, 1668 o 1670 | Une de ces dates: 1667, 1668 ou 1670 | `[1667..1668,1670]` |
-| list.rendered | All of: 1667, 1668, 1670 | Todas estas fechas: 1667, 1668 y 1670 | Toutes ces dates: 1667, 1668 et 1670 | `{1667..1668,1670}` |
-| set.renderedOpen | Earlier or one of: 1667, 1668, 1670, or later | Una de estas fechas: 1667 o antes, 1668 o 1670 o después | Une de ces dates: 1667 ou avant, 1668 ou 1670 ou après | `[..1667..1668,1670..]` |
-| list.renderedOpen | Earlier and all of: 1667, 1668, 1670, and later | Todas estas fechas: 1667 y antes, 1668 y 1670 y después | Toutes ces dates: 1667 et avant, 1668 et 1670 et après | `{..1667..1668,1670..}` |
+| set.rendered | One of: 1667, 1668, 1670 | Una de estas fechas: 1667, 1668 o 1670 | Une de ces dates: 1667, 1668 ou 1670 | `[1667,1668,1670]` |
+| list.rendered | All of: 1667, 1668, 1670 | Todas estas fechas: 1667, 1668 y 1670 | Toutes ces dates: 1667, 1668 et 1670 | `{1667,1668,1670}` |
+| set.renderedOpen | One of: 1667 or earlier, 1668, 1670 or later | Una de estas fechas: 1667 o antes, 1668 o 1670 o después | Une de ces dates: 1667 ou avant, 1668 ou 1670 ou après | `[..1667,1668,1670..]` |
+| list.renderedOpen | All of: 1667 and all earlier dates, 1668, 1670 and all later dates | Todas estas fechas: 1667 y todas las fechas anteriores, 1668 y 1670 y todas las fechas posteriores | Toutes ces dates: 1667 et toutes les dates antérieures, 1668 et 1670 et toutes les dates ultérieures | `{..1667,1668,1670..}` |
 | set.rejectConjunction | One of: 1667 and 1668 | Una de estas fechas: 1667 y 1668 | Une de ces dates: 1667 et 1668 | Rejected |
 | list.rejectDisjunction | All of: 1667 or 1668 | Todas estas fechas: 1667 o 1668 | Toutes ces dates: 1667 ou 1668 | Rejected |
 | set.renderedRange | One of: 1870 through 1880 | Una de estas fechas: 1870 a 1880 | Une de ces dates: 1870 à 1880 | `[1870..1880]` |
 | list.renderedRange | All of: 1870 through 1880 | Todas estas fechas: 1870 a 1880 | Toutes ces dates: 1870 à 1880 | `{1870..1880}` |
-| set.renderedOpenRange | Earlier or one of: 1870 through 1880, 1890, or later | Antes o Una de estas fechas: 1870 a 1880 o 1890 o después | Plus tôt ou Une de ces dates: 1870 à 1880 ou 1890 ou après | `[..1870..1880,1890..]` |
-| list.renderedOpenRange | Earlier and all of: 1870 through 1880, 1890, and later | Antes y Todas estas fechas: 1870 a 1880 y 1890 y después | Plus tôt et Toutes ces dates: 1870 à 1880 et 1890 et après | `{..1870..1880,1890..}` |
+| set.renderedOpenRange | One of: 1880 or earlier, 1890 or later | Una de estas fechas: 1880 o antes, 1890 o después | Une de ces dates: 1880 ou avant, 1890 ou après | `[..1880,1890..]` |
+| list.renderedOpenRange | All of: 1880 and all earlier dates, 1890 and all later dates | Todas estas fechas: 1880 y todas las fechas anteriores, 1890 y todas las fechas posteriores | Toutes ces dates: 1880 et toutes les dates antérieures, 1890 et toutes les dates ultérieures | `{..1880,1890..}` |
 | interval.renderedOpenEnd | 1870 to open end | 1870 a fin abierto | 1870 à fin ouverte | `1870/..` |
 | interval.renderedOpenStart | open start to 1870 | inicio abierto a 1870 | début ouvert à 1870 | `../1870` |
 | interval.renderedUnknownEnd | 1870 to unknown | 1870 a desconocido | 1870 à inconnu | `1870/` |
@@ -110,7 +113,7 @@ Generated from `packages/natural/tests/fixtures/languages.json` by `node package
 | interval.shortEndYear | 1851-52 | 1851-52 | 1851-52 | `1851/1852` |
 | interval.dashUnknown | 1988 - unknown | 1988 - desconocido | 1988 - inconnu | `1988/` |
 | interval.dashOpen | 1988 - open | 1988 - abierto | 1988 - en cours | `1988/..` |
-| list.semicolon | 2020; 2021 | 2020; 2021 | 2020; 2021 | `{2020..2021}` |
+| list.semicolon | 2020; 2021 | 2020; 2021 | 2020; 2021 | `{2020,2021}` |
 | period.qualifiedCentury | 19th century? | siglo 19? | 19e siècle? | `1801?/1900?` |
 | period.romanCentury | XIXth century | siglo XIX | XIXè siècle | `1801/1900` |
 | season.era | Spring 4BCE | primavera 4 a. C. | printemps 4AEC | `-0003-21` |

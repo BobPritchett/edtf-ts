@@ -1,6 +1,7 @@
 {
   "name": "edtf-ts",
-  "version": "0.4.2",
+  "version": "0.6.0",
+  "packageManager": "pnpm@11.19.0",
   "private": true,
   "description": "Modern TypeScript implementation of EDTF (Extended Date/Time Format)",
   "scripts": {
@@ -32,7 +33,7 @@
     "vitest": "^1.6.1"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+    "node": ">=24.0.0",
+    "pnpm": "11.19.0"
   }
 }

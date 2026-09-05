@@ -26,19 +26,19 @@ describe('parseAgeBirthday', () => {
   describe('age only (no birthday info)', () => {
     it('should parse "20 yo"', () => {
       const result = parseAgeBirthday('20 yo', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('?2004-?06-?02/?2005-?06-?01');
-      expect(result.type).toBe('interval');
+      expect(result.edtf).toBe('[2004-06-02..2005-06-01]');
+      expect(result.type).toBe('set');
       expect(result.ageRange).toEqual([20, 20]);
     });
 
     it('should parse "20 y/o"', () => {
       const result = parseAgeBirthday('20 y/o', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('?2004-?06-?02/?2005-?06-?01');
+      expect(result.edtf).toBe('[2004-06-02..2005-06-01]');
     });
 
     it('should parse "20 years old"', () => {
       const result = parseAgeBirthday('20 years old', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('?2004-?06-?02/?2005-?06-?01');
+      expect(result.edtf).toBe('[2004-06-02..2005-06-01]');
     });
 
     it('should parse "age 35"', () => {
@@ -87,7 +87,7 @@ describe('parseAgeBirthday', () => {
     it('should parse "22-26 yo"', () => {
       const result = parseAgeBirthday('22-26 yo', { currentDate: REF_DATE });
       expect(result.ageRange).toEqual([22, 26]);
-      expect(result.type).toBe('interval');
+      expect(result.type).toBe('set');
     });
 
     it('should parse "22 to 26 years old"', () => {
@@ -99,7 +99,7 @@ describe('parseAgeBirthday', () => {
   describe('decade phrases', () => {
     it('should parse "early 20s"', () => {
       const result = parseAgeBirthday('early 20s', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('?2001-?06-?02/?2005-?06-?01');
+      expect(result.edtf).toBe('[2001-06-02..2005-06-01]');
       expect(result.ageRange).toEqual([20, 23]);
     });
 
@@ -128,7 +128,7 @@ describe('parseAgeBirthday', () => {
   describe('life stages', () => {
     it('should parse "teenager"', () => {
       const result = parseAgeBirthday('teenager', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('?2005-?06-?02/?2012-?06-?01');
+      expect(result.edtf).toBe('[2005-06-02..2012-06-01]');
       expect(result.ageRange).toEqual([13, 19]);
     });
 
@@ -139,7 +139,7 @@ describe('parseAgeBirthday', () => {
 
     it('should parse "senior"', () => {
       const result = parseAgeBirthday('senior', { currentDate: REF_DATE });
-      expect(result.edtf).toBe('../?1960-?06-?01');
+      expect(result.edtf).toBe('[..1960-06-01]');
       expect(result.ageRange).toEqual([65, null]);
     });
 
@@ -198,19 +198,19 @@ describe('parseAgeBirthday', () => {
   describe('infant ages', () => {
     it('should parse "6 months old"', () => {
       const result = parseAgeBirthday('6 months old', { currentDate: REF_DATE });
-      expect(result.type).toBe('interval');
-      // Should be approximately 6 months ago: Dec 2024 to Jan 2025
-      expect(result.edtf).toMatch(/\?202[45]-\?\d{2}-\?\d{2}\/\?202[45]-\?\d{2}-\?\d{2}/);
+      expect(result.type).toBe('set');
+      expect(result.edtf).toBe('[2024-11-02..2024-12-01]');
     });
 
     it('should parse "2 weeks old"', () => {
       const result = parseAgeBirthday('2 weeks old', { currentDate: REF_DATE });
-      expect(result.type).toBe('interval');
+      expect(result.type).toBe('set');
     });
 
     it('should parse "10 days"', () => {
       const result = parseAgeBirthday('10 days', { currentDate: REF_DATE });
-      expect(result.type).toBe('interval');
+      expect(result.type).toBe('date');
+      expect(result.edtf).toBe('2025-05-22');
     });
   });
 
@@ -240,17 +240,17 @@ describe('parseAgeBirthday', () => {
   describe('application age conventions', () => {
     // Examples from the spec with currentDate = 2025-06-01
     const testCases = [
-      { input: '20 yo', expected: '?2004-?06-?02/?2005-?06-?01' },
+      { input: '20 yo', expected: '[2004-06-02..2005-06-01]' },
       { input: '20 y/o, March birthday', expected: '[2005-03-01..2005-03-31]' },
       { input: '20 y/o, birthday 3/15', expected: '2005-03-15' },
-      { input: 'early 20s', expected: '?2001-?06-?02/?2005-?06-?01' },
+      { input: 'early 20s', expected: '[2001-06-02..2005-06-01]' },
       {
         input: 'early 20s, birthday 3/15',
         expected: '[2002-03-15,2003-03-15,2004-03-15,2005-03-15]',
       },
-      { input: 'teenager', expected: '?2005-?06-?02/?2012-?06-?01' },
+      { input: 'teenager', expected: '[2005-06-02..2012-06-01]' },
       { input: 'March 15th birthday', expected: 'XXXX-03-15' },
-      { input: 'senior', expected: '../?1960-?06-?01' },
+      { input: 'senior', expected: '[..1960-06-01]' },
     ];
 
     testCases.forEach(({ input, expected }) => {

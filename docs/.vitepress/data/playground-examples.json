@@ -67,6 +67,12 @@
       "fr": "1–3 mars 2024"
     },
     {
+      "id": "set.sharedDays",
+      "en": "April 12th or 14th 1985",
+      "es": "12 o 14 de abril de 1985",
+      "fr": "12 ou 14 avril 1985"
+    },
+    {
       "id": "interval.crossYear",
       "en": "December–January 2024",
       "es": "diciembre–enero 2024",

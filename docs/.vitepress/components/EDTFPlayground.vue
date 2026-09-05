@@ -912,6 +912,7 @@ const customLocale = ref('en-US');
 const localePresets = [
   { value: 'en-US', label: 'English — United States (en-US)' },
   { value: 'en-GB', label: 'English — United Kingdom (en-GB)' },
+  { value: 'en-ZA', label: 'English — South Africa (en-ZA)' },
   { value: 'es-ES', label: 'Español — España (es-ES)' },
   { value: 'es-MX', label: 'Español — México (es-MX)' },
   { value: 'fr-FR', label: 'Français — France (fr-FR)' },

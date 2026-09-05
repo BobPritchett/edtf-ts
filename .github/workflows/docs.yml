@@ -6,7 +6,12 @@ on:
       - main
     paths:
       - 'docs/**'
-      - 'packages/*/README.md'
+      - 'packages/**'
+      - 'CHANGELOG.md'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.json'
       - '.github/workflows/docs.yml'
 
   # Allows you to run this workflow manually from the Actions tab
@@ -34,25 +39,27 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: latest
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm build
+        run: pnpm --filter './packages/*' run build
+
+      - name: Type-check packages
+        run: pnpm --filter './packages/*' run type-check
+
+      - name: Test packages
+        run: pnpm test
 
       - name: Build docs
-        run: |
-          cd docs
-          pnpm build
+        run: pnpm docs:build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

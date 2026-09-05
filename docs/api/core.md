@@ -1,6 +1,10 @@
 # @edtf-ts/core
 
+See [interoperability and migration](../guide/interoperability) for strict/extended mode, supported extensions, and the current natural-language output contracts.
+
 Core EDTF parsing, comparison, and formatting.
+
+See [canonicalization, bounds, enumeration, and relations](./operations) for the additive `canonicalize`, `canonicalLevel`, `getYearRange`, `getBounds`, `enumerateValues`, and `relate` APIs.
 
 ## Installation
 
@@ -13,7 +17,12 @@ pnpm add @edtf-ts/core
 Parse an EDTF string and return a result object.
 
 ```typescript
-function parse(input: string, level?: EDTFLevel): ParseResult
+function parse(input: string, levelOrOptions?: EDTFLevel | ParseOptions): ParseResult
+
+interface ParseOptions {
+  level?: EDTFLevel;
+  conformance?: 'strict' | 'extended'; // Default: extended
+}
 ```
 
 ### Parameters
@@ -61,7 +70,7 @@ if (result.success) {
 Validate an EDTF string.
 
 ```typescript
-function isValid(input: string, level?: EDTFLevel): boolean
+function isValid(input: string, levelOrOptions?: EDTFLevel | ParseOptions): boolean
 ```
 
 ### Parameters
@@ -184,7 +193,7 @@ The current version of @edtf-ts/core.
 
 ```typescript
 import { VERSION } from '@edtf-ts/core';
-console.log(VERSION);  // "0.1.0"
+console.log(VERSION);  // Installed @edtf-ts/core package version
 ```
 
 ### DATE_MIN_MS / DATE_MAX_MS

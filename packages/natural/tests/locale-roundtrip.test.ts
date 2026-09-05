@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compactYearRanges, formatHuman, parse } from '@edtf-ts/core';
+import { formatHuman, parse } from '@edtf-ts/core';
 import { parseNatural } from '../src/index.js';
 
 const referenceDate = new Date(2026, 0, 1);
@@ -12,7 +12,7 @@ const examples = [
   ['March 1870', '1870-03'],
   ['circa 1870', '1870~'],
   ['possibly circa 1870', '1870%'],
-  ['1870 (year uncertain)', '?1870'],
+  ['1870 (year uncertain)', '1870?'],
   ['from 1870 to 1880', '1870/1880'],
   ['sometime between 1870 and 1880', '[1870..1880]'],
   ['since 1870', '1870/..'],
@@ -25,17 +25,17 @@ const examples = [
   ['One of: 9999 through 10001', '[9999..Y10001]'],
   ['before 1870', '[..1869]'],
   ['after 1870', '[1871..]'],
-  ['One of: 1667, 1668, 1670', '[1667..1668,1670]'],
-  ['All of: 1667, 1668, 1670', '{1667..1668,1670}'],
+  ['One of: 1667, 1668, 1670', '[1667,1668,1670]'],
+  ['All of: 1667, 1668, 1670', '{1667,1668,1670}'],
   ['One of: 1667', '[1667]'],
   ['All of: 1667', '{1667}'],
   ['One of: 1870 (uncertain), 1880 (approximate)', '[1870?,1880~]'],
   ['spring 1870 (northern hemisphere)', '1870-25'],
   ['1 BCE', '0000'],
   ['One of: March 12, 1870, April 13, 1880', '[1870-03-12,1880-04-13]'],
-  ['All of: 1667, 1668, 1669, and 1670', '{1667..1670}'],
-  ['Earlier or one of: 1667, 1668, 1670, or later', '[..1667..1668,1670..]'],
-  ['Earlier and all of: 1667, 1668, 1670, and later', '{..1667..1668,1670..}'],
+  ['All of: 1667, 1668, 1669, and 1670', '{1667,1668,1669,1670}'],
+  ['One of: 1667 or earlier, 1668, 1670 or later', '[..1667,1668,1670..]'],
+  ['All of: 1667 and earlier, 1668, 1670 and later', '{..1667,1668,1670..}'],
 ];
 
 describe('collection reduction and interval endpoint round trips', () => {
@@ -45,8 +45,8 @@ describe('collection reduction and interval endpoint round trips', () => {
       '[1870,1871,1872,1873,1874,1875,1876,1877,1878,1879,1880]',
       '{1870..1880}',
       '[1870..1872,1880..1882]',
-      '[..1870..1872,1880..1882..]',
-      '{..1870..1872,1880..1882..}',
+      '[..1872,1880..]',
+      '{..1872,1880..}',
       '[1870?,1871,1872,1873~]',
       '[-0002..0002]',
       '[0098..0100]',
@@ -65,7 +65,7 @@ describe('collection reduction and interval endpoint round trips', () => {
       const candidates = parseNatural(rendered, { locale, referenceDate });
       expect(candidates.length).toBeGreaterThan(0);
       for (const candidate of candidates) {
-        expect(candidate.edtf).toBe(compactYearRanges(result.value));
+        expect(candidate.edtf).toBe(result.value.edtf);
         expect(candidate.parsed.type).toBe(result.value.type);
         expect(candidate.fuzzyDate.edtf).toBe(candidate.edtf);
       }

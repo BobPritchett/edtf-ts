@@ -65,17 +65,19 @@ This is a pnpm workspace monorepo. The `@edtf-ts/natural` package depends on `@e
 
 ### Release Process
 
-1. Update version in both `packages/core/package.json` and `packages/natural/package.json`
+1. Update the version in `package.json`, `packages/core/package.json`, `packages/natural/package.json`, and `docs/package.json`. The docs navigation and core `VERSION` export read the core manifest automatically. Prepare the root `CHANGELOG.md`, and replace the upcoming release's "Unreleased" status and published-version note with its release date when publishing. The documentation includes that file; npm publishing does not generate release notes.
 
 2. Build and test:
    ```bash
    pnpm run build
+   pnpm --filter './packages/*' run type-check
    pnpm run test
    ```
 
 3. Commit and tag:
    ```bash
-   git add packages/core/package.json packages/natural/package.json
+   # Include the reviewed release changes and changelog, then commit and tag.
+   git add package.json packages/core/package.json packages/natural/package.json docs/package.json CHANGELOG.md
    git commit -m "chore: bump version to X.Y.Z"
    git tag vX.Y.Z
    git push origin main

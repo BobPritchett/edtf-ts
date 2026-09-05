@@ -1,5 +1,7 @@
 # EDTFInterval
 
+See [interoperability and migration](../../guide/interoperability) for strict/extended mode, supported extensions, and the current natural-language output contracts.
+
 Represents a time interval between two dates (Levels 0 and 1).
 
 ## Interface

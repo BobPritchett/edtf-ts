@@ -34,9 +34,12 @@
  * @packageDocumentation
  */
 
-export { parseNatural, ParseError } from './parser';
-export type { ParseResult, ParseNaturalOptions } from './parser';
+export { parseNatural, tryParseNatural, ParseError } from './parser';
+export type { ParseResult, ParseNaturalOptions, ParseWarning } from './parser';
 
 // Export age and birthday parser
 export { parseAgeBirthday } from './age-birthday';
 export type { ParseAgeBirthdayOptions, ParseAgeBirthdayResult } from './age-birthday';
+
+export type { NaturalParseOutcome, NoMatchReason } from './outcome.js';
+export type { ParseNote, ParseNoteCode, NaturalErrorCode } from './diagnostics.js';

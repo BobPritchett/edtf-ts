@@ -1,0 +1,600 @@
+{
+  "note": "Observed EDTF-TS defaults from the read-only review, before these additions. Locks down every previously accepted attached input; candidate order is significant.",
+  "cases": [
+    {
+      "input": "1860",
+      "edtf": [
+        "1860"
+      ]
+    },
+    {
+      "input": "the year 1800",
+      "edtf": [
+        "1800"
+      ]
+    },
+    {
+      "input": "the year 1897",
+      "edtf": [
+        "1897"
+      ]
+    },
+    {
+      "input": "January 2008",
+      "edtf": [
+        "2008-01"
+      ]
+    },
+    {
+      "input": "January 12, 1940",
+      "edtf": [
+        "1940-01-12"
+      ]
+    },
+    {
+      "input": "1860?",
+      "edtf": [
+        "1860?"
+      ]
+    },
+    {
+      "input": "maybe 1862",
+      "edtf": [
+        "1862?"
+      ]
+    },
+    {
+      "input": "1862 maybe",
+      "edtf": [
+        "1862?"
+      ]
+    },
+    {
+      "input": "~ Feb 1812",
+      "edtf": [
+        "1812-02~"
+      ]
+    },
+    {
+      "input": "circa Feb 1812",
+      "edtf": [
+        "1812-02~"
+      ]
+    },
+    {
+      "input": "Feb 1812 approx",
+      "edtf": [
+        "1812-02~"
+      ]
+    },
+    {
+      "input": "c1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "c.1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "ca1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "ca.1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "c 1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "c. 1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "ca. 1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "approx 1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "1860 approx",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "1860 approximately",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "approximately 1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "about 1860",
+      "edtf": [
+        "1860~"
+      ]
+    },
+    {
+      "input": "about Spring 1849",
+      "edtf": [
+        "1849-21~"
+      ]
+    },
+    {
+      "input": "1860s",
+      "edtf": [
+        "186X"
+      ]
+    },
+    {
+      "input": "ca. 1860s",
+      "edtf": [
+        "186X~"
+      ]
+    },
+    {
+      "input": "c. 1860s",
+      "edtf": [
+        "186X~"
+      ]
+    },
+    {
+      "input": "Circa 1840s",
+      "edtf": [
+        "184X~"
+      ]
+    },
+    {
+      "input": "circa 1840s",
+      "edtf": [
+        "184X~"
+      ]
+    },
+    {
+      "input": "ca. 1860s?",
+      "edtf": [
+        "186X%"
+      ]
+    },
+    {
+      "input": "January 12",
+      "edtf": [
+        "XXXX-01-12"
+      ]
+    },
+    {
+      "input": "January",
+      "edtf": [
+        "XXXX-01"
+      ]
+    },
+    {
+      "input": "7/2008",
+      "edtf": [
+        "2008-07"
+      ]
+    },
+    {
+      "input": "Spring 1872",
+      "edtf": [
+        "1872-21"
+      ]
+    },
+    {
+      "input": "Summer 1872",
+      "edtf": [
+        "1872-22"
+      ]
+    },
+    {
+      "input": "Autumn 1872",
+      "edtf": [
+        "1872-23"
+      ]
+    },
+    {
+      "input": "Fall 1872",
+      "edtf": [
+        "1872-23"
+      ]
+    },
+    {
+      "input": "Winter 1872",
+      "edtf": [
+        "1872-24"
+      ]
+    },
+    {
+      "input": "1st century",
+      "edtf": [
+        "0001/0100"
+      ]
+    },
+    {
+      "input": "10c",
+      "edtf": [
+        "0901/1000"
+      ]
+    },
+    {
+      "input": "19th century",
+      "edtf": [
+        "1801/1900"
+      ]
+    },
+    {
+      "input": "19th century?",
+      "edtf": [
+        "1801?/1900?"
+      ]
+    },
+    {
+      "input": "19c",
+      "edtf": [
+        "1801/1900"
+      ]
+    },
+    {
+      "input": "15c.",
+      "edtf": [
+        "1401/1500"
+      ]
+    },
+    {
+      "input": "ca. 19c",
+      "edtf": [
+        "1801~/1900~"
+      ]
+    },
+    {
+      "input": "~19c",
+      "edtf": [
+        "1801~/1900~"
+      ]
+    },
+    {
+      "input": "about 19c",
+      "edtf": [
+        "1801~/1900~"
+      ]
+    },
+    {
+      "input": "19c?",
+      "edtf": [
+        "1801?/1900?"
+      ]
+    },
+    {
+      "input": "c.19c?",
+      "edtf": [
+        "1801%/1900%"
+      ]
+    },
+    {
+      "input": "1 AD",
+      "edtf": [
+        "0001"
+      ]
+    },
+    {
+      "input": "17 CE",
+      "edtf": [
+        "0017"
+      ]
+    },
+    {
+      "input": "127 CE",
+      "edtf": [
+        "0127"
+      ]
+    },
+    {
+      "input": "1270 CE",
+      "edtf": [
+        "1270"
+      ]
+    },
+    {
+      "input": "c1 AD",
+      "edtf": [
+        "0001~"
+      ]
+    },
+    {
+      "input": "c17 CE",
+      "edtf": [
+        "0017~"
+      ]
+    },
+    {
+      "input": "c127 CE",
+      "edtf": [
+        "0127~"
+      ]
+    },
+    {
+      "input": "c1270 CE",
+      "edtf": [
+        "1270~"
+      ]
+    },
+    {
+      "input": "2nd century ad",
+      "edtf": [
+        "0101/0200"
+      ]
+    },
+    {
+      "input": "2nd century ce",
+      "edtf": [
+        "0101/0200"
+      ]
+    },
+    {
+      "input": "1851-1852",
+      "edtf": [
+        "1851/1852"
+      ]
+    },
+    {
+      "input": "1851-52",
+      "edtf": [
+        "1851/1852"
+      ]
+    },
+    {
+      "input": "1852 - 1860",
+      "edtf": [
+        "1852/1860"
+      ]
+    },
+    {
+      "input": "1856-ca. 1865",
+      "edtf": [
+        "1856/1865~"
+      ]
+    },
+    {
+      "input": "1857-mid 1860s",
+      "edtf": [
+        "1857/1866"
+      ]
+    },
+    {
+      "input": "1860s-1870s",
+      "edtf": [
+        "1860/1879"
+      ]
+    },
+    {
+      "input": "1861-67",
+      "edtf": [
+        "1861/1867"
+      ]
+    },
+    {
+      "input": "1869-70",
+      "edtf": [
+        "1869/1870"
+      ]
+    },
+    {
+      "input": "1920s -early 1930s",
+      "edtf": [
+        "1920/1933"
+      ]
+    },
+    {
+      "input": "before 1928",
+      "edtf": [
+        "[..1927]"
+      ]
+    },
+    {
+      "input": "earlier than 1928",
+      "edtf": [
+        "[..1927]"
+      ]
+    },
+    {
+      "input": "after 1928",
+      "edtf": [
+        "[1929..]"
+      ]
+    },
+    {
+      "input": "later than 1928",
+      "edtf": [
+        "[1929..]"
+      ]
+    },
+    {
+      "input": "before January 1928",
+      "edtf": [
+        "[..1927-12]"
+      ]
+    },
+    {
+      "input": "before 18 January 1928",
+      "edtf": [
+        "[..1928-01-17]"
+      ]
+    },
+    {
+      "input": "1800s",
+      "edtf": [
+        "18XX",
+        "180X"
+      ]
+    },
+    {
+      "input": "2000s",
+      "edtf": [
+        "20XX",
+        "200X"
+      ]
+    },
+    {
+      "input": "c1900s",
+      "edtf": [
+        "19XX~",
+        "190X~"
+      ]
+    },
+    {
+      "input": "c1800s?",
+      "edtf": [
+        "18XX%",
+        "180X%"
+      ]
+    },
+    {
+      "input": "10/7/2008",
+      "edtf": [
+        "2008-10-07",
+        "2008-07-10"
+      ]
+    },
+    {
+      "input": "1863 or 1864",
+      "edtf": [
+        "[1863,1864]"
+      ]
+    },
+    {
+      "input": "1864 or 1866",
+      "edtf": [
+        "[1864,1866]"
+      ]
+    },
+    {
+      "input": "1858/1860",
+      "edtf": [
+        "1858/1860"
+      ]
+    },
+    {
+      "input": "c64 BCE",
+      "edtf": [
+        "-0063~"
+      ]
+    },
+    {
+      "input": "2nd century bc",
+      "edtf": [
+        "-0199/-0100"
+      ]
+    },
+    {
+      "input": "2nd century bce",
+      "edtf": [
+        "-0199/-0100"
+      ]
+    },
+    {
+      "input": "1868-1871?",
+      "edtf": [
+        "1868/1871?"
+      ]
+    },
+    {
+      "input": "1910-30",
+      "edtf": [
+        "1910-30"
+      ]
+    },
+    {
+      "input": "1900; 1973",
+      "edtf": [
+        "{1900,1973}"
+      ]
+    },
+    {
+      "input": "1862 (uncertain)",
+      "edtf": [
+        "1862?"
+      ]
+    },
+    {
+      "input": "month in 1872",
+      "edtf": [
+        "1872-XX"
+      ]
+    },
+    {
+      "input": "day in January 1872",
+      "edtf": [
+        "1872-01-XX"
+      ]
+    },
+    {
+      "input": "day in 1872",
+      "edtf": [
+        "1872-XX-XX"
+      ]
+    }
+  ],
+  "source": {
+    "impl": "python-edtf",
+    "url": "https://github.com/ixc/python-edtf",
+    "file": "tests/test_natlang.py",
+    "commit": "cd67a9d6b558e3328d8d80d65716d0e319c97807",
+    "fetched": "2026-07-26",
+    "license": "MIT",
+    "note": "Oracle corpus harvested from python-edtf's natural-language tests, same ceremony as the interop corpus (issue #12). Inputs are theirs; expectations are bucketed."
+  },
+  "rejected": [
+    "",
+    "this isn't a date",
+    "23rd Dynasty",
+    "90",
+    "1851-1852; printed 1853-1854",
+    "1861-67 (later print)",
+    "1863, printed 1870",
+    "1863, printed ca. 1866",
+    "1864, printed ca. 1864",
+    "1864-1872, printed 1870s",
+    "1870s, printed ca. 1880s",
+    "1900-1903, cast before 1929",
+    "1900; printed 1912",
+    "1915, from Camerawork, October 1916",
+    "1930s, printed early 1960s",
+    "1932, printed 1976 by Gunther Sander",
+    "1938, printed 1940s-1950s",
+    "notcirca 1860",
+    "attica 1802",
+    "attic. 1802",
+    "birthday in 1872",
+    "decade in 1800s",
+    "decade somewhere during the 1800s",
+    "day in Spring 1849",
+    "a day in about Spring 1849?",
+    "1915 late - autumn 1916",
+    "active late 17th-19th centuries"
+  ]
+}

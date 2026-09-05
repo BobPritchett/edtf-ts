@@ -1,6 +1,6 @@
 import { createLexer } from '../lexer';
 import lexicon from '../languages/es';
-import { withWeekday, defer, buildBoundary, collection, withCollectionBounds, choiceRange, sharedMonthRange, sharedDayRange } from '../semantics';
+import { withWeekday, defer, buildBoundary, collection, withCollectionBounds, choiceRange, sharedMonthRange, sharedDayRange, sharedDaySet } from '../semantics';
 import { applyDateQualifier, romanNumber, months, seasons, northernSeasons, southernSeasons, pad2, pad4, twoDigitYear, isLeapYear, getDaysInMonth, buildMonthModifierInterval, buildYearModifierInterval, buildDecadeModifierInterval, normalizeDecadeStart, normalizeDecadeEnd, buildCenturyModifierInterval, buildBCECenturyModifierInterval, buildMonthCombinationInterval, buildYearCombinationInterval, buildDecadeCombinationInterval, buildCenturyCombinationInterval, buildBCECenturyCombinationInterval, bceToBCE, buildSlashDate, buildPartialQual, getIntervalStart, getIntervalEnd, applyQualifierToInterval } from '../semantic-helpers';
 // Generated automatically by nearley, version 2.20.1
 // http://github.com/Hardmath123/nearley
@@ -130,6 +130,7 @@ var grammar = {
         } )(children, context))},
     {"name": "qualifier", "symbols": [(lexer.has("questionMark") ? {type: "questionMark"} : questionMark)], "postprocess": d => defer(d, (children, context) => ( () => '?' )(children, context))},
     {"name": "qualifier", "symbols": [(lexer.has("tilde") ? {type: "tilde"} : tilde)], "postprocess": d => defer(d, (children, context) => ( () => '~' )(children, context))},
+    {"name": "qualifier", "symbols": [(lexer.has("percent") ? {type: "percent"} : percent)], "postprocess": d => defer(d, (children, context) => ( () => '%' )(children, context))},
     {"name": "qualifier", "symbols": [(lexer.has("circa") ? {type: "circa"} : circa)], "postprocess": d => defer(d, (children, context) => ( () => '~' )(children, context))},
     {"name": "qualifier", "symbols": [(lexer.has("circa") ? {type: "circa"} : circa), (lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": d => defer(d, (children, context) => ( () => '~' )(children, context))},
     {"name": "qualifier", "symbols": [(lexer.has("ca") ? {type: "ca"} : ca)], "postprocess": d => defer(d, (children, context) => ( () => '~' )(children, context))},
@@ -324,7 +325,8 @@ var grammar = {
     {"name": "interval", "symbols": ["interval_endpoint", "interval_separator", "interval_value"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: d[0] + '/' + d[2].edtf, confidence: 0.95 }) )(children, context))},
     {"name": "interval", "symbols": [(lexer.has("until") ? {type: "until"} : until), "__", "interval_value"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: '../' + d[2].edtf, confidence: 0.95 }) )(children, context))},
     {"name": "interval", "symbols": [(lexer.has("since") ? {type: "since"} : since), "__", "interval_value"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: d[2].edtf + '/..', confidence: 0.95 }) )(children, context))},
-    {"name": "interval", "symbols": [(lexer.has("number") ? {type: "number"} : number), "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => defer(d, (children, context) => ((d, context) => {
+    {"name": "interval", "symbols": ["short_year_range"], "postprocess": id},
+    {"name": "short_year_range", "symbols": [(lexer.has("number") ? {type: "number"} : number), "_", (lexer.has("dash") ? {type: "dash"} : dash), "_", (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => defer(d, (children, context) => ((d, context) => {
           const a = d[0].text, b = d[4].text;
           if (a.length !== 4 || b.length !== 2) return null;
           const first = Number(a);
@@ -332,6 +334,7 @@ var grammar = {
           if (last < first) last += 100;
           return { edtf: pad4(first) + '/' + pad4(last), confidence: 0.98 };
         } )(children, context))},
+    {"name": "short_year_range", "symbols": ["short_year_range", "_", "qualifier"], "postprocess": d => defer(d, (children, context) => ((d, context) => d[0] ? ({ ...d[0], edtf: d[0].edtf + d[2] }) : null )(children, context))},
     {"name": "from_word", "symbols": [(lexer.has("from") ? {type: "from"} : from)], "postprocess": id},
     {"name": "interval_value", "symbols": ["datevalue"], "postprocess": id},
     {"name": "interval_value", "symbols": ["season"], "postprocess": id},
@@ -357,6 +360,21 @@ var grammar = {
     {"name": "set$ebnf$1", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma)], "postprocess": id},
     {"name": "set$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "set", "symbols": ["datevalue", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "choices", "_", "set$ebnf$1", "_", (lexer.has("or") ? {type: "or"} : or), "__", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => collection('set', [d[0], ...d[4], d[10]]) )(children, context))},
+    {"name": "set", "symbols": ["shared_day_set"], "postprocess": id},
+    {"name": "set", "symbols": [(lexer.has("either") ? {type: "either"} : either), "__", "shared_day_set"], "postprocess": d => defer(d, (children, context) => ((d, context) => d[2] )(children, context))},
+    {"name": "set", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", "shared_day_set"], "postprocess": d => defer(d, (children, context) => ((d, context) => d[2] )(children, context))},
+    {"name": "shared_day_set$ebnf$1", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma)], "postprocess": id},
+    {"name": "shared_day_set$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "shared_day_set", "symbols": ["month_name", "__", "shared_day_choices", "_", "shared_day_set$ebnf$1", "_", "calendar_year"], "postprocess": d => defer(d, (children, context) => ((d, context) => sharedDaySet(pad4(d[6]), months[d[0]], d[2]) )(children, context))},
+    {"name": "shared_day_set$ebnf$2", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma)], "postprocess": id},
+    {"name": "shared_day_set$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "shared_day_set", "symbols": ["shared_day_choices", "__", "month_name", "_", "shared_day_set$ebnf$2", "_", "calendar_year"], "postprocess": d => defer(d, (children, context) => ((d, context) => sharedDaySet(pad4(d[6]), months[d[2]], d[0]) )(children, context))},
+    {"name": "shared_day_choices", "symbols": ["choice_day", "__", (lexer.has("or") ? {type: "or"} : or), "__", "choice_day"], "postprocess": d => defer(d, (children, context) => ((d, context) => [d[0], d[4]] )(children, context))},
+    {"name": "shared_day_choices", "symbols": ["choice_day", "__", (lexer.has("or") ? {type: "or"} : or), "__", "shared_day_choices"], "postprocess": d => defer(d, (children, context) => ((d, context) => [d[0], ...d[4]] )(children, context))},
+    {"name": "shared_day_choices", "symbols": ["choice_day", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "shared_day_choices"], "postprocess": d => defer(d, (children, context) => ((d, context) => [d[0], ...d[4]] )(children, context))},
+    {"name": "shared_day_choices", "symbols": ["choice_day", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", (lexer.has("or") ? {type: "or"} : or), "__", "choice_day"], "postprocess": d => defer(d, (children, context) => ((d, context) => [d[0], d[6]] )(children, context))},
+    {"name": "choice_day", "symbols": [(lexer.has("number") ? {type: "number"} : number)], "postprocess": d => defer(d, (children, context) => ((d, context) => d[0].text.length <= 2 ? Number(d[0].value) : null )(children, context))},
+    {"name": "choice_day", "symbols": ["ordinal_day"], "postprocess": id},
     {"name": "choices", "symbols": ["choice_item"], "postprocess": d => defer(d, (children, context) => ((d, context) => [d[0]] )(children, context))},
     {"name": "choices", "symbols": ["choice_item", "__", (lexer.has("or") ? {type: "or"} : or), "__", "choices"], "postprocess": d => defer(d, (children, context) => ((d, context) => [d[0], ...d[4]] )(children, context))},
     {"name": "choices", "symbols": ["choice_item", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "choices"], "postprocess": d => defer(d, (children, context) => ((d, context) => [d[0], ...d[4]] )(children, context))},
@@ -496,7 +514,7 @@ var grammar = {
     {"name": "datevalue_base", "symbols": ["month_name", "__", "day_num", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'date', edtf: `${pad4(d[6])}-${months[d[0]]}-${pad2(d[2])}`, confidence: 0.95 }) )(children, context))},
     {"name": "datevalue_base", "symbols": ["month_name", "__", "day_num", "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[0]]}-${pad2(d[2])}`, confidence: 0.95 }) )(children, context))},
     {"name": "datevalue_base", "symbols": ["day_num", "__", "month_name", "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2]]}-${pad2(d[0])}`, confidence: 0.95 }) )(children, context))},
-    {"name": "datevalue_base", "symbols": ["month_name", "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0]]}`, confidence: 0.95 }) )(children, context))},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => String(d[2]).length <= 2 && Number(d[2]) <= 31 ? null : ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0]]}`, confidence: 0.95 }) )(children, context))},
     {"name": "datevalue_base", "symbols": [(lexer.has("the") ? {type: "the"} : the), "__", (lexer.has("number") ? {type: "number"} : number), (lexer.has("decadeSuffix") ? {type: "decadeSuffix"} : decadeSuffix)], "postprocess": d => defer(d, (children, context) => ((d, context) => {
           const num = d[2].value;
           if (num.length === 4) {
@@ -585,16 +603,17 @@ var grammar = {
     {"name": "datevalue_base", "symbols": ["year_num", (lexer.has("ish") ? {type: "ish"} : ish)], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 }) )(children, context))},
     {"name": "datevalue_base", "symbols": ["year_num", "_", (lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("ish") ? {type: "ish"} : ish)], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'date', edtf: `${pad4(d[0])}~`, confidence: 0.95 }) )(children, context))},
     {"name": "datevalue_base", "symbols": ["year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'date', edtf: pad4(d[0]), confidence: 0.95 }) )(children, context))},
-    {"name": "boundary", "symbols": ["bound_prefix", "_", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => buildBoundary(d[2], d[0][0], d[0][1]) )(children, context))},
+    {"name": "boundary", "symbols": ["bound_prefix", "_", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => buildBoundary(d[2], d[0][0], d[0][1], context) )(children, context))},
+    {"name": "boundary", "symbols": ["bound_prefix", "_", "season"], "postprocess": d => defer(d, (children, context) => ((d, context) => buildBoundary(d[2], d[0][0], d[0][1], context) )(children, context))},
     {"name": "boundary$ebnf$1", "symbols": [(lexer.has("dash") ? {type: "dash"} : dash)], "postprocess": id},
     {"name": "boundary$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "boundary", "symbols": [(lexer.has("pre") ? {type: "pre"} : pre), "_", "boundary$ebnf$1", "_", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'before', false) )(children, context))},
+    {"name": "boundary", "symbols": [(lexer.has("pre") ? {type: "pre"} : pre), "_", "boundary$ebnf$1", "_", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'before', false, context) )(children, context))},
     {"name": "boundary$ebnf$2", "symbols": [(lexer.has("dash") ? {type: "dash"} : dash)], "postprocess": id},
     {"name": "boundary$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "boundary", "symbols": [(lexer.has("post") ? {type: "post"} : post), "_", "boundary$ebnf$2", "_", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'after', false) )(children, context))},
-    {"name": "boundary", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "earlier_word"], "postprocess": d => defer(d, (children, context) => ((d, context) => buildBoundary(d[0], 'before', true) )(children, context))},
-    {"name": "boundary", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "later_word"], "postprocess": d => defer(d, (children, context) => ((d, context) => buildBoundary(d[0], 'after', true) )(children, context))},
-    {"name": "boundary", "symbols": ["datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "earlier_word"], "postprocess": d => defer(d, (children, context) => ((d, context) => collection('list', [buildBoundary(d[0], 'before', true)]) )(children, context))},
+    {"name": "boundary", "symbols": [(lexer.has("post") ? {type: "post"} : post), "_", "boundary$ebnf$2", "_", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'after', false, context) )(children, context))},
+    {"name": "boundary", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "earlier_word"], "postprocess": d => defer(d, (children, context) => ((d, context) => buildBoundary(d[0], 'before', true, context) )(children, context))},
+    {"name": "boundary", "symbols": ["datevalue", "__", (lexer.has("or") ? {type: "or"} : or), "__", "later_word"], "postprocess": d => defer(d, (children, context) => ((d, context) => buildBoundary(d[0], 'after', true, context) )(children, context))},
+    {"name": "boundary", "symbols": ["datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "earlier_word"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'interval', edtf: '../' + d[0].edtf, confidence: 0.95 }) )(children, context))},
     {"name": "boundary", "symbols": ["datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "later_word"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ type: 'interval', edtf: d[0].edtf + '/..', confidence: 0.95 }) )(children, context))},
     {"name": "boundary", "symbols": [(lexer.has("sometime") ? {type: "sometime"} : sometime), "__", (lexer.has("between") ? {type: "between"} : between), "__", "datevalue", "__", (lexer.has("and") ? {type: "and"} : and), "__", "datevalue"], "postprocess": d => defer(d, (children, context) => ((d, context) => choiceRange(d[4], d[8]) )(children, context))},
     {"name": "earlier_word", "symbols": [(lexer.has("earlier") ? {type: "earlier"} : earlier)], "postprocess": id},
@@ -663,7 +682,7 @@ var grammar = {
     {"name": "datevalue_base", "symbols": [(lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(-Number(d[1].text)), confidence: 0.95, writtenNegative: true }) )(children, context))},
     {"name": "datevalue_base$ebnf$2", "symbols": [(lexer.has("comma") ? {type: "comma"} : comma)], "postprocess": id},
     {"name": "datevalue_base$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "datevalue_base", "symbols": ["weekday", "_", "datevalue_base$ebnf$2", "_", "datevalue_base"], "postprocess": d => defer(d, (children, context) => ((d, context) => withWeekday(d[4], d[0]) )(children, context))},
+    {"name": "datevalue_base", "symbols": ["weekday", "_", "datevalue_base$ebnf$2", "_", "datevalue_base"], "postprocess": d => defer(d, (children, context) => ((d, context) => withWeekday(d[4], d[0], context) )(children, context))},
     {"name": "weekday$ebnf$1", "symbols": [(lexer.has("dot") ? {type: "dot"} : dot)], "postprocess": id},
     {"name": "weekday$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "weekday", "symbols": [(lexer.has("weekday0") ? {type: "weekday0"} : weekday0), "weekday$ebnf$1"], "postprocess": d => defer(d, (children, context) => ( () => 0 )(children, context))},
@@ -686,6 +705,7 @@ var grammar = {
     {"name": "weekday$ebnf$7", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "weekday", "symbols": [(lexer.has("weekday6") ? {type: "weekday6"} : weekday6), "weekday$ebnf$7"], "postprocess": d => defer(d, (children, context) => ( () => 6 )(children, context))},
     {"name": "calendar_year", "symbols": [(lexer.has("dash") ? {type: "dash"} : dash), (lexer.has("number") ? {type: "number"} : number)], "postprocess": d => defer(d, (children, context) => ((d, context) => pad4(-Number(d[1].text)) )(children, context))},
+    {"name": "shared_day_set", "symbols": ["shared_day_choices", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "__", (lexer.has("of") ? {type: "of"} : of), "__", "calendar_year"], "postprocess": d => defer(d, (children, context) => ((d, context) => sharedDaySet(pad4(d[8]), months[d[4]], d[0]) )(children, context))},
     {"name": "bound_prefix", "symbols": [(lexer.has("inclusiveBefore") ? {type: "inclusiveBefore"} : inclusiveBefore)], "postprocess": d => defer(d, (children, context) => ( () => ['before', true] )(children, context))},
     {"name": "bound_prefix", "symbols": [(lexer.has("inclusiveAfter") ? {type: "inclusiveAfter"} : inclusiveAfter)], "postprocess": d => defer(d, (children, context) => ( () => ['after', true] )(children, context))},
     {"name": "datevalue_base", "symbols": ["day_num", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "__", (lexer.has("of") ? {type: "of"} : of), "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(d[8]) + '-' + months[d[4]] + '-' + pad2(d[0]), confidence: 0.95 }) )(children, context))},
@@ -714,7 +734,9 @@ var grammar = {
     {"name": "datevalue_base$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "datevalue_base", "symbols": [(lexer.has("day") ? {type: "day"} : day), "__", "day_num", "__", (lexer.has("of") ? {type: "of"} : of), "__", (lexer.has("unknownMonth") ? {type: "unknownMonth"} : unknownMonth), "_", "datevalue_base$ebnf$1", "_", "calendar_year"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(d[10]) + '-XX-' + pad2(d[2]), confidence: 0.95 }) )(children, context))},
     {"name": "datevalue_base", "symbols": [(lexer.has("day") ? {type: "day"} : day), "__", "day_num", "_", (lexer.has("comma") ? {type: "comma"} : comma), "_", (lexer.has("some") ? {type: "some"} : some), "__", (lexer.has("month") ? {type: "month"} : month), "__", (lexer.has("of") ? {type: "of"} : of), "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(d[12]) + '-XX-' + pad2(d[2]), confidence: 0.95 }) )(children, context))},
-    {"name": "datevalue_base", "symbols": [(lexer.has("inWord") ? {type: "inWord"} : inWord), "__", (lexer.has("sometime") ? {type: "sometime"} : sometime), "__", (lexer.has("of") ? {type: "of"} : of), "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(d[6]) + '-XX-XX', confidence: 0.95 }) )(children, context))}
+    {"name": "datevalue_base", "symbols": [(lexer.has("inWord") ? {type: "inWord"} : inWord), "__", (lexer.has("sometime") ? {type: "sometime"} : sometime), "__", (lexer.has("of") ? {type: "of"} : of), "__", "year_num"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(d[6]) + '-XX-XX', confidence: 0.95 }) )(children, context))},
+    {"name": "datevalue_base", "symbols": ["month_name", "__", (lexer.has("of") ? {type: "of"} : of), "__", "era_year"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(d[4]) + '-' + months[d[0]], confidence: 0.95 }) )(children, context))},
+    {"name": "datevalue_base", "symbols": ["day_num", "__", (lexer.has("of") ? {type: "of"} : of), "__", "month_name", "__", (lexer.has("of") ? {type: "of"} : of), "__", "era_year"], "postprocess": d => defer(d, (children, context) => ((d, context) => ({ edtf: pad4(d[8]) + '-' + months[d[4]] + '-' + pad2(d[0]), confidence: 0.95 }) )(children, context))}
 ]
   , ParserStart: "main"
 }

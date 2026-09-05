@@ -4,18 +4,20 @@ Documentation site for the EDTF-TS project.
 
 ## Development
 
+Use Node.js 24 and the pnpm version pinned in the root `package.json`. Run these commands from the repository root:
+
 ```bash
 # Install dependencies
 pnpm install
 
 # Start development server
-pnpm dev
+pnpm docs:dev
 
 # Build for production
 pnpm build
 
 # Preview production build
-pnpm preview
+pnpm docs:preview
 ```
 
 ## Structure
@@ -39,20 +41,12 @@ docs/
 └── index.md              # Homepage
 ```
 
-## Contributing
+## Release notes
 
-See the main [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+Edit the root [CHANGELOG.md](https://github.com/BobPritchett/edtf-ts/blob/main/CHANGELOG.md) when preparing a release. The site's [changelog page](./changelog.md) includes that file, so there is only one copy to maintain. The navigation version comes from `packages/core/package.json`.
 
 ## Deployment
 
-The documentation site is automatically deployed to GitHub Pages on every push to the main branch.
+The Deploy Documentation workflow builds and deploys to GitHub Pages when documentation, packages, release metadata, or build configuration changes on `main`. It can also be run manually from GitHub Actions. Deployment runs only after package builds, type checks, tests, and the documentation build succeed.
 
-Alternatively, you can deploy manually:
-
-```bash
-# Build
-pnpm build
-
-# Deploy to GitHub Pages
-# (Requires gh-pages package and proper permissions)
-```
+Publishing npm packages is a separate release step and does not generate this changelog automatically.

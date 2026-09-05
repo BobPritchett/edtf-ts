@@ -78,7 +78,7 @@
     "locale": "en-US",
     "input": "2020; 2021",
     "expected": [
-      "{2020..2021}"
+      "{2020,2021}"
     ],
     "reason": "An inclusive list uses braces; adjacent years compact.",
     "origin": "User-provided examples"
@@ -94,11 +94,9 @@
   {
     "locale": "en-US",
     "input": "90",
-    "expected": [
-      "0090"
-    ],
-    "reason": "Bare short years are literal historical years; use 1990 explicitly or '90 for the rolling window (reference year 2026).",
-    "origin": "User-provided examples"
+    "reason": "A bare one- or two-digit year requires an era marker or four-digit spelling.",
+    "origin": "User-provided examples",
+    "reject": true
   },
   {
     "locale": "en-US",
@@ -221,10 +219,9 @@
     "locale": "en-US",
     "input": "January 12",
     "expected": [
-      "XXXX-01-12",
-      "0012-01"
+      "XXXX-01-12"
     ],
-    "reason": "The missing-year day reading ranks first; January in year 0012 remains an alternative. Write January 0012 to select that year.",
+    "reason": "A month and day without a year. Write January 0012 for the historical year.",
     "origin": "User-provided examples"
   },
   {
@@ -501,7 +498,7 @@
     "locale": "fr-FR",
     "input": "2020; 2021",
     "expected": [
-      "{2020..2021}"
+      "{2020,2021}"
     ],
     "origin": "User-provided examples"
   },

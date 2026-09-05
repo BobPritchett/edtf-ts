@@ -1,4 +1,4 @@
-import { collectionYearGroups } from './collections.js';
+import { collectionGroups } from './collections.js';
 import type {
   EDTFBase,
   EDTFDate,
@@ -30,15 +30,13 @@ export const messages = {
     to: 'a',
     oneOf: 'Una de estas fechas',
     allOf: 'Todas estas fechas',
-    earlierPrefix: 'Antes o',
-    allEarlierPrefix: 'Antes y',
     earlier: 'o antes',
     later: 'o después',
-    allEarlier: 'y antes',
-    allLater: 'y después',
+    allEarlier: 'y todas las fechas anteriores',
+    allLater: 'y todas las fechas posteriores',
     northern: 'hemisferio norte',
     southern: 'hemisferio sur',
-    seasons: ['Primavera', 'Verano', 'Otoño', 'Invierno'],
+    seasons: ['primavera', 'verano', 'otoño', 'invierno'],
     quarter: 'Trimestre',
     quadrimester: 'Cuatrimestre',
     semester: 'Semestre',
@@ -64,15 +62,13 @@ export const messages = {
     to: 'à',
     oneOf: 'Une de ces dates',
     allOf: 'Toutes ces dates',
-    earlierPrefix: 'Plus tôt ou',
-    allEarlierPrefix: 'Plus tôt et',
     earlier: 'ou avant',
     later: 'ou après',
-    allEarlier: 'et avant',
-    allLater: 'et après',
+    allEarlier: 'et toutes les dates antérieures',
+    allLater: 'et toutes les dates ultérieures',
     northern: 'hémisphère nord',
     southern: 'hémisphère sud',
-    seasons: ['Printemps', 'Été', 'Automne', 'Hiver'],
+    seasons: ['printemps', 'été', 'automne', 'hiver'],
     quarter: 'Trimestre',
     quadrimester: 'Quadrimestre',
     semester: 'Semestre',
@@ -161,7 +157,7 @@ export function formatLocalized(
       if (
         typeof d.year === 'number' &&
         options.eraDisplay !== 'never' &&
-        (d.year <= 0 || options.eraDisplay === 'always')
+        (d.year < 100 || options.eraDisplay === 'always')
       ) {
         const before = d.year <= 0;
         const common = options.eraNotation === 'bce-ce';
@@ -205,11 +201,22 @@ export function formatLocalized(
     case 'DateTime': {
       const d = value as EDTFDateTime,
         date = calendarDateObject(d.year, d.month, d.day);
-      date.setUTCHours(d.hour, d.minute, d.second);
+      date.setUTCHours(d.hour, d.minute, d.second, Number(d.fractionalSecond?.padEnd(3, '0') ?? 0));
+      // Date/time styles cannot be combined with fractionalSecondDigits.
+      const style = options.dateStyle ?? 'long';
+      const fields: Intl.DateTimeFormatOptions = d.fractionalSecond === undefined
+        ? { dateStyle: style, timeStyle: 'medium' }
+        : {
+            year: 'numeric',
+            month: style === 'short' ? 'numeric' : style === 'medium' ? 'short' : 'long',
+            day: 'numeric',
+            weekday: style === 'full' ? 'long' : undefined,
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            fractionalSecondDigits: d.fractionalSecond.length as 1 | 2 | 3,
+          };
       return (
         new Intl.DateTimeFormat(locale, {
-          dateStyle: options.dateStyle ?? 'long',
-          timeStyle: 'medium',
+          ...fields,
           timeZone: 'UTC',
           calendar: 'gregory',
         }).format(date) + (d.timezone ? ` ${d.timezone}` : '')
@@ -238,16 +245,13 @@ export function formatLocalized(
     case 'List': {
       const collection = value as EDTFSet | EDTFList,
         all = value.type === 'List';
-      const groups = collectionYearGroups(collection);
+      const groups = collectionGroups(collection);
       const items = groups.map(({ first, last }) =>
         last ? render(first) + ' ' + msg.to + ' ' + render(last) : render(first)
       );
-      // An earlier marker refers to the first year, even when it starts a run.
-      const earlierPrefix = collection.earlier && groups[0]?.last;
-      if (collection.earlier && !earlierPrefix)
-        items[0] += ' ' + (all ? msg.allEarlier : msg.earlier);
+      if (collection.earlier) items[0] += ' ' + (all ? msg.allEarlier : msg.earlier);
       if (collection.later) items[items.length - 1] += ' ' + (all ? msg.allLater : msg.later);
-      return `${earlierPrefix ? (all ? msg.allEarlierPrefix : msg.earlierPrefix) + ' ' : ''}${all ? msg.allOf : msg.oneOf}: ${new Intl.ListFormat(locale, { type: all ? 'conjunction' : 'disjunction' }).format(items)}`;
+      return `${all ? msg.allOf : msg.oneOf}: ${new Intl.ListFormat(locale, { type: all ? 'conjunction' : 'disjunction' }).format(items)}`;
     }
     default:
       return value.edtf;

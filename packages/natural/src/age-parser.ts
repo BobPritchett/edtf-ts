@@ -8,11 +8,11 @@ import { ageTokens, birthMarkers } from './languages/age-vocabulary.js';
  *
  * Parses age expressions (e.g., "20 yo", "early 30s", "teenager") and
  * birthday constraints (e.g., "March birthday", "birthday 3/15") into
- * EDTF Level 2 intervals with component-level qualification.
+ * EDTF dates or one-of sets with calculation provenance in metadata.
  */
 
 import { parse as parseEDTF } from '@edtf-ts/core';
-import type { EDTFBase } from '@edtf-ts/core';
+import type { EDTFBase, ParseOptions, CalendarDate } from '@edtf-ts/core';
 import {
   MONTH_NAMES,
   MONTH_FULL_NAMES,
@@ -25,7 +25,6 @@ import { buildPartialQual } from './semantic-helpers.js';
 import type { ParseNaturalOptions, ParseResult } from './parser-factory.js';
 import {
   possibleDateBounds,
-  formatYear,
   shiftCalendarDate,
   formatCalendarDate,
   renderAgeBirthday,
@@ -70,6 +69,8 @@ export interface ParseAgeBirthdayOptions {
   locale?: string;
   language?: Language;
   dateOrder?: DateOrder;
+  conformance?: ParseOptions['conformance'];
+  weekdayMismatch?: 'reject' | 'warn';
 }
 
 /**
@@ -78,7 +79,7 @@ export interface ParseAgeBirthdayOptions {
 export interface ParseAgeBirthdayResult {
   /** The EDTF string representation */
   edtf: string;
-  /** The type of result ('date' for exact, 'interval' for range) */
+  /** A single birth date or a one-of set of possible birth dates. */
   type: import('./parser-factory.js').ParseResult['type'];
   /**
    * Confidence score (0-1).
@@ -93,6 +94,15 @@ export interface ParseAgeBirthdayResult {
   ageRange?: [number, number | null];
   /** Birthday components that are known with certainty */
   birthdayKnown?: { month?: number; day?: number };
+  warnings?: import('./semantics.js').ParseWarning[];
+  /** Calculation provenance; derived components are not EDTF uncertainty qualifiers. */
+  derivation?: {
+    kind: 'age';
+    source: string;
+    referenceDate: string;
+    unit?: 'month' | 'week' | 'day';
+    amount?: number;
+  };
 }
 
 /**
@@ -381,16 +391,20 @@ function daysInMonth(year: number, month: number): number {
   return [4, 6, 9, 11].includes(month) ? 30 : 31;
 }
 
-/**
- * Format a date component with optional uncertainty marker.
- */
-function fmt(value: number, digits: number, uncertain: boolean): string {
-  const str = digits === 4 ? formatYear(value) : String(value).padStart(digits, '0');
-  return uncertain ? `?${str}` : str;
+/** The choice is uncertain; its calculated calendar boundaries are exact. */
+function birthChoices(
+  start: CalendarDate,
+  end: CalendarDate
+): { edtf: string; type: 'date' | 'set' } {
+  const first = formatCalendarDate(start),
+    last = formatCalendarDate(end);
+  return first === last
+    ? { edtf: first, type: 'date' }
+    : { edtf: `[${first}..${last}]`, type: 'set' };
 }
 
 /**
- * Calculate the birth interval from an age expression.
+ * Calculate possible birth dates from an age expression.
  */
 function calculateBirthInterval(
   age: AgeExpression,
@@ -414,16 +428,13 @@ function calculateBirthInterval(
       throw new Error(
         'An unbounded age with a recurring birthday cannot be represented by a finite EDTF expression; provide a finite age range'
       );
-    // Open start: `../?{year}-?{month}-?{day}`
     const endYear = refYear - minAge;
-    const edtf =
-      `../` +
-      fmt(endYear, 4, true) +
-      '-' +
-      fmt(refMonth, 2, true) +
-      '-' +
-      fmt(Math.min(refDay, daysInMonth(endYear, refMonth)), 2, true);
-    return { edtf, type: 'interval' };
+    const end = formatCalendarDate({
+      year: endYear,
+      month: refMonth,
+      day: Math.min(refDay, daysInMonth(endYear, refMonth)),
+    });
+    return { edtf: `[..${end}]`, type: 'set' };
   }
 
   // Completed calendar months/weeks/days, with clamped month anniversaries.
@@ -481,15 +492,10 @@ function calculateBirthInterval(
   }
 
   if (unitWindow) {
-    const uncertain = (date: typeof unitWindow.start) =>
-      fmt(date.year, 4, true) + '-' + fmt(date.month!, 2, true) + '-' + fmt(date.day!, 2, true);
-    return {
-      edtf: uncertain(unitWindow.start) + '/' + uncertain(unitWindow.end),
-      type: 'interval',
-    };
+    return birthChoices(unitWindow.start, unitWindow.end);
   }
 
-  // Case: Age only (no birthday info) - generic interval
+  // Case: Age only (no birthday info) - single-choice date range
   // Formula: birthStart = (T - (maxAge+1) years) + 1 day
   //          birthEnd = T - minAge years
 
@@ -503,24 +509,11 @@ function calculateBirthInterval(
   // Calculate end date (latest possible birth)
   const endYear = refYear - minAge;
 
-  const sY = startDate.year;
-  const sM = startDate.month!;
-  const sD = startDate.day!;
-
-  const edtf =
-    fmt(sY, 4, true) +
-    '-' +
-    fmt(sM, 2, true) +
-    '-' +
-    fmt(sD, 2, true) +
-    '/' +
-    fmt(endYear, 4, true) +
-    '-' +
-    fmt(refMonth, 2, true) +
-    '-' +
-    fmt(Math.min(refDay, daysInMonth(endYear, refMonth)), 2, true);
-
-  return { edtf, type: 'interval' };
+  return birthChoices(startDate, {
+    year: endYear,
+    month: refMonth,
+    day: Math.min(refDay, daysInMonth(endYear, refMonth)),
+  });
 }
 
 /**
@@ -534,7 +527,7 @@ function calculateBirthInterval(
  * ```typescript
  * // Age only
  * parseAgeBirthday('20 yo', { currentDate: new Date('2025-06-01') });
- * // { edtf: '?2004-?06-?02/?2005-?06-?01', type: 'interval', ... }
+ * // { edtf: '[2004-06-02..2005-06-01]', type: 'set', ... }
  *
  * // Age with birthday
  * parseAgeBirthday('20 y/o, birthday 3/15', { currentDate: new Date('2025-06-01') });
@@ -553,6 +546,7 @@ export function createAgeBirthdayParser(
     input: string,
     options: ParseAgeBirthdayOptions = {}
   ): ParseAgeBirthdayResult {
+    const tryParse = (edtf: string) => parseAgeValue(edtf, options.conformance);
     const { currentDate = new Date(), locale: requestedLocale = defaultLocale } = options;
     const locale = options.language
       ? new Intl.Locale(requestedLocale, { language: options.language }).toString()
@@ -580,6 +574,8 @@ export function createAgeBirthdayParser(
           language,
           dateOrder: order,
           referenceDate: currentDate,
+          conformance: options.conformance,
+          weekdayMismatch: options.weekdayMismatch,
         });
         if (results.length > 0) {
           const best = results[0]!;
@@ -589,6 +585,7 @@ export function createAgeBirthdayParser(
             confidence: best.confidence,
             interpretation: `${language === 'es' ? 'Fecha de nacimiento' : language === 'fr' ? 'Date de naissance' : 'Birth date'}: ${best.interpretation}`,
             parsed: best.parsed,
+            ...(best.warnings && { warnings: best.warnings }),
           };
         }
       }
@@ -656,7 +653,12 @@ export function createAgeBirthdayParser(
         text && text !== '..' ? buildPartialQual(text, { year: qualifier }) : text;
       if (result.type === 'set') {
         const parsed = tryParse(edtf) as import('@edtf-ts/core').EDTFSet;
-        edtf = '[' + parsed.values.map((v) => qualify(v.edtf)).join(',') + ']';
+        edtf =
+          '[' +
+          (parsed.earlier ? '..' : '') +
+          parsed.values.map((v) => qualify(v.edtf)).join(',') +
+          (parsed.later ? '..' : '') +
+          ']';
       } else edtf = edtf.split('/').map(qualify).join('/');
     }
 
@@ -703,6 +705,16 @@ export function createAgeBirthdayParser(
       parsed: tryParse(edtf),
       ageRange,
       birthdayKnown: result.birthdayKnown,
+      derivation: {
+        kind: 'age',
+        source: input,
+        referenceDate: formatCalendarDate({
+          year: currentDate.getFullYear(),
+          month: currentDate.getMonth() + 1,
+          day: currentDate.getDate(),
+        }),
+        ...(age.unit && { unit: age.unit, amount: age.amount }),
+      },
     };
   };
 }
@@ -715,10 +727,13 @@ function getMonthName(month: number): string {
 }
 
 /**
- * Try to parse an EDTF string, returning undefined if invalid.
+ * Parse a generated birth date or throw its validation error.
  */
-function tryParse(edtf: string): EDTFBase {
-  const result = parseEDTF(edtf);
-  if (!result.success) throw new Error('Invalid birth date: ' + edtf);
+function parseAgeValue(edtf: string, conformance?: ParseOptions['conformance']): EDTFBase {
+  const result = parseEDTF(edtf, { conformance });
+  if (!result.success)
+    throw new Error(
+      'Invalid birth date: ' + result.errors.map((error) => error.message).join('; ')
+    );
   return result.value;
 }

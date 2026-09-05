@@ -1,8 +1,14 @@
 # @edtf-ts/natural
 
+See [interoperability and migration](../guide/interoperability) for strict/extended mode, supported extensions, and the current natural-language output contracts.
+
 Natural language date parsing for EDTF. Convert human-readable date expressions into Extended Date/Time Format.
 
+See [structured outcomes and parsing policies](../guide/parsing-policies) for `tryParseNatural()`, conversion notes, diagnostic codes, and opt-in interpretation changes.
+
 See the [semantics and multilingual migration guide](/guide/semantics-migration) and [tested language examples](/guide/language-examples).
+
+See [locales and bundle sizes](/guide/locales-and-bundles) for regional language fallback and imports that include only English, Spanish, or French.
 
 ## Installation
 
@@ -87,6 +93,8 @@ interface ParseResult {
   parsed: EDTFBase;      // Validated EDTF object
   fuzzyDate: IFuzzyDate; // Required wrapper
   ambiguous?: boolean;    // Whether this result is ambiguous
+  warnings?: ParseWarning[]; // Structured weekday mismatch diagnostics
+  notes?: ParseNote[];     // Interpretation decisions with stable policy IDs
 }
 ```
 
@@ -205,6 +213,11 @@ interface ParseNaturalOptions {
   returnAllResults?: boolean;   // Default: true
   minConfidence?: number;       // Default: 0
   referenceDate?: Date;         // Default: current system date
+  conformance?: 'strict' | 'extended'; // Default: extended
+  weekdayMismatch?: 'reject' | 'warn'; // Default: reject
+  literalPreference?: 'edtf' | 'all'; // Default: edtf
+  rangeQualification?: 'end' | 'both' | 'ambiguous'; // Default: end
+  boundaryMode?: 'exclusive-choice' | 'open-interval'; // Default: exclusive-choice
 }
 ```
 
@@ -774,5 +787,5 @@ The [interactive playground](../playground) uses one top-level locale chooser fo
 
 - [@edtf-ts/core](/api/core) - Parse and validate EDTF strings
 - [Formatting & Utilities](/api/utils) - Format EDTF for human reading
-- [Natural Language Guide](/guide/natural-language) - Conceptual overview
+- [Natural Language Parsing](/guide/parsing#natural-language-parsing) - Conceptual overview
 - [Nearley Grammar](https://nearley.js.org/) - Grammar syntax documentation

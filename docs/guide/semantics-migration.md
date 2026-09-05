@@ -1,57 +1,146 @@
-# EDTF semantics and multilingual migration
+# Migrating from 0.5.0 to 0.6.0
 
-This release changes incorrect outputs directly. Persisted values retain their original EDTF meaning; reparse the original natural-language input when migrating stored data. A stored interval cannot reveal whether its author originally meant an event-date constraint.
+Version 0.6.0 retains the existing exports and required call arguments. Ordinary calendar-date parsing, formatting, and comparisons remain available. All 14 code examples from the deployed Getting Started guide were run against the published npm 0.5.0 packages and the 0.6.0 build with the same results. This check does not cover every application or every input.
 
-## Meaning changes
+The important upgrade risks are new exceptions, comparison return types, and assumptions about age-result shapes. Changes to the meaning or spelling of successfully parsed dates are listed separately below. Update `@edtf-ts/core` and `@edtf-ts/natural` together.
 
-| Input or behavior | Previous result | Corrected result |
+## Changes that can stop existing code
+
+| Existing usage | What can fail in 0.6.0 | What to change |
 |---|---|---|
-| `no earlier than 1870` | `../1870` | `[1870..]` |
-| `before 1870`, `pre-1870` | `../1870` or rejected | `[..1869]` |
-| `after 1870`, `post-1870` | `1870/..` or rejected | `[1871..]` |
-| `1870 or earlier` | Inconsistent boundary handling | `[..1870]` |
-| `1870 or later` | `1870/..` | `[1870..]` |
-| Known day in an unspecified month | English could omit the day; translated phrases failed to parse | `1870-XX-12` retains day 12 in all renderings |
-| `March 5` | Only `0005-03` | `XXXX-03-05` first, then `0005-03`; `March 0005` selects the historical month |
-| `19th century?` | Only the ending year was qualified | `1801?/1900?` |
-| `since 1870` | `1870/..` | `1870/..` |
-| `One of: 1870, 1871, 1872` | `[1870,1871,1872]` | `[1870..1872]`; same date choices, compact spelling |
-| Rendered Spanish/French open interval | Could fail to parse | `1870 a fin abierto` / `1870 à fin ouverte` → `1870/..` |
-| Exact extended-year rendering | Could round away trailing digits | All year digits retained |
-| `sometime between 1870 and 1880` | Rejected | `[1870..1880]` |
-| `nineteenth century` | `18XX` | `1801/1900` |
-| `1 BCE` | Could produce a negative zero | `0000` |
-| Literal `~2004-06` | `2004-06~` | `~2004-06`, preserving qualification of the year only |
-| `1–3 March 2024` | Could include `0001/2024-03-03` | `2024-03-01/2024-03-03` |
-| `December–January 2024` | Reversed interval | `2023-12/2024-01`, then `2024-12/2025-01`; both ambiguous |
-| Age 20 with a June birthday, on June 1, 2025 | Could choose only one birth year | `[2004-06-02..2004-06-30,2005-06-01]` |
-| Age 20–23 with birthday March 15, on June 1, 2025 | Continuous interval between birthdays | `[2002-03-15,2003-03-15,2004-03-15,2005-03-15]` |
+| Parsing an interval with time-of-day endpoints | Rejected even in extended mode; `FuzzyDate.parse()` throws. | Check input with `FuzzyDate.from()` or core `parse()`. Keep instant-to-instant durations outside EDTF calendar-date intervals. Standalone `Date.toISOString()` input remains supported. |
+| `parseNatural(text, { locale: navigator.language })` for English input | `locale` now selects a grammar. Unsupported languages throw; Spanish/French locales require matching input unless `language` is specified. The same language selection applies to `parseAgeBirthday()`. | Set `language: 'en'` when the field accepts English regardless of the user's region, or restrict the field to the supported input languages. |
+| Numeric use of `compare()` or `.compareTo()` | The return type is now `number \| 'UNKNOWN'`. Numeric assignments and direct `Array.sort()` callbacks can fail TypeScript compilation. In JavaScript, treating `'UNKNOWN'` as a number can silently misorder results. | Handle `'UNKNOWN'` explicitly before arithmetic or numeric comparison. |
+| `sort()`, `earliest()`, `latest()`, or `FuzzyDate.compare()` on mixed time bases | Throws when comparing a timezone-qualified timestamp with a calendar date or a datetime without a timezone. | Sort values with the same time basis, or resolve a timezone using application knowledge before comparison. Do not append `Z` to an unknown local time. |
+| Treating every age-derived result as an interval | An age such as `20 yo` now returns a one-of set. Accessing interval-only properties such as `.start` without a type check can fail in caller code. | Check the returned type, or use `.edtf` and `formatHuman(result.parsed)` when storing/displaying the result. |
 
-The [LOC EDTF specification](https://www.loc.gov/standards/datetime/) distinguishes an open interval (`../1870`) from a date choice (`[..1870]`). Bare `..1870` remains invalid. The error suggests both meaningful alternatives.
+Core `parse()` and `FuzzyDate.from()` still return a success/failure result for invalid EDTF strings; `FuzzyDate.parse()` still throws. `parseNatural()` still returns an array or throws. There is no new requirement to replace it with `tryParseNatural()`, which is an optional API for handling expected input failures as structured outcomes.
 
-Strict before/after boundaries shift an exact year, month, or day by one calendar unit. February, leap years, year zero, and negative years use Gregorian arithmetic. Inclusive boundaries preserve the cutoff. Approximate, uncertain, or masked natural-language cutoffs raise an explanatory error. Valid literal EDTF remains accepted unchanged.
+### Timestamp input
 
-The numeric prefixes accept hyphenated, closed, and spaced forms: `pre-1870`, `pre1870`, `pre 1870`, and the corresponding `post` forms. Documentation uses hyphenated forms. Numeric ambiguity is retained within qualified dates, intervals, and collections. Each numeric interpretation applies a consistent date order to the entire expression.
+```ts
+import { FuzzyDate } from '@edtf-ts/core';
+
+const iso = new Date('2020-01-01T12:30:00.123Z').toISOString();
+const result = FuzzyDate.from(iso);
+if (result.success) {
+  console.log(result.value.toISO()); // 2020-01-01T12:30:00.123Z
+  console.log(result.value.min.toISOString()); // 2020-01-01T12:30:00.123Z
+} else {
+  console.error(result.errors);
+}
+```
+
+`Date.toISOString()` input is accepted in the default extended profile, including `.000Z` and signed six-digit years. Fractions with one to three digits are retained. Strict mode excludes these ISO extensions; datetime interval endpoints and fractions longer than three digits remain unsupported.
+
+Version 0.5.0 accepted fractions but ignored them in bounds and `toISO()` output. Version 0.6.0 preserves their resolution: `.123` is one exact millisecond, `.12` spans milliseconds 120–129, and an omitted fraction still spans the whole second. This can change comparison results without changing the call signature. `precision` stays `'second'`; the optional `fractionalSecond` property records the written digits. See the [datetime reference](../api/types/datetime) for details.
+
+### Input language and regional date order
+
+```ts
+import { parseNatural } from '@edtf-ts/natural';
+
+// An English-language field used by someone with German regional settings:
+const results = parseNatural('January 12, 1940', {
+  locale: 'de-DE',
+  language: 'en',
+});
+console.log(results[0]!.edtf); // 1940-01-12
+```
+
+`language` selects English, Spanish, or French grammar; `locale` still supplies the regional numeric-date preference. Core date formatting with `locale: 'de-DE'` remains supported; the grammar restriction concerns natural-language parsing. Continue handling parse failures for unrecognized input.
+
+Regional variants of a supported language already work: `en-ZA`, `en-AU`, and `en-IN` all select English without requiring separate language packs. The full region is retained for date ordering. See [locales and bundle sizes](./locales-and-bundles).
+
+### Comparisons
+
+```ts
+import { FuzzyDate } from '@edtf-ts/core';
+
+const local = FuzzyDate.parse('2020-01-01T12:00:00');
+const absolute = FuzzyDate.parse('2020-01-01T12:00:00Z');
+const ordering = local.compareTo(absolute);
+if (ordering === 'UNKNOWN') {
+  console.log('A timezone is needed to order these values.');
+} else {
+  console.log(ordering < 0 ? 'Earlier' : ordering > 0 ? 'Later' : 'Equal');
+}
+```
+
+Even calls comparing two ordinary years have the wider static return type, so TypeScript callers may need a guard although those particular values remain comparable. The existing four-valued relation APIs, such as `isBefore()` and `equals()`, retain their `YES`/`NO`/`MAYBE`/`UNKNOWN` return type.
+
+### Age-result shape
+
+```ts
+import { formatHuman, isEDTFSet } from '@edtf-ts/core';
+import { parseAgeBirthday } from '@edtf-ts/natural';
+
+const birth = parseAgeBirthday('20 yo', { currentDate: new Date(2025, 5, 1) });
+console.log(birth.type); // set
+console.log(birth.edtf); // [2004-06-02..2005-06-01]
+console.log(formatHuman(birth.parsed));
+if (isEDTFSet(birth.parsed)) {
+  // Handle possible birthdates as a set, without reading interval endpoints.
+  console.log(birth.parsed.type); // Set
+}
+```
+
+Code that stores `.edtf` or displays the result through the formatter can keep that flow. Code that reparses it specifically as an interval, reads interval endpoints, or switches only on `date`/`interval` must handle `set` too. Forwarded literal dates can also yield other supported result types.
 
 ## Public interfaces
 
-| Interface | Change |
-|---|---|
-| Core `compactYearRanges(value)` | Returns compact year sets/lists without changing the parsed object or other syntax |
-| Natural `ParseResult` | `parsed` and `fuzzyDate` are required; `type` also includes `datetime` |
-| Age/birthday result | `parsed` is required; forwarded dates retain their actual type, including sets and datetimes |
-| `locale` | Defaults to `en-US`; selects a grammar language and regional numeric-order preference |
-| `language` | Optional `en`, `es`, or `fr` override, independent of numeric-order preference |
-| `dateOrder` | Optional `MDY`, `DMY`, or `YMD`; otherwise derived from `Intl.DateTimeFormat.formatToParts` |
-| Unsupported languages | Raise an error rather than trying English silently |
-| Language entry points | `@edtf-ts/natural/en`, `/es`, `/fr`; each includes one compiled grammar and defaults to its language |
-| `compare` and `compareTo` | Return `number \| 'UNKNOWN'`; floating/absolute timestamp comparisons return `UNKNOWN` |
-| Sorting, including `FuzzyDate.compare` | Throws when a floating/absolute pair cannot be ordered |
-| Normalized `Member` | Optional `calendarRange` represents an unbounded family of calendar choices; optional `timeDomain` distinguishes absolute and floating timestamps |
-| Custom relation callbacks | Explicitly reject symbolic calendar ranges until those callbacks support them |
-| EDTF intervals | Date-only endpoints; datetime intervals are outside this profile |
+These TypeScript changes matter primarily to callers doing numeric comparisons, constructing objects themselves, or exhaustively checking result types:
 
-All successful natural-language candidates are validated before ranking and filtering. Impossible dates, reversed intervals, malformed comma/space syntax in literal sets, impossible masks, invalid offsets, and non-profile fractional-second extensions are rejected. Do not rely on invalid secondary candidates being returned with a high confidence score.
+| Interface | Compatibility impact |
+|---|---|
+| `compare()` / `IFuzzyDate.compareTo()` | Return `number \| 'UNKNOWN'`; narrow the result before numeric use. |
+| Natural `ParseResult` | `parsed` and `fuzzyDate` are required. Old handwritten results or mocks missing them no longer type-check. `type` now declares `datetime`, which 0.5.0 already returned at runtime for literal datetimes. |
+| `ParseAgeBirthdayResult` | `parsed` is required. The `type` union expands beyond `date`/`interval`; exhaustive switches and narrowed assignments need updating. |
+| `EDTFInterval` | `start`/`end` no longer accept `EDTFDateTime`. Calendar-date endpoints remain supported; season endpoints remain supported in the default extended profile. |
+
+Receiving required `parsed`/`fuzzyDate` fields does not itself break normal result consumption. Prefer producing fixtures with the parser instead of manually imitating its result objects. Existing imports, synchronous calls, numeric EDTF-level arguments, and `ParseError` constructor calls remain supported. New parsing options, language entry points, and core operations are additive.
+
+### Advanced integrations
+
+`Member` adds optional `calendarRange` and `timeDomain` metadata. Custom callbacks passed to `evaluate()` or `evaluateRelation()` now throw for symbolic open date choices such as `[1870..]`. Use the built-in relation functions for these values. The built-in functions support the new representation; custom callbacks remain supported for nonsymbolic inputs.
+
+An unbounded age with a recurring birthday, such as `senior, March birthday`, now raises an error rather than dropping the birthday constraint. Ask for a finite age range when the application needs this combination.
+
+## Meaning changes
+
+The following examples compare the published 0.5.0 behavior with 0.6.0 defaults. A changed successful result is not automatically a crash; it matters when caller code assumes a particular type, spelling, ranking, or boundary meaning.
+
+| Input or behavior | 0.5.0 | 0.6.0 |
+|---|---|---|
+| `no earlier than 1870` | Rejected | `[1870..]` |
+| `before 1870`, `pre-1870` | `../1870` or rejected | `[..1869]` |
+| `after 1870`, `post-1870` | `1870/..` or rejected | `[1871..]` |
+| `1870 or earlier` | `[..1870]` | `[..1870]` (unchanged) |
+| `1870 or later` | `1870/..` | `[1870..]` |
+| Known day in an unspecified month | English could omit the day; translated phrases failed to parse | `1870-XX-12` retains day 12 in all renderings |
+| `March 5` | `0005-03` | `XXXX-03-05`; use `March 0005` for the historical month |
+| `19th century?` | `18XX?` | `1801?/1900?` |
+| `since 1870` | `1870/..` | `1870/..` |
+| `One of: 1870, 1871, 1872` | `[1870,1871,1872]` | `[1870,1871,1872]` (unchanged; compaction is explicit) |
+| `sometime between 1870 and 1880` | Rejected | `[1870..1880]` |
+| `nineteenth century` | `18XX` | `1801/1900` |
+| `1 BCE` | `-0000` | `0000` |
+| Literal `~2004-06` | `2004-06~` | `~2004-06`, preserving qualification of the year only |
+| `1–3 March 2024` | `0001/2024-03-03` | `2024-03-01/2024-03-03` |
+| `December–January 2024` | `2024-12/2024-01` | `2023-12/2024-01`, then `2024-12/2025-01`; both ambiguous |
+| `20 yo`, on June 1, 2025 | `?2004-?06-?02/?2005-?06-?01` | `[2004-06-02..2005-06-01]` |
+| `20 yo, birthday June`, on June 1, 2025 | `2005-06-?01/2005-06-?30` | `[2004-06-02..2004-06-30,2005-06-01]` |
+| `20-23 yo, birthday March 15`, on June 1, 2025 | `?2002-03-15/?2005-03-15` | `[2002-03-15,2003-03-15,2004-03-15,2005-03-15]` |
+
+The [LOC EDTF specification](https://www.loc.gov/standards/datetime/) distinguishes an open interval (`../1870`) from a date choice (`[..1870]`). Bare `..1870` remains invalid. The error suggests both meaningful alternatives.
+
+By default, before/after boundaries shift an exact year, month, or day by one calendar unit. February, leap years, year zero, and negative years use Gregorian arithmetic. Inclusive boundaries preserve the cutoff. Fuzzy natural-language cutoffs raise an error under the default policy. The optional `boundaryMode: 'open-interval'` retains the cutoff as an inclusive interval endpoint, for example `before 1870` → `../1870`; use it only if that meaning fits the application. See [parsing policies](./parsing-policies#before-and-after). It is not a general 0.5.0 compatibility mode.
+
+The numeric prefixes accept hyphenated, closed, and spaced forms: `pre-1870`, `pre1870`, `pre 1870`, and the corresponding `post` forms. Documentation uses hyphenated forms. Numeric ambiguity is retained within qualified dates, intervals, and collections. Each numeric interpretation applies a consistent date order to the entire expression.
+
+All successful natural-language candidates are validated before ranking and filtering. Inputs such as `February 30, 2020`, previously returned as invalid candidates, now raise an error. Bare one- or two-digit years such as `20` also require an era marker or four-digit spelling. Continue handling parse failures for user input. Human-readable `interpretation` text, confidence scores, and error details can change; avoid using display/error strings as identifiers.
+
+Stored EDTF strings are not automatically rewritten. Some formerly accepted strings no longer parse, as described above. If you want stored natural-language inputs to receive the new interpretations, reparse the original input after reviewing the differences. An old interval alone cannot reveal whether its author meant an event-date constraint or a duration.
 
 ## Multilingual use
 
@@ -77,7 +166,7 @@ Numeric ordering is a preference, not a restriction on valid alternatives. In a 
 
 The shared numeric resolver assigns component roles after the grammar captures the numbers. English uses the same grammar for `en-US` and `en-GB`; the latter prefers DMY, unless `dateOrder` overrides it. Ambiguity is retained across every member of an expression, including when a later date has equal month/day numbers. Each candidate uses a consistent ordering, so an unambiguous MDY member cannot be combined with a DMY reading of another member in the same expression.
 
-Rendered collection prefixes (`One of`, `All of`, `Una de estas fechas`, `Todas estas fechas`, `Une de ces dates`, and `Toutes ces dates`) use language vocabulary with shared member parsing. Singleton collections retain their set/list type, and rendered open members retain their inclusion boundaries. Ascending runs of adjacent exact years become finite range members in both parsing and rendering. This preserves gaps, duplicates, source order, and qualifications. Literal EDTF pass-through stays unchanged; the playground compares year collections using `compactYearRanges` so equivalent enumerations and ranges show green. Open interval endpoint phrases are language-owned tokens, retaining Spanish/French noun and adjective order.
+Rendered collection prefixes (`One of`, `All of`, `Una de estas fechas`, `Todas estas fechas`, `Une de ces dates`, and `Toutes ces dates`) use language vocabulary with shared member parsing. Singleton collections retain their set/list type, and rendered open members retain their inclusion boundaries. Explicit enumerations and ranges preserve their structure in parsing and formatting. Use `compactYearRanges` explicitly for compact year spelling; it preserves gaps, duplicates, source order, and qualifications without modifying the parsed object. The playground also uses it to compare equivalent year collections. Open interval endpoint phrases are language-owned tokens, retaining Spanish/French noun and adjective order.
 
 The [interactive playground](../playground) initializes its top-level locale chooser from `navigator.language`. Regional presets and custom locale tags apply to both date inputs and all date/age rendering. The status line exposes the numeric-order preference; unsupported languages show an error. **Browser default** resets the selection, and reload clears an override. Library calls retain their `en-US` default.
 

@@ -5,7 +5,19 @@
 
 Natural language to EDTF parser with locale support and ambiguity handling.
 
+Use `tryParseNatural()` for structured outcomes, or retain the existing throwing `parseNatural()` API. [Parsing policies](https://bobpritchett.github.io/edtf-ts/guide/parsing-policies) document conversion notes and opt-in `literalPreference`, `rangeQualification`, and `boundaryMode` options. The [migration guide](https://bobpritchett.github.io/edtf-ts/guide/semantics-migration) covers changes from 0.5.0.
+
 **[GitHub Repository](https://github.com/BobPritchett/edtf-ts)** | **[Documentation](https://bobpritchett.github.io/edtf-ts/)** | **[Interactive Playground](https://bobpritchett.github.io/edtf-ts/playground)**
+
+## Upgrading from 0.5.0 to 0.6.0
+
+`parseNatural()` still returns an array or throws; switching to `tryParseNatural()` is optional. Existing exports and required call arguments remain available. Check these cases before updating both packages:
+
+- **Language selection:** `locale` now selects the grammar. English input with a Spanish/French locale can fail, and unsupported languages throw. Set `language: 'en'` for an English field that uses the user's regional locale. This also applies to `parseAgeBirthday()`.
+- **Age-result shape:** Age-derived birthdates can now be sets. Guard interval-only access such as `.parsed.start`; storing `.edtf` and formatting `.parsed` remain supported flows.
+- **Validation and TypeScript:** More inputs are rejected, including datetime intervals passed through to core. Standalone `Date.toISOString()` timestamps remain accepted by default, with milliseconds preserved. Continue handling parser errors. Handwritten result objects and mocks may need required `parsed` / `fuzzyDate` fields; exhaustive type switches may need more cases.
+
+See the [migration guide](https://bobpritchett.github.io/edtf-ts/guide/semantics-migration) for examples and the separate list of changed parsing results. It also covers comparison changes if you compare or sort the parsed dates.
 
 ## Installation
 
@@ -160,9 +172,17 @@ parseNatural('19th century'); // 1801/1900
 
 ```typescript
 parseNatural('1667 or 1668'); // [1667,1668] (one of)
+parseNatural('April 12th or 14th 1985'); // [1985-04-12,1985-04-14]
+parseNatural('April 12, 14, or 16, 1985'); // [1985-04-12,1985-04-14,1985-04-16]
 parseNatural('1667 and 1668'); // {1667,1668} (all of)
 parseNatural('1984 or earlier'); // [..1984]
 ```
+
+Day alternatives can share a month and year, including day-first wording such as
+`12 or 14 April 1985`, Spanish `12 o 14 de abril de 1985`, and French
+`12 ou 14 avril 1985`. These return one set result containing the stated dates;
+every member must be a valid calendar date. A dash still denotes an interval:
+`April 12-14, 1985` includes the intervening day.
 
 ## API
 
@@ -191,6 +211,7 @@ interface ParseResult {
   parsed: EDTFBase; // Validated EDTF object
   fuzzyDate: IFuzzyDate; // Required wrapper
   ambiguous?: boolean; // Whether this result is ambiguous
+  warnings?: ParseWarning[]; // Weekday mismatch diagnostics in warning mode
 }
 ```
 
@@ -216,7 +237,9 @@ The default import includes all three grammars. Use `@edtf-ts/natural/en`, `/es`
 
 `locale` defaults to `en-US`; regional locales select their language pack. Optional `language: 'en' | 'es' | 'fr'` and `dateOrder: 'MDY' | 'DMY' | 'YMD'` overrides separate syntax from numeric ordering. Unsupported languages raise an error.
 
-English uses one grammar for both MDY and DMY. Shared semantics resolve the captured numbers and rank candidates using locale data: `en-GB` prefers DMY, while `en-US` prefers MDY. The preference stays consistent across qualifiers, intervals, and collection members. An unambiguous date such as `06/15/26` still resolves to June 15 in a DMY locale; alternatives remain available when both orders are valid.
+All `en-*` regions use one English grammar. Shared semantics resolve the captured numbers and rank candidates using the runtime's `Intl` locale data: `en-GB` prefers DMY, `en-US` prefers MDY, and `en-ZA` prefers YMD. The preference stays consistent across qualifiers, intervals, and collection members. An unambiguous date such as `06/15/26` still resolves to June 15 in a DMY locale; alternatives remain available when both orders are valid. Use `dateOrder` when an application needs a fixed order independent of runtime locale-data updates.
+
+The 0.6.0 browser measurements are approximately **49.3 KiB gzip for English only** and **65.6 KiB gzip for all three languages**, including core and the shared parser runtime. Regional variants add no grammar code. The default import retains all grammars even when a call specifies `locale: 'en-US'`; use the `/en` entry point to exclude Spanish and French. See [locales and bundle sizes](https://bobpritchett.github.io/edtf-ts/guide/locales-and-bundles) for the full table and loading guidance. After building, reproduce the measurements with `pnpm --filter @edtf-ts/natural measure:bundles`.
 
 ```typescript
 const referenceDate = new Date(2026, 0, 1); // Fix the rolling short-year window for this example.
@@ -230,7 +253,7 @@ Cross-language round-trip tests in `tests/locale-roundtrip.test.ts` follow key d
 
 The [interactive playground](https://bobpritchett.github.io/edtf-ts/playground) defaults to the browser’s locale. Its top-level chooser overrides parsing and rendering in both date inputs and the age/birthday section, with regional presets and a custom locale field. Select **Browser default** or reload to reset. This browser behavior does not change the API’s `en-US` default.
 
-See the [migration guide](../../docs/guide/semantics-migration.md) and [tested examples](../../docs/guide/language-examples.md).
+See the [migration guide](https://bobpritchett.github.io/edtf-ts/guide/semantics-migration) and [tested examples](https://bobpritchett.github.io/edtf-ts/guide/language-examples).
 
 ## Options
 
@@ -280,9 +303,9 @@ The parser assigns confidence scores based on:
 
 ## Unknown components and mixed interval endpoints
 
-`12th of unknown month, 1870`, `día 12 de mes desconocido, 1870`, and `12 d'un mois inconnu, 1870` parse to `1870-XX-12` with their corresponding locales. Renderings preserve that known day. `January` parses to `XXXX-01`; `January 12` prefers `XXXX-01-12`, with January in year 0012 retained as an alternative. Use `January 0012` to select that early year, or `January 12, unknown year` to select the unspecified year explicitly.
+`12th of unknown month, 1870`, `día 12 de mes desconocido, 1870`, and `12 d'un mois inconnu, 1870` parse to `1870-XX-12` with their corresponding locales. Renderings preserve that known day. `January` parses to `XXXX-01`; `January 12` produces only `XXXX-01-12`. Use `January 0012` to select that early year, or `January 12, unknown year` to select the unspecified year explicitly.
 
-`march 1988 - spring 1990` parses to `1988-03/1990-21`. Date, season, and period endpoints share range handling, including prefix/suffix qualifiers. French `De 1970 environ à 1980 environ` parses to `1970~/1980~`. Semicolons enumerate inclusive lists: `2020; 2021` → `{2020..2021}`. Bare `90` remains historical year `0090`; `'90` uses the rolling reference-year window.
+`march 1988 - spring 1990` parses to `1988-03/1990-21` as a supported extension, excluded by strict mode. Date, season, and period endpoints share range handling, including prefix/suffix qualifiers. French `De 1970 environ à 1980 environ` parses to `1970~/1980~`. Semicolons enumerate inclusive lists: `2020; 2021` → `{2020,2021}`. Write `0090` or `90 CE` for historical year 90; `'90` uses the rolling reference-year window.
 
 The [compatibility review](../../docs/guide/compatibility-review.md) lists every supplied example, selected edtfy tests, preferred renderings, and reasons for intentional rejections. Its fixtures check every returned candidate. Weekdays must match their dates; arbitrary bibliographic prose is not silently truncated.
 
@@ -309,7 +332,7 @@ if (result.success) {
 }
 ```
 
-Adjacent exact years in natural-language sets and lists now produce compact ranges: `One of: 1870, 1871, 1872` becomes `[1870..1872]`. Gaps, member order, qualifications, and set/list meaning remain intact. Literal EDTF pass-through retains the supplied spelling; use core `compactYearRanges` when comparing enumerated years with their range form.
+Natural-language sets and lists preserve enumerations: `One of: 1870, 1871, 1872` becomes `[1870,1871,1872]`. Explicit ranges retain range spelling, and day/month ranges render concisely. Use core `compactYearRanges` for explicit year compaction. Natural parsing normalizes year-only qualifiers (`~1950` → `1950~`, `~1984?` → `1984%`); core preserves accepted literal spelling.
 
 All three languages parse rendered year ranges and open/unknown interval endpoints. For example, `1870 a fin abierto` with `es-ES` and `1870 à fin ouverte` with `fr-FR` both return `1870/..`. Unknown endpoint phrases retain an empty endpoint (`1870/`), distinct from an open endpoint (`1870/..`). These cases are exercised across regional locales in chained round-trip tests.
 
@@ -386,3 +409,7 @@ MIT Copyright 2025 Bob Pritchett
 - [EDTF Specification](https://www.loc.gov/standards/datetime/)
 - [Nearley Documentation](https://nearley.js.org/)
 - [Natural Language Parser Research](../../tools/research/parser-and-formats-spec.md)
+
+## Interoperability and migration
+
+Bare one- or two-digit years require an era marker or four-digit spelling. `conformance: 'strict'` excludes the documented season combinations; extended support remains the default. `weekdayMismatch: 'warn'` returns the calendar date with structured warnings; rejection remains the default. Age-derived birth dates now use a date or one-of set and carry `derivation` metadata instead of artificial component qualifiers. See the [policy and migration guide](../../docs/guide/interoperability.md) for exact contracts and examples.

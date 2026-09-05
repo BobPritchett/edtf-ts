@@ -1,4 +1,4 @@
-import { collectionYearGroups } from './collections.js';
+import { collectionGroups } from './collections.js';
 import { formatLocalized, calendarDateObject } from './localized-format.js';
 /**
  * Formatting utilities for EDTF dates
@@ -263,7 +263,9 @@ function formatDateHuman(date: EDTFDate, options: FormatOptions): string {
 
   // Determine if we should show the era marker
   const isNegativeYear = typeof year === 'number' && year <= 0;
-  const shouldShowEra = eraDisplay === 'always' || (eraDisplay === 'auto' && isNegativeYear);
+  const shouldShowEra =
+    eraDisplay === 'always' ||
+    (eraDisplay === 'auto' && (isNegativeYear || (typeof year === 'number' && year < 100)));
 
   // Check for extended year features (exponential, significant digits)
   const hasExponential = date.exponential !== undefined;
@@ -433,7 +435,10 @@ function formatDateTimeHuman(datetime: EDTFDateTime, options: FormatOptions): st
   const { dateStyle, locale } = options;
 
   const d = calendarDateObject(datetime.year, datetime.month, datetime.day);
-  d.setUTCHours(datetime.hour, datetime.minute, datetime.second);
+  d.setUTCHours(
+    datetime.hour, datetime.minute, datetime.second,
+    Number(datetime.fractionalSecond?.padEnd(3, '0') ?? 0)
+  );
 
   const formatter = new Intl.DateTimeFormat(locale, {
     year: 'numeric',
@@ -442,6 +447,7 @@ function formatDateTimeHuman(datetime: EDTFDateTime, options: FormatOptions): st
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    fractionalSecondDigits: datetime.fractionalSecond?.length as 1 | 2 | 3 | undefined,
     timeZone: 'UTC',
   });
 
@@ -528,35 +534,32 @@ function formatSeasonHuman(season: EDTFSeason, options: FormatOptions): string {
 }
 
 function formatSetHuman(set: EDTFSet, options: FormatOptions): string {
-  const values = collectionYearGroups(set).map(({ first, last }) =>
-    last
-      ? formatHuman(first, options) + ' through ' + formatHuman(last, options)
-      : formatHuman(first, options)
+  const values = collectionGroups(set).map(
+    ({ first, last, earlier, later }) =>
+      (last
+        ? formatHuman(first, options) + ' through ' + formatHuman(last, options)
+        : formatHuman(first, options)) + (earlier ? ' or earlier' : later ? ' or later' : '')
   );
 
   let result = 'One of: ';
-  if (set.earlier) result = 'Earlier or one of: ';
 
   result += values.join(', ');
-
-  if (set.later) result += ', or later';
 
   return result;
 }
 
 function formatListHuman(list: EDTFList, options: FormatOptions): string {
-  const values = collectionYearGroups(list).map(({ first, last }) =>
-    last
-      ? formatHuman(first, options) + ' through ' + formatHuman(last, options)
-      : formatHuman(first, options)
+  const values = collectionGroups(list).map(
+    ({ first, last, earlier, later }) =>
+      (last
+        ? formatHuman(first, options) + ' through ' + formatHuman(last, options)
+        : formatHuman(first, options)) +
+      (earlier ? ' and all earlier dates' : later ? ' and all later dates' : '')
   );
 
   let result = 'All of: ';
-  if (list.earlier) result = 'Earlier and all of: ';
 
   result += values.join(', ');
-
-  if (list.later) result += ', and later';
 
   return result;
 }
@@ -605,7 +608,10 @@ export function formatISO(value: EDTFBase): string {
 
     if (value.type === 'DateTime') {
       const dt = value as EDTFDateTime;
-      const year = String(dt.year).padStart(4, '0');
+      const year =
+        dt.year < 0 || dt.year > 9999
+          ? (dt.year < 0 ? '-' : '+') + String(Math.abs(dt.year)).padStart(6, '0')
+          : String(dt.year).padStart(4, '0');
       const month = String(dt.month).padStart(2, '0');
       const day = String(dt.day).padStart(2, '0');
       const hour = String(dt.hour).padStart(2, '0');
@@ -613,7 +619,8 @@ export function formatISO(value: EDTFBase): string {
       const second = String(dt.second).padStart(2, '0');
       const tz = dt.timezone || 'Z';
 
-      return `${year}-${month}-${day}T${hour}:${minute}:${second}${tz}`;
+      const fraction = dt.fractionalSecond !== undefined ? `.${dt.fractionalSecond}` : '';
+      return `${year}-${month}-${day}T${hour}:${minute}:${second}${fraction}${tz}`;
     }
   }
 

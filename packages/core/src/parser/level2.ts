@@ -16,6 +16,8 @@ import {
   daysInMonth,
 } from '../core-utils/date-helpers.js';
 import { DATE_MIN_MS, DATE_MAX_MS } from '../types/index.js';
+import { significantYearRange } from '../year-range.js';
+import { readCollectionElements } from './collection-elements.js';
 import { parseLevel1Date, parseSeason } from './level1.js';
 import { DEFAULT_SEASON_MAPPINGS } from '../normalization/season.js';
 
@@ -216,65 +218,23 @@ function parseLevel2Interval(input: string): ParseResult<EDTFInterval> {
  * Format: [1667,1668,1670..1672] or [..1760-12] or [1760-12..]
  */
 function parseSet(input: string): ParseResult<EDTFSet> {
-  const content = input.slice(1, -1); // Remove [ and ]
-
+  const plan = readCollectionElements(input, parseSetValue);
+  if (!plan.success) return plan;
   const values: (EDTFDate | EDTFSeason)[] = [];
-  let earlier = false;
-  let later = false;
-
-  if (/\s/.test(content))
-    return {
-      success: false,
-      errors: [{ code: 'INVALID_SET', message: 'Whitespace is not allowed inside an EDTF set' }],
-    };
-  const parts = content.split(',');
-  for (let i = 0; i < parts.length; i++) {
-    let part = parts[i]!;
-    if (i === 0 && part.startsWith('..')) {
-      earlier = true;
-      part = part.slice(2);
-    }
-    if (i === parts.length - 1 && part.endsWith('..')) {
-      later = true;
-      part = part.slice(0, -2);
-    }
-    if (!part)
-      return { success: false, errors: [{ code: 'INVALID_SET', message: 'Empty set member' }] };
-    const endpoints = part.split('..');
-    if (endpoints.length > 2)
-      return { success: false, errors: [{ code: 'INVALID_RANGE', message: 'Malformed range' }] };
-    const firstResult = parseSetValue(endpoints[0]!);
-    if (!firstResult.success) return firstResult;
-    if (endpoints.length === 1) {
-      values.push(firstResult.value);
+  const earlier = plan.value.some((part) => part.earlier);
+  const later = plan.value.some((part) => part.later);
+  for (const part of plan.value) {
+    if (!part.last) {
+      values.push(part.first);
       continue;
     }
-    const lastResult = parseSetValue(endpoints[1]!);
-    if (!lastResult.success) return lastResult;
-    const first = firstResult.value,
-      last = lastResult.value;
-    if (
-      first.type !== 'Date' ||
-      last.type !== 'Date' ||
-      first.precision !== last.precision ||
-      /[X?~%]/.test(part) ||
-      first.minMs > last.maxMs
-    )
-      return {
-        success: false,
-        errors: [
-          {
-            code: 'INVALID_RANGE',
-            message: 'Range endpoints must be ordered exact dates of equal precision',
-          },
-        ],
-      };
+    const first = part.first as EDTFDate;
     let current = { year: first.year, month: first.month, day: first.day } as CalendarDate;
     while (true) {
       const value = parseLevel1Date(formatCalendarDate(current));
       if (!value.success) return value;
       values.push(value.value);
-      if (value.value.minMs >= last.minMs) break;
+      if (value.value.minMs >= part.last.minMs) break;
       current = shiftCalendarDate(current, 1);
     }
   }
@@ -432,8 +392,24 @@ function parseExponentialYear(input: string): ParseResult<EDTFDate> {
       ],
     };
 
-  const minMsValue = yearStartMs(year);
-  const maxMsValue = yearEndMs(year);
+  const range =
+    sigDigits === undefined
+      ? { min: year, max: year }
+      : significantYearRange(year, sigDigits!, String(Math.abs(year)).length);
+  if (!range)
+    return {
+      success: false,
+      errors: [
+        {
+          code: 'INVALID_SIGNIFICANT_DIGITS',
+          message:
+            'Significant digits must be between 1 and the year digit count, with bounds in the safe integer range',
+          position: { start: input.indexOf('S'), end: input.length },
+        },
+      ],
+    };
+  const minMsValue = yearStartMs(range.min);
+  const maxMsValue = yearEndMs(range.max);
   const isClamped = needsClamping(minMsValue) || needsClamping(maxMsValue);
 
   const edtfDate: EDTFDate = {
@@ -505,8 +481,21 @@ function parseExtendedYearSignificantDigits(input: string): ParseResult<EDTFDate
       ],
     };
 
-  const minMsValue = yearStartMs(year);
-  const maxMsValue = yearEndMs(year);
+  const range = significantYearRange(year, sigDigits, String(Math.abs(year)).length);
+  if (!range)
+    return {
+      success: false,
+      errors: [
+        {
+          code: 'INVALID_SIGNIFICANT_DIGITS',
+          message:
+            'Significant digits must be between 1 and the year digit count, with bounds in the safe integer range',
+          position: { start: input.indexOf('S'), end: input.length },
+        },
+      ],
+    };
+  const minMsValue = yearStartMs(range.min);
+  const maxMsValue = yearEndMs(range.max);
   const isClamped = needsClamping(minMsValue) || needsClamping(maxMsValue);
 
   const edtfDate: EDTFDate = {
@@ -564,8 +553,21 @@ function parseSignificantDigits(input: string): ParseResult<EDTFDate> {
   const year = parseInt(match[1]!, 10);
   const sigDigits = parseInt(match[2]!, 10);
 
-  const minMsValue = yearStartMs(year);
-  const maxMsValue = yearEndMs(year);
+  const range = significantYearRange(year, sigDigits, 4);
+  if (!range)
+    return {
+      success: false,
+      errors: [
+        {
+          code: 'INVALID_SIGNIFICANT_DIGITS',
+          message:
+            'Significant digits must be between 1 and the year digit count, with bounds in the safe integer range',
+          position: { start: input.indexOf('S'), end: input.length },
+        },
+      ],
+    };
+  const minMsValue = yearStartMs(range.min);
+  const maxMsValue = yearEndMs(range.max);
 
   const edtfDate: EDTFDate = {
     type: 'Date',
@@ -762,8 +764,8 @@ function parseQualificationChar(char: string): import('../types/index.js').Quali
 
 /**
  * Parse extended seasons (Level 2)
- * 25-28: Southern Hemisphere seasons
- * 29-32: Meteorological seasons
+ * 25-28: Northern Hemisphere seasons
+ * 29-32: Southern Hemisphere seasons
  * 33-36: Quarters
  * 37-39: Quadrimesters
  * 40-41: Semestrals

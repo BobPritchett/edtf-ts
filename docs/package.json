@@ -1,6 +1,6 @@
 {
   "name": "@edtf-ts/docs",
-  "version": "0.1.1",
+  "version": "0.6.0",
   "description": "Documentation site for edtf-ts",
   "private": true,
   "type": "module",

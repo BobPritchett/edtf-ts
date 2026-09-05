@@ -26,6 +26,7 @@ const features = {
     'boundary.post',
     'interval.since',
     'interval.sharedDays',
+    'set.sharedDays',
     'interval.crossYear',
     'set.finiteRange',
     'period.century',

@@ -67,9 +67,9 @@ describe('renderAgeBirthday', () => {
     it('should render age range with known birthday (month + day)', () => {
       // early 20s with birthday March 15: ?2002-03-15/?2005-03-15
       const result = renderAgeBirthday('?2002-03-15/?2005-03-15', { currentDate: REF_DATE });
-      expect(result.age).toBe('early 20s');
+      expect(result.age).toBe('possibly early 20s');
       expect(result.birthday).toBe('March 15th');
-      expect(result.formatted).toBe('early 20s, birthday March 15th');
+      expect(result.formatted).toBe('possibly early 20s, birthday March 15th');
       expect(result.ageRange).toEqual([20, 23]);
       expect(result.birthdayKnown).toEqual({ month: true, day: true });
     });
@@ -77,9 +77,9 @@ describe('renderAgeBirthday', () => {
     it('should render age range with known month only', () => {
       // 20 yo with March birthday: 2005-03-?01/2005-03-?31
       const result = renderAgeBirthday('2005-03-?01/2005-03-?31', { currentDate: REF_DATE });
-      expect(result.age).toBe('20 years old');
+      expect(result.age).toBe('possibly 20 years old');
       expect(result.birthday).toBe('March');
-      expect(result.formatted).toBe('20 years old, March birthday');
+      expect(result.formatted).toBe('possibly 20 years old, March birthday');
       expect(result.birthdayKnown).toEqual({ month: true, day: false });
     });
   });
@@ -88,17 +88,17 @@ describe('renderAgeBirthday', () => {
     it('should render age only when birthday is unknown', () => {
       // 20 yo: ?2004-?06-?02/?2005-?06-?01
       const result = renderAgeBirthday('?2004-?06-?02/?2005-?06-?01', { currentDate: REF_DATE });
-      expect(result.age).toBe('20 years old');
+      expect(result.age).toBe('possibly 20 years old');
       expect(result.birthday).toBeNull();
-      expect(result.formatted).toBe('20 years old');
+      expect(result.formatted).toBe('possibly 20 years old');
       expect(result.birthdayKnown).toEqual({ month: false, day: false });
     });
 
     it('should render teenager when age range matches', () => {
       // teenager: ?2005-?06-?02/?2012-?06-?01 = ages 13-19
       const result = renderAgeBirthday('?2005-?06-?02/?2012-?06-?01', { currentDate: REF_DATE });
-      expect(result.age).toBe('teenager');
-      expect(result.formatted).toBe('teenager');
+      expect(result.age).toBe('possibly teenager');
+      expect(result.formatted).toBe('possibly teenager');
     });
   });
 
@@ -106,7 +106,7 @@ describe('renderAgeBirthday', () => {
     it('should render senior with vocabulary style (default)', () => {
       // senior: ../?1960-?06-?01
       const result = renderAgeBirthday('../?1960-?06-?01', { currentDate: REF_DATE });
-      expect(result.age).toBe('senior');  // Vocabulary style (default)
+      expect(result.age).toBe('possibly senior'); // Vocabulary style (default)
       expect(result.birthday).toBeNull();
       expect(result.ageRange[0]).toBe(65);
       expect(result.ageRange[1]).toBeNull();
@@ -117,7 +117,7 @@ describe('renderAgeBirthday', () => {
         currentDate: REF_DATE,
         ageStyle: 'numeric',
       });
-      expect(result.age).toBe('65+ years old');
+      expect(result.age).toBe('possibly 65+ years old');
     });
   });
 
@@ -143,7 +143,7 @@ describe('renderAgeBirthday', () => {
         currentDate: REF_DATE,
         ageStyle: 'numeric',
       });
-      expect(result.age).toBe('13–19 years old');
+      expect(result.age).toBe('possibly 13–19 years old');
     });
 
     it('should use short age length', () => {
@@ -187,7 +187,7 @@ describe('renderAgeBirthday', () => {
         currentDate: REF_DATE,
         ageStyle: 'vocabulary',
       });
-      expect(result.age).toBe('early 20s');
+      expect(result.age).toBe('possibly early 20s');
     });
 
     it('should match mid 30s (34-36)', () => {
@@ -196,7 +196,7 @@ describe('renderAgeBirthday', () => {
         currentDate: REF_DATE,
         ageStyle: 'vocabulary',
       });
-      expect(result.age).toBe('mid 30s');
+      expect(result.age).toBe('possibly mid 30s');
     });
 
     it('should match late 40s (47-49)', () => {
@@ -205,14 +205,14 @@ describe('renderAgeBirthday', () => {
         currentDate: REF_DATE,
         ageStyle: 'vocabulary',
       });
-      expect(result.age).toBe('late 40s');
+      expect(result.age).toBe('possibly late 40s');
     });
   });
 });
 
 describe('LIFE_STAGES', () => {
   it('should have all expected life stages', () => {
-    const stageNames = LIFE_STAGES.map(s => s.name);
+    const stageNames = LIFE_STAGES.map((s) => s.name);
     expect(stageNames).toContain('newborn');
     expect(stageNames).toContain('toddler');
     expect(stageNames).toContain('teenager');
@@ -220,7 +220,7 @@ describe('LIFE_STAGES', () => {
   });
 
   it('should have senior as open-ended', () => {
-    const senior = LIFE_STAGES.find(s => s.name === 'senior');
+    const senior = LIFE_STAGES.find((s) => s.name === 'senior');
     expect(senior?.minYears).toBe(65);
     expect(senior?.maxYears).toBeNull();
   });

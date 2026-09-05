@@ -1,5 +1,5 @@
 @{%
-const { withWeekday, defer, buildBoundary, collection, withCollectionBounds, choiceRange, sharedMonthRange, sharedDayRange } = require('../semantics.js');
+const { withWeekday, defer, buildBoundary, collection, withCollectionBounds, choiceRange, sharedMonthRange, sharedDayRange, sharedDaySet } = require('../semantics.js');
 const { applyDateQualifier, romanNumber, months, seasons, northernSeasons, southernSeasons, pad2, pad4, twoDigitYear, isLeapYear, getDaysInMonth, buildMonthModifierInterval, buildYearModifierInterval, buildDecadeModifierInterval, normalizeDecadeStart, normalizeDecadeEnd, buildCenturyModifierInterval, buildBCECenturyModifierInterval, buildMonthCombinationInterval, buildYearCombinationInterval, buildDecadeCombinationInterval, buildCenturyCombinationInterval, buildBCECenturyCombinationInterval, bceToBCE, buildSlashDate, buildPartialQual, getIntervalStart, getIntervalEnd, applyQualifierToInterval } = require('../semantic-helpers.js');
 %}
 @lexer lexer
@@ -160,6 +160,7 @@ decade -> %number %decadeSuffix
 qualifier ->
     %questionMark {% () => '?' %}
   | %tilde {% () => '~' %}
+  | %percent {% () => '%' %}
   | %circa {% () => '~' %}
   | %circa %dot {% () => '~' %}
   | %ca {% () => '~' %}
@@ -508,7 +509,9 @@ interval ->
   | interval_endpoint interval_separator interval_value {% d => ({ edtf: d[0] + '/' + d[2].edtf, confidence: 0.95 }) %}
   | %until __ interval_value {% d => ({ edtf: '../' + d[2].edtf, confidence: 0.95 }) %}
   | %since __ interval_value {% d => ({ edtf: d[2].edtf + '/..', confidence: 0.95 }) %}
-  | %number _ %dash _ %number {% d => {
+  | short_year_range {% id %}
+
+short_year_range -> %number _ %dash _ %number {% d => {
       const a = d[0].text, b = d[4].text;
       if (a.length !== 4 || b.length !== 2) return null;
       const first = Number(a);
@@ -516,6 +519,7 @@ interval ->
       if (last < first) last += 100;
       return { edtf: pad4(first) + '/' + pad4(last), confidence: 0.98 };
     } %}
+  | short_year_range _ qualifier {% d => d[0] ? ({ ...d[0], edtf: d[0].edtf + d[2] }) : null %}
 
 from_word -> %from {% id %}
 interval_value -> datevalue {% id %} | season {% id %}
@@ -539,6 +543,23 @@ set ->
   | %either __ datevalue __ %or __ datevalue {% d => collection('set', [d[2], d[6]]) %}
   | datevalue __ %or __ choices {% d => collection('set', [d[0], ...d[4]]) %}
   | datevalue _ %comma _ choices _ %comma:? _ %or __ datevalue {% d => collection('set', [d[0], ...d[4], d[10]]) %}
+  | shared_day_set {% id %}
+  | %either __ shared_day_set {% d => d[2] %}
+  | %the __ shared_day_set {% d => d[2] %}
+
+# At least two days and a final "or" are required, so a comma before a year
+# keeps its ordinary date meaning. Each expanded member is validated together.
+shared_day_set -> month_name __ shared_day_choices _ %comma:? _ calendar_year
+  {% d => sharedDaySet(pad4(d[6]), months[d[0]], d[2]) %}
+  | shared_day_choices __ month_name _ %comma:? _ calendar_year
+  {% d => sharedDaySet(pad4(d[6]), months[d[2]], d[0]) %}
+shared_day_choices -> choice_day __ %or __ choice_day {% d => [d[0], d[4]] %}
+  | choice_day __ %or __ shared_day_choices {% d => [d[0], ...d[4]] %}
+  | choice_day _ %comma _ shared_day_choices {% d => [d[0], ...d[4]] %}
+  | choice_day _ %comma _ %or __ choice_day {% d => [d[0], d[6]] %}
+choice_day -> %number {% d => d[0].text.length <= 2 ? Number(d[0].value) : null %}
+  | ordinal_day {% id %}
+
 choices -> choice_item {% d => [d[0]] %}
   | choice_item __ %or __ choices {% d => [d[0], ...d[4]] %}
   | choice_item _ %comma _ choices {% d => [d[0], ...d[4]] %}
@@ -779,7 +800,7 @@ datevalue_base ->
       {% d => ({ type: 'date', edtf: `${pad4(d[4])}-${months[d[2]]}-${pad2(d[0])}`, confidence: 0.95 }) %}
   # Month Year
   | month_name __ year_num
-      {% d => ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0]]}`, confidence: 0.95 }) %}
+      {% d => String(d[2]).length <= 2 && Number(d[2]) <= 31 ? null : ({ type: 'date', edtf: `${pad4(d[2])}-${months[d[0]]}`, confidence: 0.95 }) %}
   # Decades: "the 1960s" -> 196X, "the 1800s" -> 18XX (century) or 180X (decade)
   | %the __ %number %decadeSuffix
       {% d => {
@@ -914,12 +935,13 @@ datevalue_base ->
   | year_num
       {% d => ({ type: 'date', edtf: pad4(d[0]), confidence: 0.95 }) %}
 
-boundary -> bound_prefix _ datevalue {% d => buildBoundary(d[2], d[0][0], d[0][1]) %}
-  | %pre _ %dash:? _ datevalue {% d => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'before', false) %}
-  | %post _ %dash:? _ datevalue {% d => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'after', false) %}
-  | datevalue __ %or __ earlier_word {% d => buildBoundary(d[0], 'before', true) %}
-  | datevalue __ %or __ later_word {% d => buildBoundary(d[0], 'after', true) %}
-  | datevalue __ %and __ earlier_word {% d => collection('list', [buildBoundary(d[0], 'before', true)]) %}
+boundary -> bound_prefix _ datevalue {% d => buildBoundary(d[2], d[0][0], d[0][1], context) %}
+  | bound_prefix _ season {% d => buildBoundary(d[2], d[0][0], d[0][1], context) %}
+  | %pre _ %dash:? _ datevalue {% d => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'before', false, context) %}
+  | %post _ %dash:? _ datevalue {% d => !d[2] && d[4].writtenNegative ? null : buildBoundary(d[4], 'after', false, context) %}
+  | datevalue __ %or __ earlier_word {% d => buildBoundary(d[0], 'before', true, context) %}
+  | datevalue __ %or __ later_word {% d => buildBoundary(d[0], 'after', true, context) %}
+  | datevalue __ %and __ earlier_word {% d => ({ type: 'interval', edtf: '../' + d[0].edtf, confidence: 0.95 }) %}
   | datevalue __ %and __ later_word {% d => ({ type: 'interval', edtf: d[0].edtf + '/..', confidence: 0.95 }) %}
   | %sometime __ %between __ datevalue __ %and __ datevalue {% d => choiceRange(d[4], d[8]) %}
 earlier_word -> %earlier {% id %} | %before {% id %}
@@ -992,7 +1014,7 @@ datevalue_base -> day_num __ month_name __ era_year {% d => ({ edtf: pad4(d[4]) 
 
 datevalue_base -> %dash %number {% d => ({ edtf: pad4(-Number(d[1].text)), confidence: 0.95, writtenNegative: true }) %}
 
-datevalue_base -> weekday _ %comma:? _ datevalue_base {% d => withWeekday(d[4], d[0]) %}
+datevalue_base -> weekday _ %comma:? _ datevalue_base {% d => withWeekday(d[4], d[0], context) %}
 weekday -> %weekday0 %dot:? {% () => 0 %}
   | %weekday1 %dot:? {% () => 1 %}
   | %weekday2 %dot:? {% () => 2 %}

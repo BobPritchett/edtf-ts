@@ -570,5 +570,5 @@ function isDisjoint(a: EDTFBase, b: EDTFBase): boolean {
 
 - [Temporal Comparison API](/api/compare)
 - [Formatting & Utilities API](/api/utils)
-- [Intervals & Ranges](/guide/intervals)
-- [Uncertainty & Approximation](/guide/uncertainty)
+- [Intervals & Ranges](/api/types/interval)
+- [Uncertainty & Approximation](/guide/parsing#qualified-dates-level-1)

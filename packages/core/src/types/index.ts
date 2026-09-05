@@ -174,6 +174,8 @@ export interface EDTFDateTime extends EDTFBase {
   hour: number;
   minute: number;
   second: number;
+  /** Written fractional-second digits (1–3), preserving trailing zeros; extended profile only. */
+  fractionalSecond?: string;
   /** Timezone (e.g., 'Z', '+05:00', '-08:00') */
   timezone?: string;
 }
@@ -181,9 +183,9 @@ export interface EDTFDateTime extends EDTFBase {
 /**
  * EDTF Season object (Level 1 and 2).
  * Represents a season within a year.
- * - 21-24: Northern Hemisphere seasons (Spring, Summer, Autumn, Winter)
- * - 25-28: Southern Hemisphere seasons
- * - 29-32: Meteorological seasons
+ * - 21-24: Location-independent seasons (Spring, Summer, Autumn, Winter)
+ * - 25-28: Northern Hemisphere seasons
+ * - 29-32: Southern Hemisphere seasons
  * - 33-36: Quarters
  * - 37-39: Quadrimesters
  * - 40-41: Semestrals
@@ -262,6 +264,14 @@ export interface ParseError {
   position?: { start: number; end: number };
   /** Optional suggestion for fixing the error */
   suggestion?: string;
+  /** Structural location of an unsupported extension, e.g. $.start or $.values[0]. */
+  path?: string;
+}
+
+/** Extended support is the default; strict applies the documented interoperability profile. */
+export interface ParseOptions {
+  level?: EDTFLevel;
+  conformance?: 'strict' | 'extended';
 }
 
 /**

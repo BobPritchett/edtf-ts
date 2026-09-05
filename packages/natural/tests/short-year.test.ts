@@ -24,18 +24,14 @@ describe('Short Year Support (1-3 digits)', () => {
       expect(results[0].type).toBe('date');
     });
 
-    it('should parse "79"', () => {
-      const results = parseNatural('79');
-      expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('0079');
-      expect(results[0].type).toBe('date');
+    it('requires an explicit era for "79"', () => {
+      expect(() => parseNatural('79')).toThrow(/era marker/);
+      expect(parseNatural('79 CE')[0].edtf).toBe('0079');
     });
 
-    it('should parse "5"', () => {
-      const results = parseNatural('5');
-      expect(results).toHaveLength(1);
-      expect(results[0].edtf).toBe('0005');
-      expect(results[0].type).toBe('date');
+    it('requires an explicit era for "5"', () => {
+      expect(() => parseNatural('5')).toThrow(/era marker/);
+      expect(parseNatural('5 CE')[0].edtf).toBe('0005');
     });
   });
 
@@ -86,8 +82,8 @@ describe('Short Year Support (1-3 digits)', () => {
 
     it('should parse "March 5"', () => {
       const results = parseNatural('March 5');
-      expect(results.map((r) => r.edtf)).toEqual(['XXXX-03-05', '0005-03']);
-      expect(results.every((r) => r.ambiguous)).toBe(true);
+      expect(results.map((r) => r.edtf)).toEqual(['XXXX-03-05']);
+      expect(results.every((r) => !r.ambiguous)).toBe(true);
       expect(parseNatural('March 0005')[0].edtf).toBe('0005-03');
     });
   });

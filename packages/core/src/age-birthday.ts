@@ -174,11 +174,16 @@ function createDateFromEDTF(date: EDTFDate, latest = false): Date {
   return createDate(utc.getUTCFullYear(), utc.getUTCMonth() + 1, utc.getUTCDate());
 }
 
-/**
- * Extract birthday certainty from an EDTF interval or date.
- * Returns which components (month, day) are known with certainty.
- * Uses the parsed qualification properties from @edtf-ts/core.
- */
+/** Whole-date and component qualifiers have the same effect on birthday certainty. */
+function qualifiedComponent(date: EDTFDate | null, component: 'month' | 'day'): boolean {
+  if (!date) return true;
+  return [
+    date.qualification,
+    date[(component + 'Qualification') as 'monthQualification' | 'dayQualification'],
+  ].some((q) => q?.uncertain || q?.approximate || q?.uncertainApproximate);
+}
+
+/** Extract known birthday components from dates, intervals, and choices. */
 function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: boolean } {
   if (parsed.type === 'Set' || parsed.type === 'List') {
     const c = parsed as EDTFSet | EDTFList;
@@ -195,18 +200,9 @@ function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: bool
   if (isEDTFDate(parsed)) {
     const date = parsed as EDTFDate;
 
-    // Check for unspecified year (XXXX) - month and day are certain if present
-    if (typeof date.year === 'string' && date.year.includes('X')) {
-      return {
-        month: typeof date.month === 'number',
-        day: typeof date.day === 'number',
-      };
-    }
-
-    // Use parsed component qualifications directly
     return {
-      month: typeof date.month === 'number' && !date.monthQualification?.uncertain,
-      day: typeof date.day === 'number' && !date.dayQualification?.uncertain,
+      month: typeof date.month === 'number' && !qualifiedComponent(date, 'month'),
+      day: typeof date.day === 'number' && !qualifiedComponent(date, 'day'),
     };
   }
 
@@ -223,10 +219,8 @@ function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: bool
     const startMonth = startDate?.month;
     const endMonth = endDate?.month;
     // No qualification means the component is certain (not uncertain)
-    const startMonthUncertain = startDate
-      ? (startDate.monthQualification?.uncertain ?? false)
-      : true;
-    const endMonthUncertain = endDate ? (endDate.monthQualification?.uncertain ?? false) : true;
+    const startMonthUncertain = qualifiedComponent(startDate, 'month');
+    const endMonthUncertain = qualifiedComponent(endDate, 'month');
 
     const monthCertain =
       typeof startMonth === 'number' &&
@@ -238,8 +232,8 @@ function extractBirthdayCertainty(parsed: EDTFBase): { month: boolean; day: bool
     // Same logic for day - day must match AND neither be uncertain
     const startDay = startDate?.day;
     const endDay = endDate?.day;
-    const startDayUncertain = startDate ? (startDate.dayQualification?.uncertain ?? false) : true;
-    const endDayUncertain = endDate ? (endDate.dayQualification?.uncertain ?? false) : true;
+    const startDayUncertain = qualifiedComponent(startDate, 'day');
+    const endDayUncertain = qualifiedComponent(endDate, 'day');
 
     const dayCertain =
       typeof startDay === 'number' &&
@@ -457,48 +451,37 @@ function getOrdinalSuffix(n: number): string {
   return s[(v - 20) % 10] || s[v] || s[0] || 'th';
 }
 
-/**
- * Detect qualifiers (approximate/uncertain) on an EDTF expression.
- * Only detects whole-expression qualifiers (Level 1), not component-level (Level 2).
- *
- * Component-level qualifiers like ?2004-?06-?02 are NOT considered whole-expression
- * uncertainty - they indicate which components are derived vs known.
- */
+/** Combine effective qualifiers, independently of their written placement. */
 function detectQualifier(parsed: EDTFBase): 'approximate' | 'uncertain' | 'both' | undefined {
-  // Check if the parsed object has a whole-expression qualification
-  if (isEDTFDate(parsed)) {
-    const date = parsed as EDTFDate;
-    if (date.qualification) {
-      if (date.qualification.uncertainApproximate) return 'both';
-      if (date.qualification.uncertain && date.qualification.approximate) return 'both';
-      if (date.qualification.uncertain) return 'uncertain';
-      if (date.qualification.approximate) return 'approximate';
+  let uncertain = false,
+    approximate = false;
+  const visit = (value: EDTFBase) => {
+    const date = value as EDTFDate;
+    for (const q of [
+      date.qualification,
+      date.yearQualification,
+      date.monthQualification,
+      date.dayQualification,
+    ]) {
+      uncertain ||= !!(q?.uncertain || q?.uncertainApproximate);
+      approximate ||= !!(q?.approximate || q?.uncertainApproximate);
     }
-    return undefined;
-  }
-
-  if (isEDTFInterval(parsed)) {
-    const interval = parsed as EDTFInterval;
-    if (interval.qualification) {
-      if (interval.qualification.uncertainApproximate) return 'both';
-      if (interval.qualification.uncertain && interval.qualification.approximate) return 'both';
-      if (interval.qualification.uncertain) return 'uncertain';
-      if (interval.qualification.approximate) return 'approximate';
+    if (value.type === 'Set' || value.type === 'List')
+      (value as EDTFSet | EDTFList).values.forEach(visit);
+    if (value.type === 'Interval') {
+      const interval = value as EDTFInterval;
+      if (interval.start) visit(interval.start);
+      if (interval.end) visit(interval.end);
     }
-    return undefined;
-  }
-
-  // Fallback: check the EDTF string for trailing qualifiers only (not component-level)
-  // Level 1 trailing qualifiers: 1984?, 1984~, 1984%
-  // These appear at the end, not before components
-  const edtf = parsed.edtf;
-
-  // Only match trailing qualifiers, not component-level ones like ?2004 or 2004?-06
-  if (edtf.match(/\d%$/)) return 'both';
-  if (edtf.match(/\d\?$/) && !edtf.includes('/')) return 'uncertain';
-  if (edtf.match(/\d~$/) && !edtf.includes('/')) return 'approximate';
-
-  return undefined;
+  };
+  visit(parsed);
+  return uncertain && approximate
+    ? 'both'
+    : uncertain
+      ? 'uncertain'
+      : approximate
+        ? 'approximate'
+        : undefined;
 }
 
 /**
